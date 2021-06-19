@@ -1,4 +1,4 @@
-require('source-map-support').install()
+// require('source-map-support').install()
 const path = require('path');
 const express = require('express');
 const app = express();

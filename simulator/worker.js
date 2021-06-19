@@ -5,8 +5,10 @@ const path = require('path');
 const profiler = require('./profiler');
 const chokidar = require('chokidar');
 
+var globalDatabase = null;
+
 var globalGame = null;
-var globalAction = {};
+var globalAction = [];
 var globalResult = null;
 var globalDone = null;
 
@@ -22,9 +24,14 @@ var globals = {
         }
     },
     game: () => globalGame,
-    action: () => globalAction,
+    action: () => {
+        return globalAction
+    },
     killGame: () => {
         globalDone = true;
+    },
+    database: () => {
+        return globalDatabase;
     }
 };
 
@@ -40,6 +47,9 @@ const vm = new VM({
 function cloneObj(obj) {
     if (typeof obj === 'object')
         return JSON.parse(JSON.stringify(obj));
+    if(Array.isArray(obj)) {
+        return JSON.parse(JSON.stringify(obj));
+    }
     return obj;
 }
 
@@ -47,7 +57,8 @@ class FSGWorker {
     constructor() {
         this.action = {};
         this.gameHistory = [];
-        this.bundlePath = path.join(__dirname, '../../builds/server/server.bundle.js');
+        this.bundlePath = path.join(workerData.dir, './builds/server/server.bundle.js');
+        this.dbPath = path.join(workerData.dir, './game-server/database.json');
         this.gameScript = null;
         this.start();
     }
@@ -104,26 +115,26 @@ class FSGWorker {
         delete timer.set;
     }
 
-    calculateTimeleft(action, game) {
+    calculateTimeleft(game) {
         if (!game || !game.timer || !game.timer.data)
-            return true;
+            return 0;
 
         let deadline = game.timer.data[0];
         let now = (new Date()).getTime();
         let timeleft = deadline - now;
-        if (action.type == 'skip') {
-            if (now < deadline)
-                return false;
-        }
+        // if (action.type == 'skip') {
+        //     if (now < deadline)
+        //         return false;
+        // }
 
-        action.timeleft = timeleft;
-        return true;
+        
+        return timeleft;
     }
 
-    async onAction(msg) {
+    async onAction(actions) {
         profiler.Start("[WorkerOnAction]")
-        if (!msg.type) {
-            console.log("Not an action: ", msg);
+        if (!Array.isArray(actions)) {
+            console.log("Not an action: ", actions);
             return;
         }
 
@@ -132,37 +143,46 @@ class FSGWorker {
         if (!globalGame)
             this.makeGame();
 
+        let timeleft = this.calculateTimeleft(globalGame);
         if (globalGame.timer) {
-            msg.seq = globalGame.timer.seq || 0;
-        }
-        if (!this.calculateTimeleft(msg, globalGame))
-            return;
-
-
-        if (msg.type == 'join') {
-            let userid = msg.user.id;
-            let username = msg.user.name;
-            if (!userid) {
-                console.error("Invalid player: " + userid);
-                return;
+            for(var i=0; i<actions.length;i++) {
+                actions[i].seq = globalGame.timer.seq || 0;
+                actions[i].timeleft = timeleft;
             }
+            
+        }
 
-            if (!(userid in globalGame.players)) {
-                globalGame.players[userid] = {
-                    name: username
+
+        if( actions.length == 1 ) {
+            if (actions[0].type == 'join') {
+                let userid = actions[0].user.id;
+                let username = actions[0].user.name;
+                if (!userid) {
+                    console.error("Invalid player: " + userid);
+                    return;
+                }
+    
+                if (!(userid in globalGame.players)) {
+                    globalGame.players[userid] = {
+                        name: username
+                    }
+                }
+                else {
+                    globalGame.players[userid].name = username;
                 }
             }
-            else {
-                globalGame.players[userid].name = username;
+            else if (actions[0].type == 'reset') {
+                this.makeGame();
             }
         }
-        else if (msg.type == 'reset') {
-            this.makeGame();
-        }
+        
         // console.log("(2)Executing Action: ", msg);
 
         globalGame = cloneObj(globalGame);
-        globalAction = cloneObj(msg);
+        if(!Array.isArray(actions)) {
+            actions = [actions];
+        }
+        globalAction = cloneObj(actions);
         await this.run();
 
 
@@ -187,12 +207,28 @@ class FSGWorker {
     }
 
 
+    async reloadServerDatabase(filepath) {
+        profiler.Start('Reload Database');
+        {
+            filepath = filepath || this.dbPath;
+            var data = await fs.promises.readFile(filepath, 'utf8');
+
+            globalDatabase = Object.freeze(JSON.parse(data));
+        }
+        profiler.End('Reload Database');
+
+        let filename = filepath.split(/\/|\\/ig);
+        filename = filename[filename.length - 1];
+        console.log("Database Reloaded: " + filename);
+
+        return this.gameScript;
+    }
+
     async reloadServerBundle(filepath) {
         profiler.Start('Reload Bundle');
         {
             filepath = filepath || this.bundlePath;
             var data = await fs.promises.readFile(filepath, 'utf8');
-
             this.gameScript = new VMScript(data, this.bundlePath);
         }
         profiler.End('Reload Bundle');
@@ -207,11 +243,18 @@ class FSGWorker {
     async start() {
         try {
             this.reloadServerBundle();
+            this.reloadServerDatabase();
 
             let watchPath = this.bundlePath.substr(0, this.bundlePath.lastIndexOf(path.sep));
             chokidar.watch(watchPath).on('change', (path) => {
                 this.reloadServerBundle();
                 console.log(`${this.bundlePath} file Changed`, watchPath);
+            });
+
+            let watchPath2 = this.dbPath.substr(0, this.dbPath.lastIndexOf(path.sep));
+            chokidar.watch(watchPath2).on('change', (path) => {
+                this.reloadServerDatabase();
+                console.log(`${this.dbPath} file Changed`, watchPath2);
             });
 
             parentPort.on('message', this.onAction.bind(this));

@@ -86,6 +86,7 @@
 
         <script>
             var socket = null;
+            var lastMessage = null;
             let note = document.getElementById('note');
             let iframe = document.getElementById('game-sandbox');
             let nameField = document.getElementById('username');
@@ -154,6 +155,25 @@
 
                     message.local = Object.assign({}, socket.user, localPlayer);
                     sendFrameMessage(message);
+                    console.timeEnd('ActionLoop');
+
+                    lastMessage = message;
+                });
+
+                socket.on('private', (message) => {
+                    console.log('Private Data: ', message);
+
+                    if (lastMessage) {
+                        lastMessage.players[socket.user.id] = Object.assign(
+                            {},
+                            lastMessage.players[socket.user.id],
+                            message
+                        );
+
+                        message.local = Object.assign({}, message.local, message);
+                    }
+                    // message.local = Object.assign({}, socket.user, localPlayer);
+                    sendFrameMessage(lastMessage);
                     console.timeEnd('ActionLoop');
                 });
 

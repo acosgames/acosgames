@@ -40,6 +40,34 @@ async function deployClient() {
 
 }
 
+async function deployServerDatabase() {
+    let url = 'http://localhost:8080/api/v1/dev/update/server/db/';
+
+    console.log("Current Working Directory: ", process.cwd())
+    let filepath = path.resolve(process.cwd() + '/game-server/database.json');
+    var newFile = fs.createReadStream(filepath);
+
+    var form_data = new FormData();
+    form_data.append('apikey', apikey || '');
+    form_data.append("db", newFile);
+
+    let headers = form_data.getHeaders();
+    headers['X-GAME-API-KEY'] = apikey || '';
+    let config = {
+        url,
+        method: 'post',
+        headers,
+        data: form_data
+    }
+    try {
+        let response = await axios.request(config);
+        console.log(response.data);
+    }
+    catch (e) {
+        console.error(e);
+    }
+}
+
 async function deployServer() {
     let url = 'http://localhost:8080/api/v1/dev/update/server/bundle/';
 
@@ -71,6 +99,7 @@ async function deployServer() {
 async function deploy() {
     deployClient();
     deployServer();
+    deployServerDatabase();
 }
 
 deploy();

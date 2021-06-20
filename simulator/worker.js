@@ -8,7 +8,7 @@ const chokidar = require('chokidar');
 var globalDatabase = null;
 
 var globalGame = null;
-var globalAction = [];
+var globalActions = [];
 var globalResult = null;
 var globalDone = null;
 
@@ -24,8 +24,8 @@ var globals = {
         }
     },
     game: () => globalGame,
-    action: () => {
-        return globalAction
+    actions: () => {
+        return globalActions
     },
     killGame: () => {
         globalDone = true;
@@ -47,7 +47,7 @@ const vm = new VM({
 function cloneObj(obj) {
     if (typeof obj === 'object')
         return JSON.parse(JSON.stringify(obj));
-    if(Array.isArray(obj)) {
+    if (Array.isArray(obj)) {
         return JSON.parse(JSON.stringify(obj));
     }
     return obj;
@@ -110,16 +110,18 @@ class FSGWorker {
         let deadline = now + (seconds * 1000);
         let timeleft = deadline - now;
 
-        timer.data = [deadline, seconds];
+        timer.end = deadline;
+        timer.seconds = seconds;
+        // timer.data = [deadline, seconds];
         timer.seq = sequence + 1;
         delete timer.set;
     }
 
     calculateTimeleft(game) {
-        if (!game || !game.timer || !game.timer.data)
+        if (!game || !game.timer || !game.timer.end)
             return 0;
 
-        let deadline = game.timer.data[0];
+        let deadline = game.timer.end;
         let now = (new Date()).getTime();
         let timeleft = deadline - now;
         // if (action.type == 'skip') {
@@ -127,7 +129,7 @@ class FSGWorker {
         //         return false;
         // }
 
-        
+
         return timeleft;
     }
 
@@ -145,15 +147,15 @@ class FSGWorker {
 
         let timeleft = this.calculateTimeleft(globalGame);
         if (globalGame.timer) {
-            for(var i=0; i<actions.length;i++) {
+            for (var i = 0; i < actions.length; i++) {
                 actions[i].seq = globalGame.timer.seq || 0;
                 actions[i].timeleft = timeleft;
             }
-            
+
         }
 
 
-        if( actions.length == 1 ) {
+        if (actions.length == 1) {
             if (actions[0].type == 'join') {
                 let userid = actions[0].user.id;
                 let username = actions[0].user.name;
@@ -161,7 +163,7 @@ class FSGWorker {
                     console.error("Invalid player: " + userid);
                     return;
                 }
-    
+
                 if (!(userid in globalGame.players)) {
                     globalGame.players[userid] = {
                         name: username
@@ -175,18 +177,18 @@ class FSGWorker {
                 this.makeGame();
             }
         }
-        
+
         // console.log("(2)Executing Action: ", msg);
 
         globalGame = cloneObj(globalGame);
-        if(!Array.isArray(actions)) {
+        if (!Array.isArray(actions)) {
             actions = [actions];
         }
-        globalAction = cloneObj(actions);
+        globalActions = cloneObj(actions);
         await this.run();
 
 
-        if (typeof globalDone !== 'undefined' && globalDone) {
+        if (typeof globalDone !== 'undefined' && globalDone && globalResult) {
             globalResult.killGame = true;
             this.makeGame(true);
             globalDone = false;
@@ -197,7 +199,6 @@ class FSGWorker {
                 this.processTimelimit(globalResult.timer);
                 this.storeGame(globalResult);
             }
-
         }
 
         profiler.End("[WorkerOnAction]")

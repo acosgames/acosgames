@@ -46,18 +46,18 @@ io.on('connection', (socket) => {
     socket.emit('connected', socket.user);
 
     setInterval(() => {
-        if( gameDeadline == 0 )
+        if (gameDeadline == 0)
             return;
         let now = (new Date()).getTime();
-        if( now > gameDeadline ) {
-            if( queuedActions.length > 0 ) {
+        if (now > gameDeadline) {
+            if (queuedActions.length > 0) {
                 worker.postMessage(queuedActions);
                 queuedActions = [];
                 gameDeadline = 0;
                 return;
             }
 
-            worker.postMessage([{type:'skip'}]);
+            worker.postMessage([{ type: 'skip' }]);
             gameDeadline = 0;
         }
     }, 500)
@@ -75,55 +75,55 @@ io.on('connection', (socket) => {
         socket.emit('time', { payload: { offset, serverTime } })
     })
 
-    socket.on('action', (msg) => {
+    socket.on('action', (action) => {
         console.time('[ActionLoop]')
         console.time('[SocketOnAction]')
-        
+
         // msg.userid = socket.user.userid;
-        if( typeof msg !== 'object' )
+        if (typeof action !== 'object')
             return;
-        let msgStr = JSON.stringify(msg);
+        let msgStr = JSON.stringify(action);
         let msgBuffer = Buffer.from(msgStr, 'utf-8');
-        
-        if( msgBuffer.length > maxActionBytes ) {
+
+        if (msgBuffer.length > maxActionBytes) {
             let warning = '!WARNING! User Action is over limit of ' + maxActionBytes + ' bytes.'
             console.log('\x1b[33m%s\x1b[0m', warning);
         }
 
-        msg.user = socket.user;
+        action.user = socket.user;
 
-        if (msg && msg.type) {
-            console.log("Incoming Action: ", msg);
+        if (action && action.type) {
+            console.log("Incoming Action: ", action);
             let lastGame = getLastGame();
             if (lastGame && lastGame.killGame)
                 return;
 
-            if (msg.type == 'join') {
-                if (lastGame && lastGame.players && lastGame.players[msg.user.id]) {
+            if (action.type == 'join') {
+                if (lastGame && lastGame.players && lastGame.players[action.user.id]) {
                     socket.emit('game', lastGame);
                     return;
                 }
             }
-            else if (msg.type == 'leave') {
+            else if (action.type == 'leave') {
                 socket.disconnect();
             }
-            else if( msg.type == 'skip') {
+            else if (action.type == 'skip') {
                 return;
             }
             else {
-               if (lastGame) {
-                    if (lastGame.next.id != '*' && lastGame.next.id != msg.user.id)
+                if (lastGame) {
+                    if (lastGame.next.id != '*' && lastGame.next.id != action.user.id)
                         return;
                 }
             }
 
-            if( lastGame && lastGame.next && lastGame.next.id == '*' ) {
-                queuedActions.push(msg);
-                return; 
+            if (lastGame && lastGame.next && lastGame.next.id == '*') {
+                queuedActions.push(action);
+                return;
             }
 
             console.timeEnd('[SocketOnAction]')
-            worker.postMessage([msg]);
+            worker.postMessage([action]);
         }
 
     });
@@ -138,7 +138,7 @@ io.on('connection', (socket) => {
 
 
 function createWorker(index) {
-    const worker = new Worker('./node_modules/fivesecondgames/simulator/worker.js', { workerData: { dir:process.cwd() }, });
+    const worker = new Worker('./node_modules/fivesecondgames/simulator/worker.js', { workerData: { dir: process.cwd() }, });
     worker.on("message", (game) => {
         console.time('[WorkerOnMessage]')
         if (!game || game.status) {
@@ -149,8 +149,31 @@ function createWorker(index) {
 
         console.log("Outgoing Game: ", game);
 
-        
-        io.emit('game', game);
+
+        let copy = JSON.parse(JSON.stringify(game));
+
+        for (var key in copy.state) {
+            if (key[0] == '_')
+                delete copy.state[key];
+        }
+
+        let playerData = {};
+        for (var id in copy.players) {
+            for (var key in copy.players[id]) {
+                if (key[0] == '_') {
+                    if (!playerData[id])
+                        playerData[id] = {};
+                    playerData[id][key] = copy.players[id][key];
+                    delete copy.players[id][key];
+                }
+            }
+        }
+
+        io.emit('game', copy);
+        for (var id in playerData) {
+            if (clients[id])
+                clients[id].emit('private', playerData[id])
+        }
 
         //do after the game update, so they can see the result of their kick
         if (game.kick) {
@@ -179,10 +202,9 @@ function createWorker(index) {
                 gameHistory = [];
             }, 1000);
 
-        } 
-        else if( game.timer && game.timer.data && game.timer.data[0] )
-        {
-            gameDeadline = game.timer.data[0];
+        }
+        else if (game.timer && game.timer.end) {
+            gameDeadline = game.timer.end;
         }
 
         console.timeEnd('[WorkerOnMessage]')
@@ -203,7 +225,7 @@ function createWorker(index) {
 
     return worker;
 }
- 
+
 
 app.get('/client.bundle.js', function (req, res) {
     res.sendFile(path.join(process.cwd(), './builds/client/client.bundle.js'));

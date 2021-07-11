@@ -193,6 +193,7 @@ class FSGWorker {
             this.makeGame(true);
             globalDone = false;
             this.gameHistory = [];
+            globalGame = null;
         }
         else {
             if (globalResult) {
@@ -205,6 +206,7 @@ class FSGWorker {
         var test = 1;
         test = test * test;
         parentPort.postMessage(globalResult);
+        globalResult = null;
     }
 
 

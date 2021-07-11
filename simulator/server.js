@@ -131,7 +131,7 @@ io.on('connection', (socket) => {
     socket.on('reload', (msg) => {
         console.log("Incoming Action: ", msg);
         gameHistory = [];
-        worker.postMessage({ type: 'reset' });
+        worker.postMessage([{ type: 'reset' }]);
     })
 });
 

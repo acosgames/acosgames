@@ -45,6 +45,16 @@ async function deployServerDatabase() {
 
     console.log("Current Working Directory: ", process.cwd())
     let filepath = path.resolve(process.cwd() + '/game-server/database.json');
+
+    try {
+        if (!fs.existsSync(path)) {
+            //file exists
+            console.warn('No database exists. It is optional, but this is a reminder just incase you forgot it.')
+        }
+    } catch (err) {
+        console.error(err)
+    }
+
     var newFile = fs.createReadStream(filepath);
 
     var form_data = new FormData();

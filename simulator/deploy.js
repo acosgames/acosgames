@@ -6,6 +6,7 @@ const fs = require('fs');
 var FormData = require('form-data');
 const argv = yargs(process.argv).argv
 
+let type = process.argv[process.argv.length - 2];
 let apikey = process.argv[process.argv.length - 1];
 
 
@@ -47,9 +48,10 @@ async function deployServerDatabase() {
     let filepath = path.resolve(process.cwd() + '/game-server/database.json');
 
     try {
-        if (!fs.existsSync(path)) {
+        if (!fs.existsSync(filepath)) {
             //file exists
             console.warn('No database exists. It is optional, but this is a reminder just incase you forgot it.')
+            return;
         }
     } catch (err) {
         console.error(err)
@@ -106,10 +108,20 @@ async function deployServer() {
     }
 }
 
-async function deploy() {
-    deployClient();
-    deployServer();
-    deployServerDatabase();
+async function deploy(type) {
+    if (type != 'all') {
+        switch (type) {
+            case 'client': deployClient(); break;
+            case 'server': deployServer(); break;
+            case 'db': deployServerDatabase(); break;
+        }
+    }
+    else {
+        deployClient();
+        deployServer();
+        deployServerDatabase();
+    }
+
 }
 
-deploy();
+deploy(type);

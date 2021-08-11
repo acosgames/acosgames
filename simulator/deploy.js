@@ -109,18 +109,19 @@ async function deployServer() {
 }
 
 async function deploy(type) {
-    if (type != 'all') {
-        switch (type) {
-            case 'client': deployClient(); break;
-            case 'server': deployServer(); break;
-            case 'db': deployServerDatabase(); break;
-        }
+
+    switch (type) {
+        case 'client': deployClient(); break;
+        case 'server': deployServer(); break;
+        case 'db': deployServerDatabase(); break;
+        default:
+            deployClient();
+            deployServer();
+            deployServerDatabase();
+            break;
     }
-    else {
-        deployClient();
-        deployServer();
-        deployServerDatabase();
-    }
+
+
 
 }
 

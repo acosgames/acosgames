@@ -5,6 +5,9 @@ const path = require('path');
 const profiler = require('./profiler');
 const chokidar = require('chokidar');
 
+const delta = require('./delta');
+
+
 var globalDatabase = null;
 
 var globalGame = null;
@@ -140,10 +143,13 @@ class FSGWorker {
             return;
         }
 
+        let before = {};
         // console.log("(1)Executing Action: ", msg);
 
         if (!globalGame)
             this.makeGame();
+        else
+            before = cloneObj(globalGame);
 
         let timeleft = this.calculateTimeleft(globalGame);
         if (globalGame.timer) {
@@ -175,6 +181,7 @@ class FSGWorker {
             }
             else if (actions[0].type == 'reset') {
                 this.makeGame();
+                before = {};
             }
         }
 
@@ -191,6 +198,7 @@ class FSGWorker {
         if (typeof globalDone !== 'undefined' && globalDone && globalResult) {
             globalResult.killGame = true;
             this.makeGame(true);
+            before = {};
             globalDone = false;
             this.gameHistory = [];
             globalGame = null;
@@ -202,10 +210,12 @@ class FSGWorker {
             }
         }
 
+        let diff = delta.delta(before, globalResult, {});
+
         profiler.End("[WorkerOnAction]")
         var test = 1;
         test = test * test;
-        parentPort.postMessage(globalResult);
+        parentPort.postMessage(diff);
         globalResult = null;
     }
 

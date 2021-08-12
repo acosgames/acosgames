@@ -132,6 +132,43 @@
                     socket.emit('time', { payload: latencyStart });
                 }
 
+                function isObject(x) {
+                    return x != null && (typeof x === 'object' || typeof x === 'function') && !Array.isArray(x);
+                }
+                function merge(from, delta) {
+                    // if (!this.isObject(delta)) {
+                    //     return from;
+                    // }
+                    if (!Array.isArray(delta) && !isObject(delta)) {
+                        if (delta != from) return delta;
+                    }
+
+                    for (var key in delta) {
+                        if (key[0] == '$') {
+                            delete from[key.substr(1)];
+                            continue;
+                        }
+
+                        if (!(key in from)) {
+                            from[key] = delta[key];
+                            continue;
+                        }
+
+                        if (Array.isArray(delta[key])) {
+                            from[key] = delta[key];
+                            continue;
+                        }
+                        if (isObject(delta[key])) {
+                            from[key] = merge(from[key], delta[key]);
+                            continue;
+                        }
+
+                        from[key] = delta[key];
+                    }
+
+                    return from;
+                }
+
                 socket.on('time', (message) => {
                     let serverOffset = message.payload.offset;
                     let serverTime = message.payload.serverTime;
@@ -149,6 +186,8 @@
                 });
 
                 socket.on('game', (message) => {
+                    message = merge(lastMessage || {}, message);
+
                     let localPlayer = message.players[socket.user.id];
                     if (localPlayer) note.textContent = 'Status: ingame';
                     console.log('Game: ', message);

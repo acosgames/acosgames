@@ -7,6 +7,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const { Worker } = require("worker_threads")
+const delta = require('./delta');
 
 const port = process.env.PORT || 3100;
 
@@ -139,35 +140,39 @@ io.on('connection', (socket) => {
 
 function createWorker(index) {
     const worker = new Worker('./node_modules/fivesecondgames/simulator/worker.js', { workerData: { dir: process.cwd() }, });
-    worker.on("message", (game) => {
+    worker.on("message", (dlta) => {
         console.time('[WorkerOnMessage]')
-        if (!game || game.status) {
+        if (!dlta || dlta.status) {
             return;
         }
 
 
-
+        let game = getLastGame() || {};
+        game = delta.merge(game, dlta);
+        console.log("Delta: ", dlta);
         console.log("Outgoing Game: ", game);
 
 
-        let copy = JSON.parse(JSON.stringify(game));
+        let copy = JSON.parse(JSON.stringify(dlta));
 
-        for (var key in copy.state) {
-            if (key[0] == '_')
-                delete copy.state[key];
-        }
+        if (copy.state)
+            for (var key in copy.state) {
+                if (key[0] == '_')
+                    delete copy.state[key];
+            }
 
         let playerData = {};
-        for (var id in copy.players) {
-            for (var key in copy.players[id]) {
-                if (key[0] == '_') {
-                    if (!playerData[id])
-                        playerData[id] = {};
-                    playerData[id][key] = copy.players[id][key];
-                    delete copy.players[id][key];
+        if (copy.players)
+            for (var id in copy.players) {
+                for (var key in copy.players[id]) {
+                    if (key[0] == '_') {
+                        if (!playerData[id])
+                            playerData[id] = {};
+                        playerData[id][key] = copy.players[id][key];
+                        delete copy.players[id][key];
+                    }
                 }
             }
-        }
 
         io.emit('game', copy);
         for (var id in playerData) {
@@ -191,6 +196,7 @@ function createWorker(index) {
                 }
             }, 1000);
         }
+
 
         gameHistory.push(game);
 

@@ -186,6 +186,7 @@
                 });
 
                 socket.on('game', (message) => {
+                    console.log('Delta: ', message);
                     message = merge(lastMessage || {}, message);
 
                     let localPlayer = message.players[socket.user.id];

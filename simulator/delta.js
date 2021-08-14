@@ -73,6 +73,33 @@ class Delta {
         return result;
     }
 
+    hidden(obj) {
+
+        if (this.isObject(obj)) {
+            let result = {}
+            for (var key in obj) {
+                if (key[0] == '_') {
+                    result[key] = JSON.parse(JSON.stringify(obj[key]));
+                    delete obj[key];
+                    continue;
+                }
+                let test = this.hidden(obj[key]);
+                if (typeof test !== 'undefined') {
+                    result[key] = test;
+                }
+                if (this.isObject(obj[key]) && Object.keys(obj[key]).length == 0) {
+                    delete obj[key];
+                }
+            }
+
+            if (Object.keys(result).length == 0)
+                return undefined;
+            return result;
+        }
+
+        return undefined;
+    }
+
     merge(from, delta) {
 
         // if (!this.isObject(delta)) {
@@ -113,6 +140,34 @@ class Delta {
 
 }
 
+
+function test2() {
+    let d = new Delta();
+    let defaultGame = {
+        state: {
+            cells: ['', '', '', '', '', '', '', '', ''],
+            startPlayer: '',
+            _secret: '123'
+        },
+        players: {
+            joe: { name: "Joe", type: "x", test: { _stats: "tank" } },
+            tim: { name: "Tim", type: "o", test: { _stats: "assassin" } }
+        },
+        rules: {
+            bestOf: 5,
+            maxPlayers: 2
+        },
+        next: {},
+        events: []
+    }
+
+    console.log(defaultGame);
+    let hiddenOnly = d.hidden(defaultGame);
+
+    console.log(hiddenOnly);
+    console.log(defaultGame);
+}
+test2();
 
 function test() {
     let defaultGame = {

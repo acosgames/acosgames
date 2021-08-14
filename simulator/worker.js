@@ -5,8 +5,10 @@ const path = require('path');
 const profiler = require('./profiler');
 const chokidar = require('chokidar');
 
+const rank = require('./rank');
 const delta = require('./delta');
 
+var globalRatings = {};
 
 var globalDatabase = null;
 
@@ -165,6 +167,15 @@ class FSGWorker {
             if (actions[0].type == 'join') {
                 let userid = actions[0].user.id;
                 let username = actions[0].user.name;
+
+                if (!globalRatings[userid]) {
+                    globalRatings[userid] = {
+                        rating: 1200,
+                        mu: 12.0,
+                        sigma: 1.5
+                    }
+                }
+
                 if (!userid) {
                     console.error("Invalid player: " + userid);
                     return;
@@ -197,8 +208,12 @@ class FSGWorker {
 
         if (typeof globalDone !== 'undefined' && globalDone && globalResult) {
             globalResult.killGame = true;
-            this.makeGame(true);
-            before = {};
+
+            this.processPlayerRatings(globalResult.players);
+
+
+            // this.makeGame(true);
+            //before = {};
             globalDone = false;
             this.gameHistory = [];
             globalGame = null;
@@ -217,6 +232,48 @@ class FSGWorker {
         test = test * test;
         parentPort.postMessage(diff);
         globalResult = null;
+    }
+
+    processPlayerRatings(players) {
+        //add saved ratings to players
+        let playerRatings = {};
+        for (var id in players) {
+            let player = players[id];
+
+            if (!(id in globalRatings)) {
+                continue;
+            }
+            if ((typeof player.rank === 'undefined')) {
+                console.error("Player [" + id + "] (" + player.name + ") is missing rank")
+                return;
+            }
+            // if ((typeof player.score === 'undefined')) {
+            //     console.error("Player [" + id + "] (" + player.name + ") is missing score")
+            //     return;
+            // }
+            let playerRating = globalRatings[id];
+            playerRating.rank = player.rank;
+            //playerRating.score = player.score;
+            playerRatings[id] = playerRating;
+        }
+
+        console.log("Before Rating: ", playerRatings);
+
+        //run OpenSkill rating system
+        rank.calculateRanks(playerRatings);
+
+        //update player ratings
+        for (var id in players) {
+            let player = players[id];
+
+            if (!(id in playerRatings)) {
+                continue;
+            }
+            let rating = playerRatings[id];
+            player.rating = rating.rating;
+        }
+
+        console.log("After Rating: ", globalRatings);
     }
 
 

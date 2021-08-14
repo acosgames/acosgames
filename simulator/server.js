@@ -43,6 +43,7 @@ io.on('connection', (socket) => {
     let id = stringHashCode(name);
     socket.user = { name, id }
     clients[socket.user.id] = socket;
+
     console.log('user connected: ' + socket.user.name);
     socket.emit('connected', socket.user);
 
@@ -152,33 +153,16 @@ function createWorker(index) {
         console.log("Delta: ", dlta);
         console.log("Outgoing Game: ", game);
 
-
+        //remove private variables and send individually to palyers
         let copy = JSON.parse(JSON.stringify(dlta));
-
-        if (copy.state)
-            for (var key in copy.state) {
-                if (key[0] == '_')
-                    delete copy.state[key];
-            }
-
-        let playerData = {};
-        if (copy.players)
-            for (var id in copy.players) {
-                for (var key in copy.players[id]) {
-                    if (key[0] == '_') {
-                        if (!playerData[id])
-                            playerData[id] = {};
-                        playerData[id][key] = copy.players[id][key];
-                        delete copy.players[id][key];
-                    }
-                }
-            }
-
+        let hiddenState = delta.hidden(copy.state);
+        let hiddenPlayers = delta.hidden(copy.players);
         io.emit('game', copy);
-        for (var id in playerData) {
-            if (clients[id])
-                clients[id].emit('private', playerData[id])
-        }
+        if (hiddenPlayers)
+            for (var id in hiddenPlayers) {
+                if (clients[id])
+                    clients[id].emit('private', hiddenPlayers[id])
+            }
 
         //do after the game update, so they can see the result of their kick
         if (game.kick) {

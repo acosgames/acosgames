@@ -195,7 +195,7 @@
 
                     message.local = Object.assign({}, socket.user, localPlayer);
                     sendFrameMessage(message);
-                    console.timeEnd('ActionLoop');
+                    // console.timeEnd('ActionLoop');
 
                     lastMessage = message;
                 });
@@ -249,6 +249,8 @@
                     return;
                 }
 
+                document.getElementById('game-sandbox').src = '/iframe';
+
                 connect(displayname, () => {
                     if (socket) socket.emit('action', { type: 'join', payload: {} });
                 });
@@ -275,7 +277,7 @@
                 if (data.type == '__ready') {
                     return;
                 }
-                console.time('ActionLoop');
+                // console.time('ActionLoop');
                 if (socket) socket.emit('action', data);
             }
 

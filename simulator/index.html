@@ -187,17 +187,22 @@
 
                 socket.on('game', (message) => {
                     console.log('Delta: ', message);
+                    if (!message) return;
                     message = merge(lastMessage || {}, message);
 
                     let localPlayer = message.players[socket.user.id];
                     if (localPlayer) note.textContent = 'Status: ingame';
-                    console.log('Game: ', message);
+                    // console.log('Game: ', message);
 
                     message.local = Object.assign({}, socket.user, localPlayer);
                     sendFrameMessage(message);
                     // console.timeEnd('ActionLoop');
 
-                    lastMessage = message;
+                    if (message && message.events && message.events.gameover) {
+                        lastMessage = null;
+                    } else {
+                        lastMessage = message;
+                    }
                 });
 
                 socket.on('private', (message) => {
@@ -249,11 +254,16 @@
                     return;
                 }
 
-                document.getElementById('game-sandbox').src = '/iframe';
+                iframe.src = '/iframe';
 
-                connect(displayname, () => {
-                    if (socket) socket.emit('action', { type: 'join', payload: {} });
-                });
+                iframe.onload = function () {
+                    console.log('game-sandbox is loaded');
+                    setTimeout(() => {
+                        connect(displayname, () => {
+                            if (socket) socket.emit('action', { type: 'join', payload: {} });
+                        });
+                    }, 200);
+                };
             };
 
             document.getElementById('reload').onclick = (event) => {

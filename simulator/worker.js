@@ -83,7 +83,7 @@ class FSGWorker {
         globalGame.rules = {};
         globalGame.next = {};
         globalGame.prev = {};
-        globalGame.events = [];
+        globalGame.events = {};
 
         if (clearPlayers) {
             globalGame.players = {}
@@ -205,19 +205,19 @@ class FSGWorker {
         globalActions = cloneObj(actions);
         await this.run();
 
-
-        if (typeof globalDone !== 'undefined' && globalDone && globalResult) {
-            globalResult.killGame = true;
+        //should we kill the game?
+        if (globalResult && globalResult.events && globalResult.events.gameover) {
 
             this.processPlayerRatings(globalResult.players);
 
 
             // this.makeGame(true);
             //before = {};
-            globalDone = false;
+            // globalDone = false;
             this.gameHistory = [];
             globalGame = null;
         }
+        //game still live, process timer and history
         else {
             if (globalResult) {
                 this.processTimelimit(globalResult.timer);

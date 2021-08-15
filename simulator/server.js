@@ -101,10 +101,11 @@ io.on('connection', (socket) => {
                 return;
 
             if (action.type == 'join') {
-                if (lastGame && lastGame.players && lastGame.players[action.user.id]) {
-                    socket.emit('game', lastGame);
-                    return;
-                }
+                socket.emit('game', lastGame);
+                // if (lastGame && lastGame.players && lastGame.players[action.user.id]) {
+                //     socket.emit('game', lastGame);
+                //     return;
+                // }
             }
             else if (action.type == 'leave') {
                 socket.disconnect();
@@ -151,7 +152,7 @@ function createWorker(index) {
         let game = getLastGame() || {};
         game = delta.merge(game, dlta);
         console.log("Delta: ", dlta);
-        console.log("Outgoing Game: ", game);
+        console.log("Updated Game: ", game);
 
         //remove private variables and send individually to palyers
         let copy = JSON.parse(JSON.stringify(dlta));
@@ -184,7 +185,8 @@ function createWorker(index) {
 
         gameHistory.push(game);
 
-        if (game.killGame) {
+        if (game.events && game.events.gameover) {
+            gameDeadline = 0;
             setTimeout(() => {
                 for (var id in clients) {
                     clients[id].disconnect();

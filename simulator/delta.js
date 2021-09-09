@@ -167,7 +167,7 @@ function test2() {
     console.log(hiddenOnly);
     console.log(defaultGame);
 }
-test2();
+// test2();
 
 function test() {
     let defaultGame = {

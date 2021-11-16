@@ -10,6 +10,53 @@ let type = process.argv[process.argv.length - 2];
 let apikey = process.argv[process.argv.length - 1];
 
 
+async function deployAll() {
+    let url = 'http://localhost:8080/api/v1/dev/update/game/bundle/';
+
+    console.log("Current Working Directory: ", process.cwd())
+    let filepath = path.resolve(process.cwd() + '/builds/client/client.bundle.js');
+    var clientFile = fs.createReadStream(filepath);
+
+    var form_data = new FormData();
+    form_data.append('apikey', apikey || '');
+    form_data.append("client", clientFile);
+
+    try {
+        let filepath = path.resolve(process.cwd() + '/game-server/database.json');
+        if (!fs.existsSync(filepath)) {
+            //file exists
+            console.warn('No database exists. It is optional, but this is a reminder just incase you forgot it.  Format should be `database.json`')
+        }
+        else {
+            var dbFile = fs.createReadStream(filepath);
+            form_data.append("db", dbFile);
+        }
+    } catch (err) {
+        console.error(err)
+    }
+
+    let serverFilePath = path.resolve(process.cwd() + '/builds/server/server.bundle.js');
+    var serverFile = fs.createReadStream(serverFilePath);
+    form_data.append("server", serverFile);
+
+    let headers = form_data.getHeaders();
+    headers['X-GAME-API-KEY'] = apikey || '';
+    console.log(headers);
+    let config = {
+        url,
+        method: 'post',
+        headers,
+        data: form_data
+    }
+    try {
+        let response = await axios.request(config);
+        console.log(response.data);
+    }
+    catch (e) {
+        console.error(e);
+    }
+
+}
 
 async function deployClient() {
 
@@ -125,4 +172,8 @@ async function deploy(type) {
 
 }
 
-deploy(type);
+async function run() {
+    await deployAll();
+}
+run();
+// deploy(type);

@@ -219,8 +219,8 @@ function createWorker(index) {
 }
 
 
-app.get('/client.bundle.js', function (req, res) {
-    res.sendFile(path.join(process.cwd(), './builds/client/client.bundle.js'));
+app.get('/client.bundle.dev.js', function (req, res) {
+    res.sendFile(path.join(process.cwd(), './builds/client/client.bundle.dev.js'));
 });
 
 app.get('/', function (req, res) {

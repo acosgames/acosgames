@@ -64,6 +64,9 @@ class FSGWorker {
         this.gameHistory = [];
         this.bundlePath = path.join(workerData.dir, './builds/server/server.bundle.js');
         this.dbPath = path.join(workerData.dir, './game-server/database.json');
+        if( !fs.existsSync(this.dbPath))
+            this.dbPath = null;
+
         this.gameScript = null;
         this.start();
     }
@@ -278,11 +281,13 @@ class FSGWorker {
 
 
     async reloadServerDatabase(filepath) {
+        filepath = filepath || this.dbPath;
+        if(!filepath)
+            return this.gameScript;
+                
         profiler.Start('Reload Database');
         {
-            filepath = filepath || this.dbPath;
             var data = await fs.promises.readFile(filepath, 'utf8');
-
             globalDatabase = Object.freeze(JSON.parse(data));
         }
         profiler.End('Reload Database');
@@ -321,11 +326,14 @@ class FSGWorker {
                 console.log(`${this.bundlePath} file Changed`, watchPath);
             });
 
-            let watchPath2 = this.dbPath.substr(0, this.dbPath.lastIndexOf(path.sep));
-            chokidar.watch(watchPath2).on('change', (path) => {
-                this.reloadServerDatabase();
-                console.log(`${this.dbPath} file Changed`, watchPath2);
-            });
+            if(this.dbPath) {
+                let watchPath2 = this.dbPath.substr(0, this.dbPath.lastIndexOf(path.sep));
+                chokidar.watch(watchPath2).on('change', (path) => {
+                    this.reloadServerDatabase();
+                    console.log(`${this.dbPath} file Changed`, watchPath2);
+                });
+            }
+            
 
             parentPort.on('message', this.onAction.bind(this));
             parentPort.postMessage({ status: "READY" });

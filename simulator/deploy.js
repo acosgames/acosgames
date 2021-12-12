@@ -41,7 +41,7 @@ async function deployAll() {
 
     let headers = form_data.getHeaders();
     headers['X-GAME-API-KEY'] = apikey || '';
-    console.log(headers);
+    // console.log(headers);
     let config = {
         url,
         method: 'post',

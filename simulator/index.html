@@ -3,9 +3,10 @@
     <head>
         <meta charset="utf-8" />
 
-        <title>The HTML5 Herald</title>
-        <meta name="description" content="The HTML5 Herald" />
-        <meta name="author" content="SitePoint" />
+        <title>SIMULATOR - FiveSecondGames</title>
+        <meta name="description" content="FiveSecondGames" />
+        <meta name="author" content="FSG" />
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://localhost:* https://*.fivesecondgames.com https://*.socket.io https://*.jsdelivr.net 'unsafe-inline';" />
 
         <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
@@ -37,12 +38,15 @@
                 color:white;
             }
 
+
             #wrapper {
                 display: flex;
                 flex-direction: column;
+                align-items: center;
                 width: 100%;
                 height: 100%;
                 position:relative;
+                /* overflow-x:hidden; */
             }
 
             #wrapper .sidebar {
@@ -53,12 +57,10 @@
             #wrapper #maincontent {
                 /* flex-basis: 0;
                 flex-grow: 999; */
-                align-self:flex-start;
+                
             }
 
-            #wrapper,
-            #game-sandbox {
-                
+            #wrapper {
                 border: 0;
                 border-spacing: 0;
                 
@@ -75,8 +77,9 @@
                 /* max-width:1000px; */
                 /* aspect-ratio: 16 / 9; */
                 /* max-width: 1000px; */
-                background-color: red;
-                resize: both;
+                /* background-color: red; */
+                /* resize: both; */
+                
             }
             #placeholder {
                 width:100%;
@@ -86,12 +89,13 @@
                 background-color:transparent;
             }
             #game-sandbox {
-                width: 1920px;
-                height: 1080px;
-                object-fit: fill;
+                width: 100%;
+                height: 100%;
                 position:absolute;
-                
+                backface-visibility: hidden;
                 background-color:white;
+                /* border: 4px solid rgb(11, 14, 19); */
+                border-radius:8px;
             }
         </style>
         <div id="wrapper">
@@ -114,11 +118,15 @@
                     <button id="leavegame" type="button" class="btn btn-primary">Leave Game</button>
                     <button id="reload" type="button" class="btn btn-primary">Reload</button>
                     <button id="maximize" type="button" class="btn btn-primary">Maximize Window</button>
+                    
+                        <input type="checkbox" class="form-check-input" id="scaled">
+                        <label class="form-check-label" for="exampleCheck1">Scaled?</label>
+                    
                 </form>
             </div>
             <div id="maincontent">
-                <div id="placeholder"></div>
-                <iframe id="game-sandbox" sandbox="allow-scripts" src="/iframe"></iframe>
+                <div id="placeholder"><iframe id="game-sandbox" sandbox="allow-scripts" src="/iframe"></iframe></div>
+                
             </div>
         </div>
 
@@ -135,11 +143,11 @@
                 let username = event.target.value;
                 updateUser(username);
             };
-            iframe.style.display = 'none';
 
+            iframe.style.display = 'none';
+            var scaled =false;
             var CONTENT_WIDTH = 1920;
             var CONTENT_HEIGHT = 1080;
-            
             var timestamp = 0;
             var THROTTLE = 0;
             
@@ -186,72 +194,55 @@
                     offsetLeft;
                 
                 if ( now - timestamp < THROTTLE  ) {
-                return onResize;
+                    return onResize;
                 }
                 
                 timestamp = now;
 
                 let isFullscreen = checkFullScreen();
-
-                let windowHeight = isFullscreen ? window.screen.height : window.innerHeight;
-                let windowWidth = isFullscreen ? window.screen.width : window.innerWidth;
-
+                let windowHeight = isFullscreen ? window.screen.height : document.documentElement.clientHeight;
+                let windowWidth = isFullscreen ? window.screen.width : document.documentElement.clientWidth;
                 var bgWidth = parseInt(getComputedStyle(maincontent).width, 10);
                 var bgHeight = parseInt(getComputedStyle(maincontent).height, 10);
                 var iframeWidth =  parseInt(getComputedStyle(iframe).width, 10);
-                    let ratio = windowHeight < windowWidth ? (windowHeight / bgHeight) : (windowWidth /bgWidth );
-                    let maxWidth = Math.round(bgWidth * ratio);
-                    // IFRAME_HEIGHT = IFRAME_HEIGHT * ratio;
-                    maincontent.style.maxWidth = maxWidth + 'px';
-                    // scale = scale * ratio;
-                    bgWidth = parseInt(getComputedStyle(maincontent).width, 10);
-                // if( IFRAME_HEIGHT >= (windowHeight) && IFRAME_WIDTH <= windowWidth ) {
-                //     let ratio = (windowHeight / IFRAME_HEIGHT);
-                //     IFRAME_WIDTH = IFRAME_WIDTH * ratio;
-                //     IFRAME_HEIGHT = IFRAME_HEIGHT * ratio;
-                //     maincontent.style.width = Math.floor(IFRAME_WIDTH) + 'px';
-                //     scale = scale * ratio;
-                // }
-                // else {
-                //     maincontent.style.width = '100%';
-                // }
-               // if( IFRAME_HEIGHT >= (windowHeight)) {
-                    
-                //}
-                //else {
-                    //maincontent.style.width = '100%';
-                //}
+                let ratio = 1;
 
-                // var IFRAME_WIDTH = parseInt(getComputedStyle(maincontent).width, 10);
+                if( bgHeight >= windowHeight ) {
+                    ratio = (windowHeight/bgHeight  );
+                }
+                else if( bgWidth >= windowWidth ) {
+                    ratio =  (windowWidth/bgWidth  );
+                }
+                else {
+                    ratio = (windowWidth/bgWidth  );
+                    if( bgHeight*ratio >= windowHeight ) {
+                        ratio = (windowHeight/bgHeight  );
+                    }
+                }
+                bgWidth *= ratio;
+                let steps = Math.floor(bgWidth / 16);
+                bgWidth = Math.round(steps * 16);
+                bgHeight = Math.round(steps * 9);
+            
+                maincontent.style.width = bgWidth + 'px';
+                maincontent.style.height = bgHeight + 'px';
                 
-                // scale = ((IFRAME_WIDTH / CONTENT_WIDTH));
                 scale = ((bgWidth / CONTENT_WIDTH));
-                // scale = scale * ratio;
-                // width = scale * IFRAME_WIDTH;
-                // height = scale * IFRAME_HEIGHT;
-                
-                if( scale >= 1 ) {
-                //     scale = 1;
-                //     offsetLeft = 0;
-                offsetLeft = ratio*scale*7.55;
-                }
-                else  {
-                    offsetLeft = ((100 / scale) - 100) / 2;//((IFRAME_WIDTH - CONTENT_WIDTH ) * 0.25) + (IFRAME_WIDTH * 0.25);
-                //if(offsetLeft > 0 )
-                    offsetLeft = '-' + offsetLeft;
-                }
+           
+                offsetLeft = 0;
                    
-                //(IFRAME_WIDTH * 0.5 * scale) + (CONTENT_WIDTH * 0.5 * scale);
-                //offsetLeft = (scale*100)*1.65;
-
-                iframe.setAttribute('style', transformStr({
+                if( scaled ) {
+                    iframe.setAttribute('style', transformStr({
                     scale: scale,
-                    translateX:  offsetLeft + '%',
-                    translateY:  offsetLeft + '%',
-                    translateZ: '1px'
-                }) + ';');
+                    translateX:  offsetLeft + 'px',
+                    translateY:  offsetLeft + 'px',
+                    translateZ: '0'
+                }) + '; transform-origin: left top; width:1920px; height:1080px;');
+                } else {
+                    iframe.setAttribute('style', 'width:100%; height:100%;')
+                }
             }
-            onResize();
+            
             window.addEventListener('resize', onResize, false);
 
             function connect(username, onjoin) {
@@ -395,6 +386,26 @@
                 return window.sessionStorage.getItem('name') || '';
             }
 
+            let checkboxScaled = document.getElementById('scaled');
+            checkboxScaled.onclick= (event) => {
+                scaled = event.target.checked;
+                if( scaled ) {
+                    iframe.style.width = '1920px';
+                    iframe.style.height = '1080px';
+                }
+                else {
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                }
+                
+                localStorage.setItem('scaled', scaled);
+                onResize();
+            }
+
+            scaled = localStorage.getItem('scaled') || false;
+            checkboxScaled.checked = scaled;
+            onResize();
+            
             document.getElementById('maximize').onclick = (event) => {
                 openFullscreen(maincontent);
             }

@@ -1,20 +1,22 @@
 
 const axios = require('axios');
 const path = require('path');
-// const yargs = require('yargs/yargs')
-// const { hideBin } = require('yargs/helpers')
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
 const fs = require('fs');
 var FormData = require('form-data');
-// const argv = yargs(hideBin(process.argv)).argv
+const argv = yargs(hideBin(process.argv)).argv
 
 // let type = process.argv[process.argv.length - 2];
-let apikey = process.argv[process.argv.length - 1];
+// let apikey = process.argv[process.argv.length - 1];
 
-// let isScaled = argv.scaled;
-// let apikey = argv.key;
+let isScaled = argv.scaled || false;
+let apikey = argv._[0];
 
 console.log(process.argv);
-// console.log(argv);
+console.log(argv);
+
+console.log("parsed: apikey=", apikey, ", isScaled=", isScaled);
 
 async function deployAll() {
     let url = 'http://localhost:8080/api/v1/dev/update/game/bundle/';
@@ -24,9 +26,11 @@ async function deployAll() {
     var clientFile = fs.createReadStream(filepath);
 
     var form_data = new FormData();
-    form_data.append('apikey', apikey || '');
+    // form_data.append('apikey', apikey || '');
     // form_data.append('scaled', isScaled);
     form_data.append("client", clientFile);
+
+    let hasDb = false;
 
     try {
         let filepath = path.resolve(process.cwd() + '/game-server/database.json');
@@ -37,6 +41,7 @@ async function deployAll() {
         else {
             var dbFile = fs.createReadStream(filepath);
             form_data.append("db", dbFile);
+            hasDb = true;
         }
     } catch (err) {
         console.error(err)
@@ -48,6 +53,8 @@ async function deployAll() {
 
     let headers = form_data.getHeaders();
     headers['X-GAME-API-KEY'] = apikey || '';
+    headers['X-GAME-SCALED'] = isScaled ? 'yes' : 'no';
+    headers['X-GAME-HASDB'] = hasDb ? 'yes' : 'no';
     // console.log(headers);
     let config = {
         url,

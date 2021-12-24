@@ -44,7 +44,7 @@
                 flex-direction: column;
                 align-items: center;
                 width: 100%;
-                height: 100%;
+                /* height: 100%; */
                 position:relative;
                 /* overflow-x:hidden; */
             }
@@ -69,7 +69,7 @@
             #maincontent::after {
                 content: '';
                 display:block;
-                padding-bottom:56.25%;
+                /* padding-bottom:56.25%; */
             }
             #maincontent {
                 position:relative;
@@ -79,14 +79,20 @@
                 /* max-width: 1000px; */
                 /* background-color: red; */
                 /* resize: both; */
+                background-color:red;
                 
             }
             #placeholder {
-                width:100%;
+                /* width:100%;
                 height:100%;
                 object-fit:fill;
                 position:absolute;
-                background-color:transparent;
+                background-color:transparent; */
+
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                            
             }
             #game-sandbox {
                 width: 100%;
@@ -111,22 +117,67 @@
                             aria-describedby="userHelp"
                             placeholder="Enter username"
                         />
-                        <small id="userHelp" class="form-text text-muted">Enter a username to join the game</small>
+                        <!-- <small id="userHelp" class="form-text text-muted">Enter a username to join the game</small> -->
                     </div>
 
                     <button id="joingame" type="button" class="btn btn-primary">Join Game</button>
                     <button id="leavegame" type="button" class="btn btn-primary">Leave Game</button>
                     <button id="reload" type="button" class="btn btn-primary">Reload</button>
                     <button id="maximize" type="button" class="btn btn-primary">Maximize Window</button>
-                    
-                        <input type="checkbox" class="form-check-input" id="scaled">
-                        <label class="form-check-label" for="exampleCheck1">Scaled?</label>
-                    
+                    <br />
+                    <div style="display:flex; flex-direction: row; justify-items: center; align-items:center; flex-wrap: wrap; ">  
+                        <div >
+                            <!-- <input style="margin-left:2rem; margin-right:0.5rem; " type="checkbox" class="form-check-input" id="scaled"> -->
+                            <select id="screenType">
+                                <option value="1">Full Screen</option>
+                                <option value="2">Fixed Resolution</option>
+                                <option value="3">Scaled Resolution</option>
+                            </select>
+                            <!-- <label class="form-check-label" for="exampleCheck1" style="font-size:0.8rem;">Scale Viewport?</label> -->
+                        </div>
+                        <div id="viewportResolution">
+                            <label style="display:inline-block; padding-right:0.5rem;font-size:0.8rem;" for="resolution">Resolution</label>
+                            <input
+                                type="text"
+                                class=""
+                                id="resolution"
+                                aria-describedby=""
+                                placeholder="16:9"
+                                style="width:60px"
+                            />
+                        </div>
+                        <div id="viewportSize">
+                        <label style="padding-left:1rem; padding-right:0.5rem; display:inline-block; font-size:0.8rem;" for="maxwidth">Width (px)</label>
+                        <input
+                            type="text"
+                            class=""
+                            id="maxwidth"
+                            aria-describedby=""
+                            placeholder="1920"
+                            style="width:50px"
+                        />
+                        <label style="padding-left:1rem; padding-right:0.5rem; display:inline-block; font-size:0.8rem;" for="maxheight">Height (px)</label>
+                        <input
+                            type="text"
+                            class=""
+                            id="maxheight"
+                            disabled
+                            aria-describedby=""
+                            value="1080"
+                            style="width:50px"
+                        />
+                    </div>
+                        
+                    </div>
                 </form>
             </div>
-            <div id="maincontent">
-                <div id="placeholder"><iframe id="game-sandbox" sandbox="allow-scripts" src="/iframe"></iframe></div>
-                
+            <div id="placeholder" style="justify-content:center;align-content:center;">
+                <div id="maincontent">
+                    <!-- <div id="placeholder">
+                        
+                    </div> -->
+                    <iframe id="game-sandbox" sandbox="allow-scripts" src="/iframe"></iframe>
+                </div>
             </div>
         </div>
 
@@ -137,17 +188,34 @@
             let maincontent = document.getElementById('maincontent');
             let placeholder = document.getElementById('placeholder');
             let iframe = document.getElementById('game-sandbox');
+
             let nameField = document.getElementById('username');
+            let checkboxScaled = document.getElementById('scaled');
+            let inputResolution = document.getElementById('resolution');
+            let inputWidth = document.getElementById('maxwidth');
+            let inputHeight = document.getElementById('maxheight');
+            let selectScreenType = document.getElementById('screenType');
+            let screenType = 1;
+
+            let viewportSize = document.getElementById('viewportSize');
+            let viewportResolution = document.getElementById('viewportResolution');
+
             nameField.value = getUsername();
             nameField.onkeyup = (event) => {
                 let username = event.target.value;
                 updateUser(username);
             };
 
+            var resoWidth = 16;
+            var resoHeight = 9;
+            var resoScale = resoWidth > resoHeight ? (resoWidth / resoHeight) : (resoHeight / resoWidth);
+            var resMaxWidth = 1920;
+            var resMaxHeight = 1080;
+
             iframe.style.display = 'none';
             var scaled =false;
-            var CONTENT_WIDTH = 1920;
-            var CONTENT_HEIGHT = 1080;
+            // var CONTENT_WIDTH = 1920;
+            // var CONTENT_HEIGHT = 1080;
             var timestamp = 0;
             var THROTTLE = 0;
             
@@ -159,7 +227,7 @@
                 } else if (elem.msRequestFullscreen) { /* IE11 */
                     elem.msRequestFullscreen();
                 }
-                maincontent.style.width = '100%';
+                // maincontent.style.width = '100%';
                 onResize();
             }
 
@@ -207,44 +275,200 @@
                 var iframeWidth =  parseInt(getComputedStyle(iframe).width, 10);
                 let ratio = 1;
 
-                if( bgHeight >= windowHeight ) {
-                    ratio = (windowHeight/bgHeight  );
-                }
-                else if( bgWidth >= windowWidth ) {
-                    ratio =  (windowWidth/bgWidth  );
+                let wratio = (windowWidth / bgWidth);
+                let hratio = (windowHeight / bgHeight );
+
+                let wsteps = (windowWidth / resoWidth);
+                let hsteps = (windowHeight / resoHeight);
+                let steps = 0;
+
+                 if( wsteps < hsteps ) {
+                    steps = wsteps
                 }
                 else {
-                    ratio = (windowWidth/bgWidth  );
-                    if( bgHeight*ratio >= windowHeight ) {
-                        ratio = (windowHeight/bgHeight  );
-                    }
-                }
-                bgWidth *= ratio;
-                let steps = Math.floor(bgWidth / 16);
-                bgWidth = Math.round(steps * 16);
-                bgHeight = Math.round(steps * 9);
+                    steps = hsteps
+                }   
+
+                bgWidth = (steps * resoWidth);
+                bgHeight = (steps * resoHeight);
             
-                maincontent.style.width = bgWidth + 'px';
-                maincontent.style.height = bgHeight + 'px';
                 
-                scale = ((bgWidth / CONTENT_WIDTH));
            
-                offsetLeft = 0;
                    
-                if( scaled ) {
+                if( screenType == '3' ) {
+                    maincontent.style.width = bgWidth + 'px';
+                    maincontent.style.height = bgHeight + 'px';
+                    scale = ((bgWidth / resMaxWidth));
+
                     iframe.setAttribute('style', transformStr({
-                    scale: scale,
-                    translateX:  offsetLeft + 'px',
-                    translateY:  offsetLeft + 'px',
-                    translateZ: '0'
-                }) + '; transform-origin: left top; width:1920px; height:1080px;');
-                } else {
+                        scale: scale,
+                        translateZ: '0'
+                    }) + `; transform-origin: left top; width:${resMaxWidth}px; height:${resMaxHeight}px;`);
+                } 
+                else if( screenType == '2' ) {
+                    maincontent.style.width = bgWidth + 'px';
+                    maincontent.style.height = bgHeight + 'px';
+                    iframe.setAttribute('style', 'width:100%; height:100%;')
+                }
+                else if(screenType =='1' ) {
+                    maincontent.style.width = windowWidth + 'px';
+                    maincontent.style.height = windowHeight + 'px';
                     iframe.setAttribute('style', 'width:100%; height:100%;')
                 }
             }
             
+            function updateFrameSize(newWidth, newHeight) {
+
+                resoWidth = newWidth || resoWidth;
+                resoHeight = newHeight || resoHeight;
+
+                let steps = resMaxWidth / resoWidth;
+                resMaxHeight = resoHeight * steps;
+                inputHeight.value = resMaxHeight;
+
+                resoScale =  resoWidth > resoHeight ? (resoWidth / resoHeight) : (resoHeight / resoWidth);
+
+                if( screenType == '1' ) {
+                    viewportSize.style.display = 'none';
+                    viewportResolution.style.display = 'none';
+                }
+                else if(screenType == '2' ) {
+                    viewportSize.style.display = 'none';
+                    viewportResolution.style.display = 'block';
+                }
+                else {
+                    viewportSize.style.display = 'block';
+                    viewportResolution.style.display = 'block';
+                }
+
+                onResize();
+            }
+
             window.addEventListener('resize', onResize, false);
 
+            function updateUser(username) {
+                if (!username || username.length == 0) return;
+                window.sessionStorage.setItem('name', username);
+                // window.sessionStorage.setItem(username, stringHashCode(username));
+            }
+
+            function getUsername() {
+                return window.sessionStorage.getItem('name') || '';
+            }
+
+           
+            selectScreenType.onchange = (event) => {
+                console.log(event.target.value);
+                
+                screenType = event.target.value;
+                updateFrameSize();
+                localStorage.setItem('screenType', screenType);
+            }
+
+            
+
+            inputResolution.oninput = (event) => {
+                let val = event.target.value;
+                let parts = val.split(':');
+                if( !parts || parts.length != 2 ) {
+                    return;
+                }
+
+                resoWidth = 1*parts[0];
+                resoHeight = 1*parts[1];
+                if( !Number.isInteger(resoWidth) || !Number.isInteger(resoHeight))
+                    return;
+
+                if( resoWidth <= 0 || resoHeight <= 0 )
+                    return;
+
+                localStorage.setItem('resoWidth', resoWidth);
+                localStorage.setItem('resoHeight', resoHeight);
+                
+                updateFrameSize(resoWidth, resoHeight);
+            }
+
+            inputWidth.onchange = (event) => {
+                let val = event.target.value;
+                
+                val = 1*val;
+                if( !Number.isInteger(val))
+                    return;
+
+                
+                    if( val <= 0  )
+                        return;
+
+                resMaxWidth = val;
+
+                let steps = resMaxWidth / resoWidth;
+                resMaxHeight = resoHeight * steps;
+
+                localStorage.setItem('resMaxWidth', resMaxWidth);
+                localStorage.setItem('resMaxHeight', resMaxHeight);
+
+                updateFrameSize(resoWidth,resoHeight);
+            }
+
+           
+          
+            screenType =  localStorage.getItem('screenType') || "1";
+            resoWidth = localStorage.getItem('resoWidth') || 16;
+            resoHeight = localStorage.getItem('resoHeight') || 9;
+            resMaxWidth = localStorage.getItem('resMaxWidth') || 1920;
+            resMaxHeight = localStorage.getItem('resMaxHeight') || 1080;
+            inputResolution.value = resoWidth + ':' + resoHeight;
+            inputWidth.value = resMaxWidth;
+            inputHeight.value = resMaxHeight;
+            selectScreenType.value = screenType;
+            updateFrameSize();
+            
+            document.getElementById('maximize').onclick = (event) => {
+                openFullscreen(placeholder);
+            }
+            
+            document.getElementById('leavegame').onclick = (event) => {
+                speechSynthesis.cancel();
+                if (socket) {
+                    socket.emit('action', { type: 'leave', payload: {} });
+                }
+                iframe.style.display = 'none';
+                note.textContent = 'Status: offline';
+            };
+
+            document.getElementById('joingame').onclick = (event) => {
+                let displayname = getUsername();
+                if (displayname.trim().length == 0) {
+                    alert('Please enter a username.');
+                    return;
+                }
+
+                iframe.src = '/iframe';
+
+                iframe.onload = function () {
+                    console.log('game-sandbox is loaded');
+                    setTimeout(() => {
+                        connect(displayname, () => {
+                            if (socket) socket.emit('action', { type: 'join', payload: {} });
+                        });
+                    }, 200);
+                };
+            };
+
+            document.getElementById('reload').onclick = (event) => {
+                if (socket) socket.emit('reload', 'now!');
+            };
+
+
+
+
+
+
+
+
+            //--------------------------------------------------
+            //WebSockets Connection / Management 
+            //--------------------------------------------------
             function connect(username, onjoin) {
                 note.textContent = 'Status: connecting...';
 
@@ -376,71 +600,7 @@
                 });
             }
 
-            function updateUser(username) {
-                if (!username || username.length == 0) return;
-                window.sessionStorage.setItem('name', username);
-                // window.sessionStorage.setItem(username, stringHashCode(username));
-            }
-
-            function getUsername() {
-                return window.sessionStorage.getItem('name') || '';
-            }
-
-            let checkboxScaled = document.getElementById('scaled');
-            checkboxScaled.onclick= (event) => {
-                scaled = event.target.checked;
-                if( scaled ) {
-                    iframe.style.width = '1920px';
-                    iframe.style.height = '1080px';
-                }
-                else {
-                    iframe.style.width = '100%';
-                    iframe.style.height = '100%';
-                }
-                
-                localStorage.setItem('scaled', scaled);
-                onResize();
-            }
-
-            scaled = localStorage.getItem('scaled') || false;
-            checkboxScaled.checked = scaled;
-            onResize();
             
-            document.getElementById('maximize').onclick = (event) => {
-                openFullscreen(maincontent);
-            }
-            
-            document.getElementById('leavegame').onclick = (event) => {
-                speechSynthesis.cancel();
-                if (socket) {
-                    socket.emit('action', { type: 'leave', payload: {} });
-                }
-                iframe.style.display = 'none';
-                note.textContent = 'Status: offline';
-            };
-
-            document.getElementById('joingame').onclick = (event) => {
-                let displayname = getUsername();
-                if (displayname.trim().length == 0) {
-                    alert('Please enter a username.');
-                    return;
-                }
-
-                iframe.src = '/iframe';
-
-                iframe.onload = function () {
-                    console.log('game-sandbox is loaded');
-                    setTimeout(() => {
-                        connect(displayname, () => {
-                            if (socket) socket.emit('action', { type: 'join', payload: {} });
-                        });
-                    }, 200);
-                };
-            };
-
-            document.getElementById('reload').onclick = (event) => {
-                if (socket) socket.emit('reload', 'now!');
-            };
 
             function attachToFrame() {
                 window.addEventListener('message', recvFrameMessage, false);

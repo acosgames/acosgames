@@ -79,7 +79,7 @@
                 /* max-width: 1000px; */
                 /* background-color: red; */
                 /* resize: both; */
-                background-color:red;
+                /* background-color:red; */
                 
             }
             #placeholder {
@@ -122,7 +122,8 @@
 
                     <button id="joingame" type="button" class="btn btn-primary">Join Game</button>
                     <button id="leavegame" type="button" class="btn btn-primary">Leave Game</button>
-                    <button id="reload" type="button" class="btn btn-primary">Reload</button>
+                    <button id="startgame" type="button" class="btn btn-primary">Start Game</button>
+                    <button id="reload" type="button" class="btn btn-primary">Reload Game</button>
                     <button id="maximize" type="button" class="btn btn-primary">Maximize Window</button>
                     <br />
                     <div style="display:flex; flex-direction: row; justify-items: center; align-items:center; flex-wrap: wrap; ">  
@@ -428,7 +429,7 @@
             }
             
             document.getElementById('leavegame').onclick = (event) => {
-                speechSynthesis.cancel();
+                // speechSynthesis.cancel();
                 if (socket) {
                     socket.emit('action', { type: 'leave', payload: {} });
                 }
@@ -436,12 +437,22 @@
                 note.textContent = 'Status: offline';
             };
 
+            document.getElementById('startgame').onclick = (event) => {
+                
+                if (socket) {
+                    socket.emit('action', { type: 'gamestart', payload: null });
+                }
+            };
+
+
             document.getElementById('joingame').onclick = (event) => {
                 let displayname = getUsername();
                 if (displayname.trim().length == 0) {
                     alert('Please enter a username.');
                     return;
                 }
+
+                iframe.src = null;
 
                 iframe.src = '/iframe';
 
@@ -557,8 +568,27 @@
                     console.log('Real Time: ', realTime);
                 });
 
+                socket.on('join', (message) => {
+                    console.log('JOINED: ', message);
+                    if (!message) return;
+                    lastMessage = {};
+                    message = merge(lastMessage || {}, message);
+
+                    let localPlayer = message.players[socket.user.id];
+                    if (localPlayer) note.textContent = 'Status: ingame';
+                    // console.log('Game: ', message);
+                    message.local = Object.assign({}, socket.user, localPlayer);
+                    sendFrameMessage(message);
+                    // console.timeEnd('ActionLoop');
+
+                    if (message && message.events && message.events.gameover) {
+                        lastMessage = null;
+                    } else {
+                        lastMessage = message;
+                    }
+                })
                 socket.on('game', (message) => {
-                    console.log('Delta: ', message);
+                    console.log('GAME UPDATE: ', message);
                     if (!message) return;
                     message = merge(lastMessage || {}, message);
 

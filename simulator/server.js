@@ -101,7 +101,7 @@ io.on('connection', (socket) => {
                 return;
 
             if (action.type == 'join') {
-                socket.emit('game', lastGame);
+                socket.emit('join', lastGame || {});
                 // if (lastGame && lastGame.players && lastGame.players[action.user.id]) {
                 //     socket.emit('game', lastGame);
                 //     return;
@@ -113,9 +113,15 @@ io.on('connection', (socket) => {
             else if (action.type == 'skip') {
                 return;
             }
+            else if (action.type == 'gamestart') {
+
+            }
             else {
                 if (lastGame) {
-                    if (lastGame.next.id != '*' && lastGame.next.id != action.user.id)
+                    if (!lastGame.next || (lastGame.next.id != '*' && lastGame.next.id != action.user.id))
+                        return;
+
+                    if (!lastGame.state || !lastGame.state.gamestart)
                         return;
                 }
             }
@@ -187,6 +193,7 @@ function createWorker(index) {
 
         if (game.events && game.events.gameover) {
             gameDeadline = 0;
+            lastGame = {};
             setTimeout(() => {
                 for (var id in clients) {
                     clients[id].disconnect();

@@ -12,9 +12,9 @@ var globalRatings = {};
 
 var globalDatabase = null;
 
-var globalGame = null;
+var globalGame = {};
 var globalActions = [];
-var globalResult = null;
+var globalResult = {};
 var globalDone = null;
 
 var globals = {
@@ -64,7 +64,7 @@ class FSGWorker {
         this.gameHistory = [];
         this.bundlePath = path.join(workerData.dir, './builds/server/server.bundle.js');
         this.dbPath = path.join(workerData.dir, './game-server/database.json');
-        if( !fs.existsSync(this.dbPath))
+        if (!fs.existsSync(this.dbPath))
             this.dbPath = null;
 
         this.gameScript = null;
@@ -142,99 +142,117 @@ class FSGWorker {
     }
 
     async onAction(actions) {
-        profiler.Start("[WorkerOnAction]")
-        if (!Array.isArray(actions)) {
-            console.log("Not an action: ", actions);
-            return;
-        }
+        try {
 
-        let before = {};
-        // console.log("(1)Executing Action: ", msg);
 
-        if (!globalGame)
-            this.makeGame();
-        else
-            before = cloneObj(globalGame);
-
-        let timeleft = this.calculateTimeleft(globalGame);
-        if (globalGame.timer) {
-            for (var i = 0; i < actions.length; i++) {
-                actions[i].seq = globalGame.timer.seq || 0;
-                actions[i].timeleft = timeleft;
+            profiler.Start("[WorkerOnAction]")
+            if (!Array.isArray(actions)) {
+                console.log("Not an action: ", actions);
+                return;
             }
 
-        }
+            let before = {};
+            // console.log("(1)Executing Action: ", msg);
 
-
-        if (actions.length == 1) {
-            if (actions[0].type == 'join') {
-                let userid = actions[0].user.id;
-                let username = actions[0].user.name;
-
-                if (!globalRatings[userid]) {
-                    globalRatings[userid] = {
-                        rating: 1200,
-                        mu: 12.0,
-                        sigma: 1.5
-                    }
-                }
-
-                if (!userid) {
-                    console.error("Invalid player: " + userid);
-                    return;
-                }
-
-                if (!(userid in globalGame.players)) {
-                    globalGame.players[userid] = {
-                        name: username
-                    }
-                }
-                else {
-                    globalGame.players[userid].name = username;
-                }
-            }
-            else if (actions[0].type == 'reset') {
+            if (!globalGame)
                 this.makeGame();
-                before = {};
+            else
+                before = cloneObj(globalGame);
+
+            let timeleft = this.calculateTimeleft(globalGame);
+            if (globalGame.timer) {
+                for (var i = 0; i < actions.length; i++) {
+                    actions[i].seq = globalGame.timer.seq || 0;
+                    actions[i].timeleft = timeleft;
+                }
+
             }
-        }
-
-        // console.log("(2)Executing Action: ", msg);
-
-        globalGame = cloneObj(globalGame);
-        if (!Array.isArray(actions)) {
-            actions = [actions];
-        }
-        globalActions = cloneObj(actions);
-        await this.run();
-
-        //should we kill the game?
-        if (globalResult && globalResult.events && globalResult.events.gameover) {
-
-            this.processPlayerRatings(globalResult.players);
 
 
-            // this.makeGame(true);
-            //before = {};
-            // globalDone = false;
-            this.gameHistory = [];
-            globalGame = null;
-        }
-        //game still live, process timer and history
-        else {
-            if (globalResult) {
-                this.processTimelimit(globalResult.timer);
-                this.storeGame(globalResult);
+            if (actions.length == 1) {
+                if (actions[0].type == 'join') {
+                    let userid = actions[0].user.id;
+                    let username = actions[0].user.name;
+
+                    if (!globalRatings[userid]) {
+                        globalRatings[userid] = {
+                            rating: 1200,
+                            mu: 12.0,
+                            sigma: 1.5
+                        }
+                    }
+
+                    if (!userid) {
+                        console.error("Invalid player: " + userid);
+                        return;
+                    }
+
+                    if (!globalGame.players)
+                        globalGame.players = {};
+
+                    if (!(userid in globalGame.players)) {
+                        globalGame.players[userid] = {
+                            name: username
+                        }
+                    }
+                    else {
+                        globalGame.players[userid].name = username;
+                    }
+                }
+                else if (actions[0].type == 'reset') {
+                    this.makeGame();
+                    before = {};
+                }
+                else if (actions[0].type == 'gamestart') {
+                    this.makeGame();
+                }
             }
+
+            // console.log("(2)Executing Action: ", msg);
+
+            globalGame = cloneObj(globalGame);
+            if (!Array.isArray(actions)) {
+                actions = [actions];
+            }
+            globalActions = cloneObj(actions);
+            await this.run();
+
+            //should we kill the game?
+            if (globalResult && globalResult.events && globalResult.events.gameover) {
+
+                this.processPlayerRatings(globalResult.players);
+
+
+                // this.makeGame(true);
+                //before = {};
+                // globalDone = false;
+                this.gameHistory = [];
+                globalGame = {};
+            }
+            //game still live, process timer and history
+            else {
+                if (globalResult) {
+
+                    if (actions[0].type == 'gamestart') {
+                        globalResult.state.gamestart = 1;
+                    }
+
+                    this.processTimelimit(globalResult.timer);
+                    this.storeGame(globalResult);
+                }
+            }
+
+            let diff = delta.delta(before, globalResult, {});
+
+            profiler.End("[WorkerOnAction]")
+            var test = 1;
+            test = test * test;
+            parentPort.postMessage(diff);
+            globalResult = {};
         }
-
-        let diff = delta.delta(before, globalResult, {});
-
-        profiler.End("[WorkerOnAction]")
-        var test = 1;
-        test = test * test;
-        parentPort.postMessage(diff);
-        globalResult = null;
+        catch (e) {
+            console.error(e);
+        }
     }
 
     processPlayerRatings(players) {
@@ -282,9 +300,9 @@ class FSGWorker {
 
     async reloadServerDatabase(filepath) {
         filepath = filepath || this.dbPath;
-        if(!filepath)
+        if (!filepath)
             return this.gameScript;
-                
+
         profiler.Start('Reload Database');
         {
             var data = await fs.promises.readFile(filepath, 'utf8');
@@ -326,14 +344,14 @@ class FSGWorker {
                 console.log(`${this.bundlePath} file Changed`, watchPath);
             });
 
-            if(this.dbPath) {
+            if (this.dbPath) {
                 let watchPath2 = this.dbPath.substr(0, this.dbPath.lastIndexOf(path.sep));
                 chokidar.watch(watchPath2).on('change', (path) => {
                     this.reloadServerDatabase();
                     console.log(`${this.dbPath} file Changed`, watchPath2);
                 });
             }
-            
+
 
             parentPort.on('message', this.onAction.bind(this));
             parentPort.postMessage({ status: "READY" });

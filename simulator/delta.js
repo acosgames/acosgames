@@ -1,19 +1,24 @@
 
 class Delta {
     delta(from, to, result) {
+        try {
 
-        if (Array.isArray(from)) {
-            return this.arrDelta(from, to, []);
+
+            if (Array.isArray(from)) {
+                return this.arrDelta(from, to, []);
+            }
+
+            if (this.isObject(from)) {
+                return this.objDelta(from, to, {});
+            }
+
+            if (from != to) {
+                result = to;
+            }
         }
-
-        if (this.isObject(from)) {
-            return this.objDelta(from, to, {});
+        catch (e) {
+            console.error(e);
         }
-
-        if (from != to) {
-            result = to;
-        }
-
         return result;
     }
 
@@ -23,32 +28,40 @@ class Delta {
     objDelta(from, to, result) {
         result = result || {};
 
-        for (var key in to) {
+        try {
 
 
-            if (!(key in from)) {
-                result[key] = to[key];
-                continue;
+            for (var key in to) {
+
+
+                if (!(key in from)) {
+                    result[key] = to[key];
+                    continue;
+                }
+
+                let child = this.delta(from[key], to[key]);
+                if (typeof child !== 'undefined' && child != null &&
+                    ((typeof child === 'string') ||
+                        (typeof child === 'number') ||
+                        (typeof child === 'boolean') ||
+                        Object.keys(child).length > 0))
+                    result[key] = child;
+                // else
+                //     result[key] = to[key];
             }
 
-            let child = this.delta(from[key], to[key]);
-            if (typeof child !== 'undefined' &&
-                ((typeof child === 'string') ||
-                    (typeof child === 'number') ||
-                    (typeof child === 'boolean') ||
-                    Object.keys(child).length > 0))
-                result[key] = child;
-            // else
-            //     result[key] = to[key];
-        }
+            for (var key in from) {
+                if (!(key in to)) {
+                    result['$' + key] = 0;
+                }
 
-        for (var key in from) {
-            if (!(key in to)) {
-                result['$' + key] = 0;
             }
-
+            return result;
         }
-        return result;
+        catch (e) {
+            console.error(e);
+        }
+        return null;
     }
 
     arrDelta(from, to, result) {

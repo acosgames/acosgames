@@ -16,6 +16,7 @@ var globalGame = {};
 var globalActions = [];
 var globalResult = {};
 var globalDone = null;
+var globalIgnore = false;
 
 var globals = {
     log: (msg) => { console.log(msg) },
@@ -37,6 +38,9 @@ var globals = {
     },
     database: () => {
         return globalDatabase;
+    },
+    ignore: () => {
+        globalIgnore = true;
     }
 };
 
@@ -153,7 +157,7 @@ class FSGWorker {
 
             let before = {};
             // console.log("(1)Executing Action: ", msg);
-
+            globalIgnore = false;
             if (!globalGame)
                 this.makeGame();
             else
@@ -217,6 +221,9 @@ class FSGWorker {
             globalActions = cloneObj(actions);
             await this.run();
 
+            if (globalIgnore)
+                return;
+
             //should we kill the game?
             if (globalResult && globalResult.events && globalResult.events.gameover) {
 
@@ -245,8 +252,6 @@ class FSGWorker {
             let diff = delta.delta(before, globalResult, {});
 
             profiler.End("[WorkerOnAction]")
-            var test = 1;
-            test = test * test;
             parentPort.postMessage(diff);
             globalResult = {};
         }

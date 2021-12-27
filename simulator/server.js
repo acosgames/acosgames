@@ -78,8 +78,6 @@ io.on('connection', (socket) => {
     })
 
     socket.on('action', (action) => {
-        console.time('[ActionLoop]')
-        console.time('[SocketOnAction]')
 
         // msg.userid = socket.user.userid;
         if (typeof action !== 'object')
@@ -95,7 +93,7 @@ io.on('connection', (socket) => {
         action.user = socket.user;
 
         if (action && action.type) {
-            console.log("Incoming Action: ", action);
+
             let lastGame = getLastGame();
             if (lastGame && lastGame.killGame)
                 return;
@@ -131,7 +129,7 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            console.timeEnd('[SocketOnAction]')
+
             worker.postMessage([action]);
         }
 

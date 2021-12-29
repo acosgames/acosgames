@@ -241,7 +241,7 @@ class FSGWorker {
                 if (globalResult) {
 
                     if (actions[0].type == 'gamestart') {
-                        globalResult.state.gamestart = 1;
+                        globalResult.state.gamestatus = 'gamestart';
                     }
 
                     this.processTimelimit(globalResult.timer);

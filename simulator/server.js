@@ -119,7 +119,7 @@ io.on('connection', (socket) => {
                     if (!lastGame.next || (lastGame.next.id != '*' && lastGame.next.id != action.user.id))
                         return;
 
-                    if (!lastGame.state || !lastGame.state.gamestart)
+                    if (!lastGame.state)
                         return;
                 }
             }

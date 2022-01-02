@@ -12,6 +12,7 @@ const argv = yargs(hideBin(process.argv)).argv
 
 let isScaled = argv.scaled || false;
 let apikey = argv._[0];
+let isLocal = argv.local || false;
 
 console.log(process.argv);
 console.log(argv);
@@ -20,6 +21,9 @@ console.log("parsed: apikey=", apikey, ", isScaled=", isScaled);
 
 async function deployAll() {
     let url = 'http://localhost:8080/api/v1/dev/update/game/bundle/';
+    if (!isLocal) {
+        url = 'https://acos.games/api/v1/dev/update/game/bundle/';
+    }
 
     console.log("Current Working Directory: ", process.cwd())
     let filepath = path.resolve(process.cwd() + '/builds/client/client.bundle.js');

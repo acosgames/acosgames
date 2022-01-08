@@ -27,7 +27,7 @@ will be loaded on the server-side of simulator.
 ## Install 
 
 ```bash
-npm install acosgames --save
+npm install acosgames --save-dev
 ```
 
 

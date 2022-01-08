@@ -7,11 +7,18 @@ The builds directory structure is required in your project:
 
 ![image](https://user-images.githubusercontent.com/1610876/148656053-72246d14-9b51-4ebf-acb9-ab560b3fa64c.png)
 
-**client.bundle.js** will be loaded inside an `<iframe>`.
-
-**server.bundle.js** will be loaded on the server-side of simulator.  
-
 Your code on both client and server must be bundled into a single js file.
+
+### **client.bundle.js** 
+
+will be loaded inside an `<iframe>` at the end of the `<body>` tag.  
+- There is a `<div id="root">` tag that should be targetted by your front end framework.
+
+### **server.bundle.js**
+
+will be loaded on the server-side of simulator.  
+
+
 
 [View our documentation](https://docs.acos.games)
 

@@ -7,7 +7,7 @@ The builds directory structure is required in your project:
 
 ![image](https://user-images.githubusercontent.com/1610876/148656053-72246d14-9b51-4ebf-acb9-ab560b3fa64c.png)
 
-Your code for both client and server must be each bundled into a single js file.
+Your code for both client and server must each be bundled into a single js file.
 
 ### **client.bundle.js** 
 

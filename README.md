@@ -20,7 +20,9 @@ will be loaded on the server-side of simulator.
 
 
 
-[View our documentation](https://docs.acos.games)
+[View Documentation](https://docs.acos.games)
+
+[View TicTacToe code for example usage](https://github.com/acosgames/tictactoe)
 
 --- 
 

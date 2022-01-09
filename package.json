@@ -1,12 +1,15 @@
 {
   "name": "acosgames",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "devDependencies": {
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "openskill": "^1.4.1",
     "yargs": "^17.0.1",
     "chokidar": "^3.5.1",
     "axios": "^0.21.1",
@@ -15,10 +18,5 @@
     "vm2": "^3.9.3",
     "source-map-support": "^0.5.19",
     "form-data": "^4.0.0"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "openskill": "^1.4.1"
   }
 }

@@ -571,6 +571,8 @@
                     lastMessage = {};
                     message = merge(lastMessage || {}, message);
 
+                    if(!message.players) return;
+
                     let localPlayer = message.players[socket.user.id];
                     if (localPlayer) note.textContent = 'Status: ingame';
                     // console.log('Game: ', message);
@@ -589,6 +591,8 @@
                     if (!message) return;
                     message = merge(lastMessage || {}, message);
 
+                    if(!message.players) return;
+                    
                     let localPlayer = message.players[socket.user.id];
                     if (localPlayer) note.textContent = 'Status: ingame';
                     // console.log('Game: ', message);

@@ -32,9 +32,9 @@ module.exports = Profiler = {
         const number = Number(end) - start;
         const milliseconds = number / 1000000;
         const seconds = number / 1000000000;
-
+        const fixedMs = Number(milliseconds).toFixed(4);
         if (typeof msWarn == 'undefined' || milliseconds < msWarn)
-            this.log(name + " Time: %d ms", milliseconds.toFixed(4));
+            this.log(name + ` Time: ${fixedMs} ms`,);
         else {
             let msElapsed = milliseconds;
             if (msElapsed >= 100) {
@@ -62,7 +62,7 @@ module.exports = Profiler = {
         let hrend = process.hrtime(profiles[name]);
         let seconds = hrend[0];
         let ms = hrend[1] / 1000000;
-        this.info(name + " Time: %ds %d ms", seconds, ms.toFixed(2));
+        this.info(name + ` Time: ${seconds}s ${ms.toFixed(2)} ms`);
     },
 
     Memory: function (name) {

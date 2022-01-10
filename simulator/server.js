@@ -112,7 +112,8 @@ io.on('connection', (socket) => {
                 return;
             }
             else if (action.type == 'gamestart') {
-
+                gameHistory = [];
+                gameDeadline = 0;
             }
             else {
                 if (lastGame) {

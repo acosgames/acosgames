@@ -76,6 +76,8 @@ class FSGWorker {
     }
 
     storeGame(game) {
+        if (!game || !game.state)
+            return;
         this.gameHistory.push(game);
         globalGame = JSON.parse(JSON.stringify(globalResult));
     }
@@ -211,6 +213,7 @@ class FSGWorker {
                 }
                 else if (actions[0].type == 'gamestart') {
                     this.makeGame();
+                    before = {};
                 }
             }
 
@@ -243,7 +246,8 @@ class FSGWorker {
                 if (globalResult) {
 
                     if (actions[0].type == 'gamestart') {
-                        globalResult.state.gamestatus = 'gamestart';
+                        if (globalResult.state)
+                            globalResult.state.gamestatus = 'gamestart';
                     }
 
                     this.processTimelimit(globalResult.timer);

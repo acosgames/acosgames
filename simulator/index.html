@@ -484,7 +484,9 @@
                     socket.disconnect();
                 }
 
-                socket = io('ws://localhost:3200', {
+                let host = window.location.host;
+                console.log(host);
+                socket = io('ws://' + host, {
                     transports: ['websocket'],
                     upgrade: true,
                     query: 'username=' + username,

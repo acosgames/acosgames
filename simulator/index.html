@@ -613,14 +613,11 @@
                 socket.on('private', (message) => {
                     console.log('Private Data: ', message);
 
-                    if (lastMessage) {
-                        lastMessage.players[socket.user.id] = Object.assign(
-                            {},
-                            lastMessage.players[socket.user.id],
-                            message
-                        );
+                    let localPlayer = lastMessage.players[socket.user.id];
 
-                        message.local = Object.assign({}, message.local, message);
+                    if (localPlayer) {
+                        localPlayer = merge(localPlayer || {}, message);
+                        lastMessage.local = localPlayer;
                     }
                     // message.local = Object.assign({}, socket.user, localPlayer);
                     sendFrameMessage(lastMessage);

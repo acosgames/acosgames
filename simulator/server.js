@@ -125,10 +125,10 @@ io.on('connection', (socket) => {
                 }
             }
 
-            if (lastGame && lastGame.next && lastGame.next.id == '*') {
-                queuedActions.push(action);
-                return;
-            }
+            // if (lastGame && lastGame.next && lastGame.next.id == '*') {
+            //     queuedActions.push(action);
+            //     return;
+            // }
 
 
             worker.postMessage([action]);

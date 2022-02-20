@@ -333,7 +333,7 @@ class FSGWorker {
         {
             filepath = filepath || this.bundlePath;
             var data = await fs.promises.readFile(filepath, 'utf8');
-            this.gameScript = new VMScript(data, this.bundlePath);
+            this.gameScript = new VMScript(data, this.bundlePath).compile();
         }
         profiler.End('Reload Bundle');
 
@@ -395,5 +395,7 @@ class FSGWorker {
 
     }
 }
+
+process.on('SIGINT', () => process.exit(1));
 
 var worker = new FSGWorker();

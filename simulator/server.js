@@ -224,6 +224,13 @@ function createWorker(index) {
     return worker;
 }
 
+app.get('/client-simulator.js', function (req, res) {
+    res.sendFile(path.join(__dirname, './client-simulator.js'));
+});
+
+app.get('/delta.js', function (req, res) {
+    res.sendFile(path.join(__dirname, './delta.js'));
+});
 
 app.get('/client.bundle.dev.js', function (req, res) {
     res.sendFile(path.join(process.cwd(), './builds/client/client.bundle.dev.js'));
@@ -242,3 +249,6 @@ server.listen(port, () => {
 
 
 });
+
+
+process.on('SIGINT', () => process.exit(1));

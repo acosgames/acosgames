@@ -8,7 +8,7 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const { Worker } = require("worker_threads")
 const delta = require('./delta');
-
+const { encode, decode } = require('./encoder');
 const port = process.env.PORT || 3100;
 
 const maxActionBytes = 150;
@@ -45,7 +45,7 @@ io.on('connection', (socket) => {
     clients[socket.user.id] = socket;
 
     console.log('user connected: ' + socket.user.name);
-    socket.emit('connected', socket.user);
+    socket.emit('connected', encode(socket.user));
 
     setInterval(() => {
         if (gameDeadline == 0)
@@ -71,14 +71,15 @@ io.on('connection', (socket) => {
     });
 
     socket.on('time', (msg) => {
+        msg = decode(msg);
         let clientTime = msg.payload;
         let serverTime = (new Date()).getTime();
         let offset = serverTime - clientTime;
-        socket.emit('time', { payload: { offset, serverTime } })
+        socket.emit('time', encode({ payload: { offset, serverTime } }))
     })
 
     socket.on('action', (action) => {
-
+        action = decode(action);
         // msg.userid = socket.user.userid;
         if (typeof action !== 'object')
             return;
@@ -99,7 +100,7 @@ io.on('connection', (socket) => {
                 return;
 
             if (action.type == 'join') {
-                socket.emit('join', lastGame || {});
+                socket.emit('join', encode(lastGame || {}));
                 // if (lastGame && lastGame.players && lastGame.players[action.user.id]) {
                 //     socket.emit('game', lastGame);
                 //     return;
@@ -137,6 +138,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('reload', (msg) => {
+        msg = decode(msg);
         console.log("Incoming Action: ", msg);
         gameHistory = [];
         worker.postMessage([{ type: 'reset' }]);
@@ -144,6 +146,13 @@ io.on('connection', (socket) => {
 });
 
 
+function stringify(obj) {
+    return JSON.stringify(obj, function (k, v) {
+        if (v instanceof Array && !delta.isObject(v[0]))
+            return JSON.stringify(v);
+        return v;
+    }, 2);
+}
 
 function createWorker(index) {
     const worker = new Worker('./node_modules/acosgames/simulator/worker.js', { workerData: { dir: process.cwd() }, });
@@ -156,18 +165,19 @@ function createWorker(index) {
 
         let game = getLastGame() || {};
         game = delta.merge(game, dlta);
-        console.log("Delta: ", dlta);
-        console.log("Updated Game: ", game);
+        console.log("Delta: ", stringify(dlta));
+        console.log("Merged Game: ", stringify(game));
 
         //remove private variables and send individually to palyers
         let copy = JSON.parse(JSON.stringify(dlta));
         let hiddenState = delta.hidden(copy.state);
         let hiddenPlayers = delta.hidden(copy.players);
-        io.emit('game', copy);
+
+        io.emit('game', encode(copy));
         if (hiddenPlayers)
             for (var id in hiddenPlayers) {
                 if (clients[id])
-                    clients[id].emit('private', hiddenPlayers[id])
+                    clients[id].emit('private', encode(hiddenPlayers[id]))
             }
 
         //do after the game update, so they can see the result of their kick
@@ -230,6 +240,10 @@ app.get('/client-simulator.js', function (req, res) {
 
 app.get('/delta.js', function (req, res) {
     res.sendFile(path.join(__dirname, './delta.js'));
+});
+
+app.get('/encoder.js', function (req, res) {
+    res.sendFile(path.join(__dirname, './encoder.js'));
 });
 
 app.get('/client.bundle.dev.js', function (req, res) {

@@ -30,6 +30,19 @@ class Delta {
 
         for (var key in to) {
 
+            if (key[0] == '#') {
+                let fixedKey = key.substring(1);
+                if (typeof to[key] !== 'undefined') {
+                    to[fixedKey] = to[key];
+                    delete to[key];
+                }
+                if (typeof from[key] !== 'undefined') {
+                    from[fixedKey] = from[key];
+                    delete from[key];
+                }
+
+                key = fixedKey;
+            }
 
             if (!(key in from)) {
                 result[key] = to[key];
@@ -40,7 +53,7 @@ class Delta {
 
             if (typeof child !== 'undefined' && child != null) {
 
-                if (Array.isArray(from[key]) && Array.isArray(to[key])) {
+                if (Array.isArray(from[key]) && Array.isArray(to[key]) && from[key].length > 0) {
                     result['#' + key] = child;
                     continue;
                 }
@@ -84,10 +97,15 @@ class Delta {
         let resize = null;
         let moves = [];
 
+        if (from.length == 0 && to.length > 0) {
+            return to;
+        }
+
+        to = to || [];
         // let arrMapFrom = {};
         // let arrMapTo = {};
         // let valMap = {};
-        let maxSize = Math.max(to.length, from.length);
+        let maxSize = Math.max(to?.length || 0, from?.length || 0);
 
         for (var i = 0; i < maxSize; i++) {
 
@@ -102,32 +120,51 @@ class Delta {
                 continue;
 
             if (i >= to.length) {
-                changes.push(-i);
+                changes.push({ value: i, type: 'resize' });
+                // changes.push(-i);
                 // resize = i;
                 break;
             }
 
-            changes.push(i);
-            changes.push(valt);
+            changes.push({ index: i, type: 'nested', value: valt });
+            // changes.push(valt);
         }
 
 
 
-        for (var i = 0; i < changes.length; i += 2) {
-            if (i + 1 >= changes.length)
-                break;
+        for (var i = 0; i < changes.length; i++) {
             //let add = adds[i];
-            let toIndex = changes[i];
-            let toVal = changes[i + 1];
+            let change = changes[i];
+            let toIndex = change.index;
+            let type = change.type;
 
-            let child = this.delta(from[toIndex], toVal);
+            if (type == 'resize')
+                continue;
 
-            changes[i + 1] = child;
+            let toVal = change.value;
+            let child;
+
+            let isFromArray = Array.isArray(from[toIndex])
+            let isToArray = Array.isArray(toVal)
+            if (isFromArray && isToArray &&
+                from[toIndex].length == 0 && toVal.length > 0) {
+                change.type = 'setvalue';
+                child = this.delta(from[toIndex], toVal);
+            }
+            else if (typeof from[toIndex] != typeof toVal || (!isFromArray || !isToArray)) {
+                change.type = 'setvalue';
+                child = this.delta(from[toIndex], toVal);
+            }
+            else {
+                child = this.delta(from[toIndex], toVal);
+            }
+
+            change.value = child;
         }
 
         result = changes;
 
-        console.log("result:", result);
+        // console.log("result:", result);
 
         // if(typeof result.adds === 'undefined' && typeof result.resize === 'undefined' ) {
         //     return result
@@ -184,6 +221,10 @@ class Delta {
                 return delta;
         }
 
+        if (typeof from != typeof delta) {
+            return delta;
+        }
+
         for (var key in delta) {
 
             if (key == '$') {
@@ -230,24 +271,38 @@ class Delta {
         if (!from) {
             return changes;
         }
-        for (var i = 0; i < changes.length; i += 2) {
+        for (var i = 0; i < changes.length; i++) {
 
-            //negative means we need to reduce the size of array to the absolute value
-            let index = changes[i];
-            if (index < 0) {
-                from = from.slice(0, -index);
-                break;
+
+            let change = changes[i];
+            let index = change.index;
+            let type = change.type;
+            let value = change.value;
+
+            //type of resize
+            if (type == 'resize') {
+                from.length = value;// = from.slice(0, value);
+                continue;
             }
 
-            //even = index
-            //odd = value
-            let value = changes[i + 1];
-            let final = null;
-            if (typeof from[index] === 'undefined' || Array.isArray(from[index])) {
-                final = this.mergeArrayChanges(from[index], value);
-            } else {
-                final = this.merge(from[index], value);
+            //type of full update
+            if (type == 'setvalue') {
+                from[index] = this.merge(from[index], value);
+                continue;
             }
+
+            if (type == 'nested') {
+                from[index] = this.mergeArrayChanges(from[index], value);
+                continue;
+            }
+
+            return from;
+            // let final = null;
+            // if (typeof from[index] === 'undefined' || Array.isArray(from[index])) {
+            //     final = this.mergeArrayChanges(from[index], value);
+            // } else {
+            //     final = this.merge(from[index], value);
+            // }
             from[index] = final;
         }
 
@@ -279,54 +334,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 function test3() {
 
-    let prev = {
-        state: {
-            board: [
-                [0, 2, 0, 2, 0, 2, 0, 2], //white
-                [2, 0, 2, 0, 2, 0, 2, 0],
-                [0, 2, 0, 2, 0, 2, 0, 2],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [1, 0, 1, 0, 1, 0, 1, 0],
-                [0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0], //black
 
-            ]
-        }
-    }
-
-    let next = {
-        state: {
-            board: [
-                [null, , 0, 2, 0, 2, 0, 2], //white
-                [2, 0, 2, 0, 2, 0, 2, 0],
-                [0, 2, 0, 2, 0, 2, 0, 2],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 1, 0, 0, 0, 0, 0, 0],
-                [1, 0, 0, 0, 1, 0, 1, 0],
-                [0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0], //black
-                [{ hello: '123' }, { world: '456' }, { test: 'abc', test2: "xyz", grid: [1, 2, 3, 4, 5, 6] }]
-            ]
-        }
-    }
-
-    let d = new Delta();
-    console.time('delta');
-    // for (var i = 0; i < 1000; i++) {
-    // let output = JSON.stringify(prev);
-    let delta = d.delta(prev, next, {});
-    // }
-    console.timeEnd('delta');
-
-    console.log("delta", JSON.stringify(delta, null, 2));
-
-    console.time('merge');
-
-    let merged = d.merge(prev, delta);
-
-    console.time('merge');
-    console.log("merged", JSON.stringify(merged, null, 2));
     // let hash = cyrb53("test");
     // console.log("Hash:", hash);
 }

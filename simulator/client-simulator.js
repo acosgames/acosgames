@@ -246,7 +246,7 @@ document.getElementById('maximize').onclick = (event) => {
 document.getElementById('leavegame').onclick = (event) => {
     // speechSynthesis.cancel();
     if (socket) {
-        socket.emit('action', { type: 'leave', payload: {} });
+        socket.emit('action', encode({ type: 'leave', payload: {} }));
     }
     iframe.style.display = 'none';
     note.textContent = 'Status: offline';
@@ -255,7 +255,7 @@ document.getElementById('leavegame').onclick = (event) => {
 document.getElementById('startgame').onclick = (event) => {
 
     if (socket) {
-        socket.emit('action', { type: 'gamestart', payload: null });
+        socket.emit('action', encode({ type: 'gamestart', payload: null }));
     }
 };
 
@@ -275,7 +275,7 @@ document.getElementById('joingame').onclick = (event) => {
         console.log('game-sandbox is loaded');
         setTimeout(() => {
             connect(displayname, () => {
-                if (socket) socket.emit('action', { type: 'join', payload: {} });
+                if (socket) socket.emit('action', encode({ type: 'join', payload: {} }));
             });
         }, 200);
     };
@@ -323,17 +323,19 @@ function connect(username, onjoin) {
     var offsetTime = 0;
     socket.on('connected', (message) => {
         //message should have { id, name }
+        message = decode(message);
         socket.user = message;
         updateLatency();
     });
 
     function updateLatency() {
         latencyStart = new Date().getTime();
-        socket.emit('time', { payload: latencyStart });
+        socket.emit('time', encode({ payload: latencyStart }));
     }
 
 
     socket.on('time', (message) => {
+        message = decode(message);
         let serverOffset = message.payload.offset;
         let serverTime = message.payload.serverTime;
         let currentTime = new Date().getTime();
@@ -350,6 +352,7 @@ function connect(username, onjoin) {
     });
 
     socket.on('join', (message) => {
+        message = decode(message);
         console.log('JOINED: ', message);
         if (!message) return;
         lastMessage = {};
@@ -371,6 +374,7 @@ function connect(username, onjoin) {
         }
     })
     socket.on('game', (message) => {
+        message = decode(message);
         console.log('GAME UPDATE: ', message);
         if (!message) return;
         message = DELTA.merge(lastMessage || {}, message);
@@ -393,6 +397,7 @@ function connect(username, onjoin) {
     });
 
     socket.on('private', (message) => {
+        message = decode(message);
         console.log('Private Data: ', message);
 
         let localPlayer = lastMessage.players[socket.user.id];
@@ -432,7 +437,7 @@ function recvFrameMessage(evt) {
         return;
     }
     // console.time('ActionLoop');
-    if (socket) socket.emit('action', data);
+    if (socket) socket.emit('action', encode(data));
 }
 
 function onLoad() {
@@ -449,7 +454,7 @@ function onLoad() {
 
         setTimeout(() => {
             connect(displayname, () => {
-                if (socket) socket.emit('action', { type: 'join', payload: {} });
+                if (socket) socket.emit('action', encode({ type: 'join', payload: {} }));
             });
         }, 500);
     }

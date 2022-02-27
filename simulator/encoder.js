@@ -903,7 +903,7 @@ function serializeObj(json, buffer, dict, cache) {
             let startPos = buffer.length;
             let skey = key.substring(1);
             if (!(skey in dict.keys)) {
-                mapKey(key, buffer, dict, cache);
+                mapKey(skey, buffer, dict, cache);
             }
             else {
                 let id = dict.keys[skey];
@@ -926,76 +926,76 @@ function serializeObj(json, buffer, dict, cache) {
         }
         else {
 
-            if (isObject(value)) {
-                if (key == 'state') {
-                    if (Object.keys(value).length == 0) {
-                        buffer.push(TYPE_KEY_STATE_EMPTY);
-                        continue;
-                    }
-                    buffer.push(TYPE_KEY_STATE);
-                }
-                else if (key == 'players') {
-                    if (Object.keys(value).length == 0) {
-                        buffer.push(TYPE_KEY_PLAYERS_EMPTY);
-                        continue;
-                    }
-                    buffer.push(TYPE_KEY_PLAYERS);
-                }
-                else if (key == 'rules') {
-                    if (Object.keys(value).length == 0) {
-                        buffer.push(TYPE_KEY_RULES_EMPTY);
-                        continue;
-                    }
-                    buffer.push(TYPE_KEY_RULES);
-                }
-                else if (key == 'next') {
-                    if (Object.keys(value).length == 0) {
-                        buffer.push(TYPE_KEY_NEXT_EMPTY);
-                        continue;
-                    }
-                    buffer.push(TYPE_KEY_NEXT);
-                }
-                else if (key == 'events') {
-                    if (Object.keys(value).length == 0) {
-                        buffer.push(TYPE_KEY_EVENTS_EMPTY);
-                        continue;
-                    }
-                    buffer.push(TYPE_KEY_EVENTS);
-                }
-                else if (key == 'teams') {
-                    if (Object.keys(value).length == 0) {
-                        buffer.push(TYPE_KEY_TEAMS_EMPTY);
-                        continue;
-                    }
-                    buffer.push(TYPE_KEY_TEAMS);
-                }
-                else if (key == 'timer') {
-                    if (Object.keys(value).length == 0) {
-                        buffer.push(TYPE_KEY_TIMER_EMPTY);
-                        continue;
-                    }
-                    buffer.push(TYPE_KEY_TIMER);
-                }
-                else {
-                    let startPos = buffer.length;
-                    mapKey(key, buffer, dict, cache);
-                    serializeEX(value, buffer, dict, cache);
-                    let dist = buffer.length - startPos;
-                    // console.log("Object Size [" + key + "] = ", dist);
-                    continue;
-                }
+            // if (isObject(value)) {
+            //     if (key == 'state') {
+            //         if (Object.keys(value).length == 0) {
+            //             buffer.push(TYPE_KEY_STATE_EMPTY);
+            //             continue;
+            //         }
+            //         buffer.push(TYPE_KEY_STATE);
+            //     }
+            //     else if (key == 'players') {
+            //         if (Object.keys(value).length == 0) {
+            //             buffer.push(TYPE_KEY_PLAYERS_EMPTY);
+            //             continue;
+            //         }
+            //         buffer.push(TYPE_KEY_PLAYERS);
+            //     }
+            //     else if (key == 'rules') {
+            //         if (Object.keys(value).length == 0) {
+            //             buffer.push(TYPE_KEY_RULES_EMPTY);
+            //             continue;
+            //         }
+            //         buffer.push(TYPE_KEY_RULES);
+            //     }
+            //     else if (key == 'next') {
+            //         if (Object.keys(value).length == 0) {
+            //             buffer.push(TYPE_KEY_NEXT_EMPTY);
+            //             continue;
+            //         }
+            //         buffer.push(TYPE_KEY_NEXT);
+            //     }
+            //     else if (key == 'events') {
+            //         if (Object.keys(value).length == 0) {
+            //             buffer.push(TYPE_KEY_EVENTS_EMPTY);
+            //             continue;
+            //         }
+            //         buffer.push(TYPE_KEY_EVENTS);
+            //     }
+            //     else if (key == 'teams') {
+            //         if (Object.keys(value).length == 0) {
+            //             buffer.push(TYPE_KEY_TEAMS_EMPTY);
+            //             continue;
+            //         }
+            //         buffer.push(TYPE_KEY_TEAMS);
+            //     }
+            //     else if (key == 'timer') {
+            //         if (Object.keys(value).length == 0) {
+            //             buffer.push(TYPE_KEY_TIMER_EMPTY);
+            //             continue;
+            //         }
+            //         buffer.push(TYPE_KEY_TIMER);
+            //     }
+            //     else {
+            //         let startPos = buffer.length;
+            //         mapKey(key, buffer, dict, cache);
+            //         serializeEX(value, buffer, dict, cache);
+            //         let dist = buffer.length - startPos;
+            //         // console.log("Object Size [" + key + "] = ", dist);
+            //         continue;
+            //     }
 
-                serializeObj(value, buffer, dict, cache);
-                buffer.push(TYPE_ENDOBJ);
-            }
-            else {
-                let startPos = buffer.length;
-                mapKey(key, buffer, dict, cache);
-                serializeEX(value, buffer, dict, cache);
-                let dist = buffer.length - startPos;
-                // console.log("Object Size [" + key + "] = ", dist);
-                continue;
-            }
+            //     serializeObj(value, buffer, dict, cache);
+            //     buffer.push(TYPE_ENDOBJ);
+            // }
+            // else {
+            let startPos = buffer.length;
+            mapKey(key, buffer, dict, cache);
+            serializeEX(value, buffer, dict, cache);
+            let dist = buffer.length - startPos;
+            // console.log("Object Size [" + key + "] = ", dist);
+            //     continue;
+            // }
 
         }
 
@@ -1093,7 +1093,7 @@ function deserializeEX(ref) {
             let startPos = ref.pos;
             json = deserializeArrDelta([], ref);
             let dist = ref.pos - startPos;
-            console.log("ArrDelta Length: ", dist);
+            // console.log("ArrDelta Length: ", dist);
             break;
         case TYPE_ARR_NESTED:
             json = deserializeArrDelta([], ref);
@@ -1240,50 +1240,50 @@ function deserializeObj(json, ref) {
     // if (type == TYPE_OBJ) {
     //     type = ref.buffer.getUint8(ref.pos++);
     // }
-    switch (type) {
-        case TYPE_KEY_STATE_EMPTY:
-            json['state'] = {};
-            return deserializeObj(json, ref);
-        case TYPE_KEY_PLAYERS_EMPTY:
-            json['players'] = {};
-            return deserializeObj(json, ref);
-        case TYPE_KEY_TEAMS_EMPTY:
-            json['teams'] = {};
-            return deserializeObj(json, ref);
-        case TYPE_KEY_EVENTS_EMPTY:
-            json['events'] = {};
-            return deserializeObj(json, ref);
-        case TYPE_KEY_RULES_EMPTY:
-            json['rules'] = {};
-            return deserializeObj(json, ref);
-        case TYPE_KEY_NEXT_EMPTY:
-            json['next'] = {};
-            return deserializeObj(json, ref);
-        case TYPE_KEY_TIMER_EMPTY:
-            json['timer'] = {};
-            return deserializeObj(json, ref);
-        case TYPE_KEY_STATE:
-            json['state'] = deserializeObj({}, ref);
-            return deserializeObj(json, ref);
-        case TYPE_KEY_PLAYERS:
-            json['players'] = deserializeObj({}, ref);
-            return deserializeObj(json, ref);
-        case TYPE_KEY_TEAMS:
-            json['teams'] = deserializeObj({}, ref);
-            return deserializeObj(json, ref);
-        case TYPE_KEY_EVENTS:
-            json['events'] = deserializeObj({}, ref);
-            return deserializeObj(json, ref);
-        case TYPE_KEY_RULES:
-            json['rules'] = deserializeObj({}, ref);
-            return deserializeObj(json, ref);
-        case TYPE_KEY_NEXT:
-            json['next'] = deserializeObj({}, ref);
-            return deserializeObj(json, ref);
-        case TYPE_KEY_TIMER:
-            json['timer'] = deserializeObj({}, ref);
-            return deserializeObj(json, ref);
-    }
+    // switch (type) {
+    //     case TYPE_KEY_STATE_EMPTY:
+    //         json['state'] = {};
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_PLAYERS_EMPTY:
+    //         json['players'] = {};
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_TEAMS_EMPTY:
+    //         json['teams'] = {};
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_EVENTS_EMPTY:
+    //         json['events'] = {};
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_RULES_EMPTY:
+    //         json['rules'] = {};
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_NEXT_EMPTY:
+    //         json['next'] = {};
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_TIMER_EMPTY:
+    //         json['timer'] = {};
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_STATE:
+    //         json['state'] = deserializeObj({}, ref);
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_PLAYERS:
+    //         json['players'] = deserializeObj({}, ref);
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_TEAMS:
+    //         json['teams'] = deserializeObj({}, ref);
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_EVENTS:
+    //         json['events'] = deserializeObj({}, ref);
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_RULES:
+    //         json['rules'] = deserializeObj({}, ref);
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_NEXT:
+    //         json['next'] = deserializeObj({}, ref);
+    //         return deserializeObj(json, ref);
+    //     case TYPE_KEY_TIMER:
+    //         json['timer'] = deserializeObj({}, ref);
+    //         return deserializeObj(json, ref);
+    // }
 
 
     if (type != TYPE_DICT && type != TYPE_STRING && type != TYPE_OBJ_DELETE && type != TYPE_STRING_DICT1 && type != TYPE_STRING_DICT2) {

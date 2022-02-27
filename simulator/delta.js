@@ -189,7 +189,7 @@ class Delta {
         if (this.isObject(obj)) {
             let result = {}
             for (var key in obj) {
-                if (key[0] == '_') {
+                if (key[0] == '_' || (key[0] == '#' && key[1] == '_')) {
                     result[key] = JSON.parse(JSON.stringify(obj[key]));
                     delete obj[key];
                     continue;
@@ -341,7 +341,7 @@ function test3() {
 
 
 
-test3();
+// test3();
 
 function test2() {
     let d = new Delta();

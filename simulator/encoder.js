@@ -1,5 +1,5 @@
 // const JSBI = require('jsbi');
-const encoderVersion = '1.1';
+const encoderVersion = '1.2';
 
 // const pako = require('pako');
 const encoder = new TextEncoder();
@@ -247,17 +247,7 @@ let testJSON = {
     "type": "ping",
     "room_slug": "JHMKGD",
     "state": {
-        "cells": {
-            "0": "",
-            "1": "",
-            "2": "",
-            "3": "",
-            "4": "",
-            "5": "",
-            "6": "",
-            "7": "",
-            "8": ""
-        },
+        "cells": ['', '', '', '', '', '', '', '', ''],
         "startPlayer": "manC6"
     },
     "rules": {
@@ -287,7 +277,7 @@ let testJSON = {
             "type": "X"
         }
     },
-    "prev": {}
+    "teams": {}
 };
 
 const TYPE_OBJ = 1;
@@ -331,6 +321,25 @@ const TYPE_KEY_PLAYERS = 38
 const TYPE_KEY_EVENTS = 39;
 const TYPE_KEY_TIMER = 40;
 const TYPE_KEY_NEXT = 41;
+const TYPE_KEY_TEAMS = 42;
+const TYPE_FOUR = 43;
+const TYPE_FIVE = 44;
+const TYPE_SIX = 45;
+const TYPE_SEVEN = 46;
+const TYPE_EIGHT = 47;
+const TYPE_NINE = 48;
+const TYPE_TEN = 49;
+const TYPE_ELEVEN = 50;
+const TYPE_TWELVE = 51;
+const TYPE_THIRTEEN = 52;
+const TYPE_KEY_STATE_EMPTY = 53;
+const TYPE_KEY_PLAYERS_EMPTY = 54
+const TYPE_KEY_EVENTS_EMPTY = 55;
+const TYPE_KEY_TIMER_EMPTY = 56;
+const TYPE_KEY_NEXT_EMPTY = 57;
+const TYPE_KEY_TEAMS_EMPTY = 58;
+const TYPE_KEY_RULES = 59;
+const TYPE_KEY_RULES_EMPTY = 60;
 
 var dvbuff = new ArrayBuffer(16);
 var dv = new DataView(dvbuff);
@@ -374,6 +383,7 @@ var defaultOrder = [
     'latest_tsupdate',
     'minplayers',
     'maxplayers',
+    'maxPlayers',
     'teams',
     'mode',
     'owner',
@@ -457,7 +467,15 @@ var defaultOrder = [
     'Grand Champion III',
     'Grand Champion IV',
     'board',
-    'test', 'hello'
+    'playerCount',
+    'red',
+    'blue',
+    'item',
+    'items',
+    'bestOf',
+
+    'achievements',
+    'achievement'
 ]
 
 var defaultDict = null;
@@ -634,8 +652,39 @@ function serializeEX(json, buffer, dict, cache) {
             } else if (json == 3) {
                 buffer.push(TYPE_THREE);
                 return;
+            } else if (json == 4) {
+                buffer.push(TYPE_FOUR);
+                return;
+            } else if (json == 5) {
+                buffer.push(TYPE_FIVE);
+                return;
             }
-            else if (json >= -128 && json <= 127) {
+            else if (json == 6) {
+                buffer.push(TYPE_SIX);
+                return;
+            } else if (json == 7) {
+                buffer.push(TYPE_SEVEN);
+                return;
+            } else if (json == 8) {
+                buffer.push(TYPE_EIGHT);
+                return;
+            } else if (json == 9) {
+                buffer.push(TYPE_NINE);
+                return;
+            } else if (json == 10) {
+                buffer.push(TYPE_TEN);
+                return;
+            } else if (json == 11) {
+                buffer.push(TYPE_ELEVEN);
+                return;
+            } else if (json == 12) {
+                buffer.push(TYPE_TWELVE);
+                return;
+            } else if (json == 13) {
+                buffer.push(TYPE_THIRTEEN);
+                return;
+            }
+            else if (json >= -128 && json < 0) {
                 buffer.push(TYPE_INT8);
                 dv.setInt8(0, json);
                 buffer.push(dv.getUint8(0));
@@ -645,7 +694,7 @@ function serializeEX(json, buffer, dict, cache) {
                 dv.setUint8(0, json);
                 buffer.push(dv.getUint8(0));
             }
-            else if (json >= -32768 && json <= 32767) {
+            else if (json >= -32768 && json < 0) {
                 buffer.push(TYPE_INT16);
                 dv.setInt16(0, json);
                 buffer.push(dv.getUint8(0));
@@ -657,7 +706,7 @@ function serializeEX(json, buffer, dict, cache) {
                 buffer.push(dv.getUint8(0));
                 buffer.push(dv.getUint8(1));
             }
-            else if (json >= -2147483648 && json <= 2147483647) {
+            else if (json >= -2147483648 && json < 0) {
                 buffer.push(TYPE_INT32);
                 dv.setInt32(0, json);
                 buffer.push(dv.getUint8(0));
@@ -865,22 +914,89 @@ function serializeObj(json, buffer, dict, cache) {
             if (!Array.isArray(value)) {
                 serializeEX(value, buffer, dict, cache);
                 let dist = buffer.length - startPos;
-                console.log("Object Size [" + key + "] = ", dist);
+                // console.log("Object Size [" + key + "] = ", dist);
                 continue;
             }
 
             buffer.push(TYPE_ARR_DELTA);
             mapArrayDelta(value, buffer, dict, cache)
             let dist = buffer.length - startPos;
-            console.log("Object Size [" + key + "] = ", dist);
+            // console.log("Object Size [" + key + "] = ", dist);
             continue;
         }
         else {
-            let startPos = buffer.length;
-            mapKey(key, buffer, dict, cache);
-            serializeEX(value, buffer, dict, cache);
-            let dist = buffer.length - startPos;
-            console.log("Object Size [" + key + "] = ", dist);
+
+            if (isObject(value)) {
+                if (key == 'state') {
+                    if (Object.keys(value).length == 0) {
+                        buffer.push(TYPE_KEY_STATE_EMPTY);
+                        continue;
+                    }
+                    buffer.push(TYPE_KEY_STATE);
+                }
+                else if (key == 'players') {
+                    if (Object.keys(value).length == 0) {
+                        buffer.push(TYPE_KEY_PLAYERS_EMPTY);
+                        continue;
+                    }
+                    buffer.push(TYPE_KEY_PLAYERS);
+                }
+                else if (key == 'rules') {
+                    if (Object.keys(value).length == 0) {
+                        buffer.push(TYPE_KEY_RULES_EMPTY);
+                        continue;
+                    }
+                    buffer.push(TYPE_KEY_RULES);
+                }
+                else if (key == 'next') {
+                    if (Object.keys(value).length == 0) {
+                        buffer.push(TYPE_KEY_NEXT_EMPTY);
+                        continue;
+                    }
+                    buffer.push(TYPE_KEY_NEXT);
+                }
+                else if (key == 'events') {
+                    if (Object.keys(value).length == 0) {
+                        buffer.push(TYPE_KEY_EVENTS_EMPTY);
+                        continue;
+                    }
+                    buffer.push(TYPE_KEY_EVENTS);
+                }
+                else if (key == 'teams') {
+                    if (Object.keys(value).length == 0) {
+                        buffer.push(TYPE_KEY_TEAMS_EMPTY);
+                        continue;
+                    }
+                    buffer.push(TYPE_KEY_TEAMS);
+                }
+                else if (key == 'timer') {
+                    if (Object.keys(value).length == 0) {
+                        buffer.push(TYPE_KEY_TIMER_EMPTY);
+                        continue;
+                    }
+                    buffer.push(TYPE_KEY_TIMER);
+                }
+                else {
+                    let startPos = buffer.length;
+                    mapKey(key, buffer, dict, cache);
+                    serializeEX(value, buffer, dict, cache);
+                    let dist = buffer.length - startPos;
+                    // console.log("Object Size [" + key + "] = ", dist);
+                    continue;
+                }
+
+                serializeObj(value, buffer, dict, cache);
+                buffer.push(TYPE_ENDOBJ);
+            }
+            else {
+                let startPos = buffer.length;
+                mapKey(key, buffer, dict, cache);
+                serializeEX(value, buffer, dict, cache);
+                let dist = buffer.length - startPos;
+                // console.log("Object Size [" + key + "] = ", dist);
+                continue;
+            }
+
         }
 
     }
@@ -939,6 +1055,37 @@ function deserializeEX(ref) {
         case TYPE_THREE:
             json = 3;
             break;
+        case TYPE_FOUR:
+            json = 4;
+            break;
+        case TYPE_FIVE:
+            json = 5;
+            break;
+        case TYPE_SIX:
+            json = 6;
+            break;
+        case TYPE_SEVEN:
+            json = 7;
+            break;
+        case TYPE_EIGHT:
+            json = 8;
+            break;
+        case TYPE_NINE:
+            json = 9;
+            break;
+        case TYPE_TEN:
+            json = 10;
+            break;
+        case TYPE_ELEVEN:
+            json = 11;
+            break;
+        case TYPE_TWELVE:
+            json = 12;
+            break;
+        case TYPE_THIRTEEN:
+            json = 13;
+            break;
+
         case TYPE_OBJ:
             json = deserializeObj({}, ref);
             break;
@@ -1081,17 +1228,69 @@ function deserializeEX(ref) {
 function deserializeObj(json, ref) {
     json = json || {};
 
+    // let prevType = ref.buffer.getUint8(ref.pos - 1);
+
+
+
     let type = ref.buffer.getUint8(ref.pos++);
     if (type == TYPE_ENDOBJ) {
+        // ref.pos++;
         return json
     }
-    if (type == TYPE_OBJ) {
-        type = ref.buffer.getUint8(ref.pos++);
+    // if (type == TYPE_OBJ) {
+    //     type = ref.buffer.getUint8(ref.pos++);
+    // }
+    switch (type) {
+        case TYPE_KEY_STATE_EMPTY:
+            json['state'] = {};
+            return deserializeObj(json, ref);
+        case TYPE_KEY_PLAYERS_EMPTY:
+            json['players'] = {};
+            return deserializeObj(json, ref);
+        case TYPE_KEY_TEAMS_EMPTY:
+            json['teams'] = {};
+            return deserializeObj(json, ref);
+        case TYPE_KEY_EVENTS_EMPTY:
+            json['events'] = {};
+            return deserializeObj(json, ref);
+        case TYPE_KEY_RULES_EMPTY:
+            json['rules'] = {};
+            return deserializeObj(json, ref);
+        case TYPE_KEY_NEXT_EMPTY:
+            json['next'] = {};
+            return deserializeObj(json, ref);
+        case TYPE_KEY_TIMER_EMPTY:
+            json['timer'] = {};
+            return deserializeObj(json, ref);
+        case TYPE_KEY_STATE:
+            json['state'] = deserializeObj({}, ref);
+            return deserializeObj(json, ref);
+        case TYPE_KEY_PLAYERS:
+            json['players'] = deserializeObj({}, ref);
+            return deserializeObj(json, ref);
+        case TYPE_KEY_TEAMS:
+            json['teams'] = deserializeObj({}, ref);
+            return deserializeObj(json, ref);
+        case TYPE_KEY_EVENTS:
+            json['events'] = deserializeObj({}, ref);
+            return deserializeObj(json, ref);
+        case TYPE_KEY_RULES:
+            json['rules'] = deserializeObj({}, ref);
+            return deserializeObj(json, ref);
+        case TYPE_KEY_NEXT:
+            json['next'] = deserializeObj({}, ref);
+            return deserializeObj(json, ref);
+        case TYPE_KEY_TIMER:
+            json['timer'] = deserializeObj({}, ref);
+            return deserializeObj(json, ref);
     }
+
 
     if (type != TYPE_DICT && type != TYPE_STRING && type != TYPE_OBJ_DELETE && type != TYPE_STRING_DICT1 && type != TYPE_STRING_DICT2) {
         throw 'E_INVALIDOBJ';
     }
+
+    // ref.pos++;
 
     if (type == TYPE_OBJ_DELETE) {
         // let id = ref.buffer.getUint8(ref.pos++);
@@ -1281,6 +1480,15 @@ function test() {
     let buffer = [];
     let dict = createDefaultDict();
 
+    let testJSON2 = {
+        state: { startPlayer: 1 },
+        events: {},
+        timer: {},
+        players: {},
+        teams: {},
+        next: {},
+        rules: {}
+    }
     // console.time('serialize');
     // let encoded = serialize(testJSON, dict);
     // let deflated = pako.deflate(encoded);
@@ -1290,22 +1498,22 @@ function test() {
     let bufferLen = buffer.length;
     let dictLen = JSON.stringify(dict.order).length;
 
-    console.time('encode')
-    let jsonStr = JSON.stringify(testJSON);
-    let jsonEncoded = encode(jsonStr);
+    // console.time('encode')
+    // let jsonStr = JSON.stringify(testJSON);
+    let jsonEncoded = encode(testJSON2);
     // let jsonDeflated = pako.deflate(jsonEncoded);
-    console.timeEnd('encode')
+    // console.timeEnd('encode')
 
-    console.time('decode');
+    // console.time('decode');
     let decoded = decode(jsonEncoded);
-    console.log(decoded);
-    console.timeEnd("decode");
 
+    // console.timeEnd("decode");
+    console.log(decoded);
     // console.log("Dict: ", dict);
     // console.log("Buffer:", encoded.byteLength);
-    console.log("Dict length: ", dictLen);
+    // console.log("Dict length: ", dictLen);
     // console.log("Buffer+Dict length: ", dictLen + encoded.byteLength);
-    console.log("JSON length: ", JSON.stringify(testJSON).length);
+    console.log("JSON length: ", JSON.stringify(testJSON2).length);
     // console.log("compressed byte len: ", deflated.length);
     // console.log("compressed JSON str byte len: ", jsonDeflated.length);
     // var dataview = new DataView(encoded);

@@ -374,17 +374,17 @@ function connect(username, onjoin) {
         }
     })
     socket.on('game', (message) => {
-        message = decode(message);
-        console.log('GAME UPDATE: ', message);
-        if (!message) return;
-        message = DELTA.merge(lastMessage || {}, message);
+        let delta = decode(message);
+        console.log('GAME UPDATE: ', delta);
+        if (!delta) return;
+        message = DELTA.merge(lastMessage || {}, delta);
 
         if (!message.players) return;
 
         let localPlayer = message.players[socket.user.id];
         if (localPlayer) note.textContent = 'Status: ingame';
         // console.log('Game: ', message);
-
+        message.delta = delta;
         message.local = Object.assign({}, socket.user, localPlayer);
         sendFrameMessage(message);
         // console.timeEnd('ActionLoop');
@@ -405,7 +405,9 @@ function connect(username, onjoin) {
         if (localPlayer) {
             localPlayer = DELTA.merge(localPlayer || {}, message);
             lastMessage.local = localPlayer;
+            lastMessage.private = message;
         }
+
         // message.local = Object.assign({}, socket.user, localPlayer);
         sendFrameMessage(lastMessage);
         console.timeEnd('ActionLoop');

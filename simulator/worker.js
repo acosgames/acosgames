@@ -29,7 +29,7 @@ var globals = {
             console.error(e);
         }
     },
-    game: () => globalGame,
+    game: () => cloneObj(globalGame),
     actions: () => {
         return globalActions
     },
@@ -91,7 +91,7 @@ class FSGWorker {
         globalGame.state = {};
         globalGame.rules = {};
         globalGame.next = {};
-        globalGame.prev = {};
+        globalGame.teams = {};
         globalGame.events = {};
 
         if (clearPlayers) {
@@ -232,7 +232,7 @@ class FSGWorker {
             //should we kill the game?
             if (globalResult && globalResult.events && globalResult.events.gameover) {
 
-                this.processPlayerRatings(globalResult.players);
+                this.processPlayerRatings(globalResult.players, globalResult.teams);
 
 
                 // this.makeGame(true);
@@ -266,7 +266,7 @@ class FSGWorker {
         }
     }
 
-    processPlayerRatings(players) {
+    processPlayerRatings(players, teams) {
         //add saved ratings to players
         let playerRatings = {};
         for (var id in players) {
@@ -292,7 +292,7 @@ class FSGWorker {
         console.log("Before Rating: ", playerRatings);
 
         //run OpenSkill rating system
-        rank.calculateRanks(playerRatings);
+        rank.calculateRanks(playerRatings, teams);
 
         //update player ratings
         for (var id in players) {

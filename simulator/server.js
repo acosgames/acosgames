@@ -118,18 +118,14 @@ io.on('connection', (socket) => {
             }
             else {
                 if (lastGame) {
-                    if (!lastGame.next || (lastGame.next.id != '*' && lastGame.next.id != action.user.id))
+                    let nextPlayers = lastGame?.next?.id;
+                    let userid = action.user.id;
+
+                    if (!validateNextUser(lastGame, userid))
                         return;
 
-                    if (!lastGame.state)
-                        return;
                 }
             }
-
-            // if (lastGame && lastGame.next && lastGame.next.id == '*') {
-            //     queuedActions.push(action);
-            //     return;
-            // }
 
 
             worker.postMessage([action]);
@@ -144,6 +140,60 @@ io.on('connection', (socket) => {
         worker.postMessage([{ type: 'reset' }]);
     })
 });
+
+function validateNextUser(gameState, userid) {
+    let next = gameState?.next;
+    let nextid = next?.id;
+
+    if (!next || !nextid)
+        return false;
+
+    if (!gameState.state)
+        return;
+
+    //check if we ven have teams
+    let teams = gameState?.teams;
+
+
+    if (typeof nextid === 'string') {
+        //anyone can send actions
+        if (nextid == '*')
+            return true;
+
+        //only specific user can send actions
+        if (nextid == userid)
+            return true;
+
+        //validate team has players
+        if (!teams || !teams[nextid] || !teams[nextid].players)
+            return false;
+
+        //allow players on specified team to send actions
+        if (Array.isArray(teams[nextid].players) && teams[nextid].players.includes(userid)) {
+            return true;
+        }
+    }
+    else if (Array.isArray(nextid)) {
+
+        //multiple users can send actions if in the array
+        if (nextid.includes(userid))
+            return true;
+
+        //validate teams exist
+        if (!teams)
+            return false;
+
+        //multiple teams can send actions if in the array
+        for (var i = 0; i < nextid.length; i++) {
+            let teamid = nextid[i];
+            if (Array.isArray(teams[teamid].players) && teams[teamid].players.includes(userid)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 
 function stringify(obj) {

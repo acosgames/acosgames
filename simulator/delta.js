@@ -53,7 +53,7 @@ class Delta {
 
             if (typeof child !== 'undefined' && child != null) {
 
-                if (Array.isArray(from[key]) && Array.isArray(to[key]) && from[key].length > 0) {
+                if (Array.isArray(from[key]) && Array.isArray(to[key]) && child.length > 0) {
                     result['#' + key] = child;
                     continue;
                 }

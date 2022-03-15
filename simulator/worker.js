@@ -184,9 +184,9 @@ class FSGWorker {
 
                     if (!globalRatings[userid]) {
                         globalRatings[userid] = {
-                            rating: 1200,
-                            mu: 12.0,
-                            sigma: 1.5
+                            rating: 2500,
+                            mu: 25.0,
+                            sigma: 5.0
                         }
                     }
 

@@ -1,5 +1,7 @@
 
-## About
+## ACOS Simulator
+
+![image](https://cdn.acos.games/file/acospub/acos-logo-combined.png)
 
 This package must be run from your game project.   
 

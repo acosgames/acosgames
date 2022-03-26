@@ -160,7 +160,7 @@ class FSGWorker {
             }
 
             let before = {};
-            // console.log("(1)Executing Action: ", msg);
+            console.log("Executing Action: ", actions);
             globalIgnore = false;
             if (!globalGame)
                 this.makeGame();
@@ -396,6 +396,8 @@ class FSGWorker {
     }
 }
 
-process.on('SIGINT', () => process.exit(1));
+process.on('SIGINT', () => {
+    process.exit()
+});
 
 var worker = new FSGWorker();

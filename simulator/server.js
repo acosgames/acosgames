@@ -100,7 +100,19 @@ io.on('connection', (socket) => {
                 return;
 
             if (action.type == 'join') {
-                socket.emit('join', encode(lastGame || {}));
+                lastGame = lastGame || {};
+                let dlta = JSON.parse(JSON.stringify(lastGame));
+                let hiddenState = delta.hidden(dlta.state);
+                let hiddenPlayers = delta.hidden(dlta.players);
+
+                io.emit('join', encode(dlta));
+                if (hiddenPlayers)
+                    for (var id in hiddenPlayers) {
+                        if (hiddenPlayers[action.user.id] && clients[action.user.id])
+                            clients[id].emit('private', encode(hiddenPlayers[id]))
+                    }
+
+                // socket.emit('join', encode(lastGame || {}));
                 // if (lastGame && lastGame.players && lastGame.players[action.user.id]) {
                 //     socket.emit('game', lastGame);
                 //     return;
@@ -314,5 +326,6 @@ server.listen(port, () => {
 
 });
 
-
-process.on('SIGINT', () => process.exit(1));
+process.on('SIGINT', () => {
+    process.exit()
+});

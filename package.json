@@ -1,11 +1,12 @@
 {
   "name": "acosgames",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": "./simulator/server.js",
   "author": "",
   "license": "ISC",
   "repository": {

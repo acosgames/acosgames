@@ -219,7 +219,7 @@ function stringify(obj) {
 }
 
 function createWorker(index) {
-    const worker = new Worker('./simulator/worker.js', { workerData: { dir: process.cwd() }, });
+    const worker = new Worker(__dirname + '/worker.js', { workerData: { dir: process.cwd() }, });
     worker.on("message", (dlta) => {
         console.time('[WorkerOnMessage]')
         if (!dlta || dlta.status) {

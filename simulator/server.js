@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+
 
 // require('source-map-support').install()
 const path = require('path');
@@ -219,7 +219,8 @@ function stringify(obj) {
 }
 
 function createWorker(index) {
-    const worker = new Worker(__dirname + '/worker.js', { workerData: { dir: process.cwd() }, });
+    console.log("Worker current directory: ", process.cwd(), process.argv);
+    const worker = new Worker(__dirname + '/worker.js', { workerData: { dir: process.argv[2] }, });
     worker.on("message", (dlta) => {
         console.time('[WorkerOnMessage]')
         if (!dlta || dlta.status) {
@@ -311,7 +312,7 @@ app.get('/encoder.js', function (req, res) {
 });
 
 app.get('/client.bundle.dev.js', function (req, res) {
-    res.sendFile(path.join(process.cwd(), './builds/client/client.bundle.dev.js'));
+    res.sendFile(path.join(process.argv[2], './builds/client/client.bundle.dev.js'));
 });
 
 app.get('/', function (req, res) {

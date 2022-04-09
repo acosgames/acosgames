@@ -155,12 +155,12 @@ class FSGWorker {
 
             profiler.Start("[WorkerOnAction]")
             if (!Array.isArray(actions)) {
-                console.log("Not an action: ", actions);
+                console.log("[ACOS] Not an action: ", actions);
                 return;
             }
 
             let before = {};
-            console.log("Executing Action: ", actions);
+            console.log("[ACOS] Executing Action: ", actions);
             globalIgnore = false;
             if (!globalGame)
                 this.makeGame();
@@ -289,7 +289,7 @@ class FSGWorker {
             playerRatings[id] = playerRating;
         }
 
-        console.log("Before Rating: ", playerRatings);
+        console.log("[ACOS] Before Rating: ", playerRatings);
 
         //run OpenSkill rating system
         rank.calculateRanks(playerRatings, teams);
@@ -305,7 +305,7 @@ class FSGWorker {
             player.rating = rating.rating;
         }
 
-        console.log("After Rating: ", globalRatings);
+        console.log("[ACOS] After Rating: ", globalRatings);
     }
 
 
@@ -323,7 +323,7 @@ class FSGWorker {
 
         let filename = filepath.split(/\/|\\/ig);
         filename = filename[filename.length - 1];
-        console.log("Database Reloaded: " + filename);
+        console.log("[ACOS] Database Reloaded: " + filename);
 
         return this.gameScript;
     }
@@ -339,7 +339,7 @@ class FSGWorker {
 
         let filename = filepath.split(/\/|\\/ig);
         filename = filename[filename.length - 1];
-        console.log("Bundle Reloaded: " + filename);
+        console.log("[ACOS] Bundle Reloaded: " + filename);
 
         return this.gameScript;
     }
@@ -352,14 +352,14 @@ class FSGWorker {
             let watchPath = this.bundlePath.substr(0, this.bundlePath.lastIndexOf(path.sep));
             chokidar.watch(watchPath).on('change', (path) => {
                 this.reloadServerBundle();
-                console.log(`${this.bundlePath} file Changed`, watchPath);
+                console.log(`[ACOS] ${this.bundlePath} file Changed`, watchPath);
             });
 
             if (this.dbPath) {
                 let watchPath2 = this.dbPath.substr(0, this.dbPath.lastIndexOf(path.sep));
                 chokidar.watch(watchPath2).on('change', (path) => {
                     this.reloadServerDatabase();
-                    console.log(`${this.dbPath} file Changed`, watchPath2);
+                    console.log(`[ACOS] ${this.dbPath} file Changed`, watchPath2);
                 });
             }
 

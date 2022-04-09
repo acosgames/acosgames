@@ -43,7 +43,7 @@ function runScript(dirPath, command, callback) {
     })
 
     child.on('close', (code, signal) => {
-        callback({ code, signal });
+        callback(null, { code, signal });
     })
 
     child.on('disconnect', () => {
@@ -76,17 +76,18 @@ function runScript(dirPath, command, callback) {
 function runServer() {
     return new Promise(async (rs, rj) => {
 
+        console.log("[ACOS] Starting Simulator");
 
         const cmd = `npx nodemon --inspect --enable-source-maps --watch ./simulator ./simulator/server.js "${cwd}"`;
-        console.log("STARTING ACOSGAMES SIMULATOR >>>>>>>", cmd);
+        // console.log("STARTING ACOSGAMES SIMULATOR >>>>>>>\n", cmd);
 
-        runScript(cd, cmd, async (err) => {
+        runScript(cd, cmd, async (err, sigint) => {
             if (err) {
                 console.error(err);
                 rj(err);
                 return;
             }
-            console.log("Finished loading script.");
+            // console.log("Finished loading ACOS Simulator.");
 
             await runBrowserSync();
 
@@ -98,19 +99,20 @@ function runServer() {
 function runBrowserSync() {
     return new Promise((rs, rj) => {
 
+        console.log("[ACOS] Starting BrowserSync");
 
         let gameClientPath = path.join(cwd, '/game-client/**');
         let buildsClientPath = path.join(cwd, '/builds/client/**');
         let projectNodeModulePath = path.join(cwd, '/node_modules');
         const cmd = `npx wait-on http://localhost:3100/ && npx browser-sync start --no-ghost-mode --ws --port 3200 --proxy localhost:3100 --files=${gameClientPath} --files=${buildsClientPath} --ignore=${projectNodeModulePath}`;
-        console.log("Running node command: ", cmd);
+        // console.log("Running BrowserSync: ", cmd);
         runScript(cd, cmd, (err) => {
             if (err) {
                 console.error(err);
                 rj(err);
                 return;
             }
-            console.log("Finished loading script.");
+            // console.log("Finished loading BrowserSync.");
             rs(true);
         })
     })
@@ -119,13 +121,20 @@ function runBrowserSync() {
 function runDeploy() {
     return new Promise((rs, rj) => {
 
-        runScript(cd, `npx nodemon --inspect --enable-source-maps --watch ${cwd}/game-server --watch ./simulator ./simulator/server.js`, (err) => {
+        const cmd = `node ./simulator/deploy.js`;
+        console.log("[ACOS] Starting Deploy to ACOS.games");
+        let buildPath = path.join(cwd, '/builds');
+        let args = process.argv.splice(3, process.argv.length - 2);
+        // console.log(args, process.argv.length);
+        let argsStr = args.join(' ') + ' --buildPath=' + buildPath;
+        // console.log("Running Deploy: ", cmd + ' ' + argsStr);
+        runScript(cd, cmd + ' ' + argsStr, (err) => {
             if (err) {
                 console.error(err);
                 rj(err);
                 return;
             }
-            console.log("Finished loading script.");
+            // console.log("Finished Deploy.");
             rs(true);
         })
     })
@@ -136,7 +145,13 @@ function getCommand(argv) {
 }
 
 const command = getCommand(process.argv);
-console.log("RUNNING COMMAND: ", command);
+// console.log("[ACOS] RUNNING COMMAND!!!: ", command);
 if (command == '') {
     runServer();
+}
+else if (command == 'dev') {
+    runServer();
+}
+else if (command == 'deploy') {
+    runDeploy();
 }

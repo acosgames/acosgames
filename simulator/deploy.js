@@ -15,14 +15,15 @@ let resow = argv.resow || 4;
 let resoh = argv.resoh || 4;
 let screenwidth = argv.screenwidth || 1200;
 
+let buildPath = argv.buildPath || process.cwd();
 let isScaled = argv.scaled || false;
 let apikey = argv._[0];
 let isLocal = argv.local || false;
 
-console.log(process.argv);
-console.log(argv);
+// console.log(process.argv);
+// console.log(argv);
 
-console.log("parsed: apikey=", apikey, ", isScaled=", isScaled);
+// console.log("parsed: apikey=", apikey, ", isScaled=", isScaled);
 
 async function deployAll() {
     let url = 'http://localhost:8080/api/v1/dev/update/game/bundle/';
@@ -30,8 +31,8 @@ async function deployAll() {
         url = 'https://acos.games/api/v1/dev/update/game/bundle/';
     }
 
-    console.log("Current Working Directory: ", process.cwd())
-    let filepath = path.resolve(process.cwd() + '/builds/client/client.bundle.js');
+    console.log("[ACOS] current working directory: ", buildPath)
+    let filepath = path.join(buildPath, '/client/client.bundle.js');
     var clientFile = fs.createReadStream(filepath);
 
     var form_data = new FormData();
@@ -42,10 +43,10 @@ async function deployAll() {
     let hasDb = false;
 
     try {
-        let filepath = path.resolve(process.cwd() + '/game-server/database.json');
+        let filepath = path.join(buildPath, '../game-server/database.json');
         if (!fs.existsSync(filepath)) {
             //file exists
-            console.warn('No database exists. It is optional, but this is a reminder just incase you forgot it.  Format should be `database.json`')
+            console.warn('[ACOS] No database exists. It is optional, but this is a reminder just incase you forgot it.  Format should be `./game-server/database.json`')
         }
         else {
             var dbFile = fs.createReadStream(filepath);
@@ -56,7 +57,7 @@ async function deployAll() {
         console.error(err)
     }
 
-    let serverFilePath = path.resolve(process.cwd() + '/builds/server/server.bundle.js');
+    let serverFilePath = path.join(buildPath, '/server/server.bundle.js');
     var serverFile = fs.createReadStream(serverFilePath);
     form_data.append("server", serverFile);
 
@@ -79,11 +80,15 @@ async function deployAll() {
     }
     try {
         let response = await axios.request(config);
-        console.log(response.data);
+        let ver = response.data;
+        console.log(`[ACOS] Deployed version ${ver.version} successfully`);
+        console.log(`[ACOS] Screen Type: ${ver.screentype}${ver.screentype > 1 ? (', Resolution: ' + ver.resow + ':' + ver.resoh) : ''}${ver.screentype == 3 ? (', Width: ' + ver.screenwidth + 'px') : ''}`);
     }
     catch (e) {
-        console.error(e);
+        console.error('[ACOS] Error Deploying:', e);
     }
+
+    process.exit(0);
 }
 
 async function run() {

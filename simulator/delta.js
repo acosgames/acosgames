@@ -364,11 +364,11 @@ function test2() {
         events: []
     }
 
-    console.log(defaultGame);
+    console.log('[ACOS] ' + defaultGame);
     let hiddenOnly = d.hidden(defaultGame);
 
-    console.log(hiddenOnly);
-    console.log(defaultGame);
+    console.log('[ACOS] ' + hiddenOnly);
+    console.log('[ACOS] ' + defaultGame);
 }
 // test2();
 
@@ -411,16 +411,16 @@ function test() {
     for (var i = 0; i < 1; i++)
         diff = d.delta(defaultGame, changed, {});
     console.timeEnd('delta');
-    console.log("Diffed: ", diff);
+    console.log('[ACOS] ' + "Diffed: ", diff);
     let merged = d.merge(defaultGame, diff);
-    console.log("Merged: ", merged);
+    console.log('[ACOS] ' + "Merged: ", merged);
 
     changed = JSON.parse(JSON.stringify(merged));
     delete changed.players.joe.type;
     diff = d.delta(merged, changed, {});
-    console.log("Diffed2: ", diff);
+    console.log('[ACOS] ' + "Diffed2: ", diff);
     merged = d.merge(merged, diff);
-    console.log("Merged2: ", merged);
+    console.log('[ACOS] ' + "Merged2: ", merged);
 }
 
 // test();

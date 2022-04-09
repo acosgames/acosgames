@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
     socket.user = { name, id }
     clients[socket.user.id] = socket;
 
-    console.log('user connected: ' + socket.user.name);
+    console.log('[ACOS] user connected: ' + socket.user.name);
     socket.emit('connected', encode(socket.user));
 
     setInterval(() => {
@@ -67,7 +67,7 @@ io.on('connection', (socket) => {
     }, 500)
 
     socket.on('disconnect', () => {
-        console.log('user disconnected: ' + socket.user.name);
+        console.log('[ACOS] user disconnected: ' + socket.user.name);
         delete clients[socket.user.id];
         userCount--;
     });
@@ -90,7 +90,7 @@ io.on('connection', (socket) => {
 
         if (msgBuffer.length > maxActionBytes) {
             let warning = '!WARNING! User Action is over limit of ' + maxActionBytes + ' bytes.'
-            console.log('\x1b[33m%s\x1b[0m', warning);
+            console.log('[ACOS] \x1b[33m%s\x1b[0m', warning);
         }
 
         action.user = socket.user;
@@ -149,7 +149,7 @@ io.on('connection', (socket) => {
 
     socket.on('reload', (msg) => {
         msg = decode(msg);
-        console.log("Incoming Action: ", msg);
+        console.log("[ACOS] Incoming Action: ", msg);
         gameHistory = [];
         worker.postMessage([{ type: 'reset' }]);
     })
@@ -219,10 +219,10 @@ function stringify(obj) {
 }
 
 function createWorker(index) {
-    console.log("Worker current directory: ", process.cwd(), process.argv);
+    console.log("[ACOS] Worker current directory: ", process.cwd(), process.argv);
     const worker = new Worker(__dirname + '/worker.js', { workerData: { dir: process.argv[2] }, });
     worker.on("message", (dlta) => {
-        console.time('[WorkerOnMessage]')
+        console.time('[ACOS] [WorkerOnMessage]')
         if (!dlta || dlta.status) {
             return;
         }
@@ -230,8 +230,8 @@ function createWorker(index) {
 
         let game = getLastGame() || {};
         game = delta.merge(game, dlta);
-        console.log("Delta: ", stringify(dlta));
-        console.log("Merged Game: ", stringify(game));
+        console.log("[ACOS] Delta: ", stringify(dlta));
+        console.log("[ACOS] Merged Game: ", stringify(game));
 
         //remove private variables and send individually to palyers
         let copy = JSON.parse(JSON.stringify(dlta));
@@ -280,8 +280,8 @@ function createWorker(index) {
             gameDeadline = game.timer.end;
         }
 
-        console.timeEnd('[WorkerOnMessage]')
-        console.timeEnd('[ActionLoop]')
+        console.timeEnd('[ACOS] [WorkerOnMessage]')
+        console.timeEnd('[ACOS] [ActionLoop]')
     });
     worker.on("online", (err) => {
 
@@ -324,7 +324,7 @@ app.get('/iframe', function (req, res) {
 });
 
 server.listen(port, () => {
-    console.log('Server started at http://localhost:' + port);
+    console.log('[ACOS] Server started at http://localhost:' + port);
 
 
 });

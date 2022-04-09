@@ -241,7 +241,7 @@ function bufToBn(buf) {
 
 
 
-console.log("ENCODER VERSION = " + encoderVersion);
+console.log("[ACOS] ENCODER VERSION = " + encoderVersion);
 
 let testJSON = {
     "type": "ping",
@@ -1413,7 +1413,7 @@ function encode(json, storedDict) {
         // console.time('serialize');
         let encoded = serialize(json, dict);
         // console.timeEnd('serialize');
-        console.log('Encoded Size: ', encoded.byteLength)
+        console.log('[ACOS] Encoded Size: ', encoded.byteLength)
         // let jsonStr = JSON.stringify(json);
         // let buffer = encoder.encode(jsonStr);
         // let deflated = pako.deflate(encoded);
@@ -1508,12 +1508,12 @@ function test() {
     let decoded = decode(jsonEncoded);
 
     // console.timeEnd("decode");
-    console.log(decoded);
+    console.log('[ACOS] ' + decoded);
     // console.log("Dict: ", dict);
     // console.log("Buffer:", encoded.byteLength);
     // console.log("Dict length: ", dictLen);
     // console.log("Buffer+Dict length: ", dictLen + encoded.byteLength);
-    console.log("JSON length: ", JSON.stringify(testJSON2).length);
+    console.log("[ACOS] JSON length: ", JSON.stringify(testJSON2).length);
     // console.log("compressed byte len: ", deflated.length);
     // console.log("compressed JSON str byte len: ", jsonDeflated.length);
     // var dataview = new DataView(encoded);

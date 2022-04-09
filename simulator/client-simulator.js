@@ -410,7 +410,7 @@ function connect(username, onjoin) {
 
         // message.local = Object.assign({}, socket.user, localPlayer);
         sendFrameMessage(lastMessage);
-        console.timeEnd('ActionLoop');
+        console.timeEnd('[ACOS] ActionLoop');
     });
 
     socket.on('disconnect', () => {

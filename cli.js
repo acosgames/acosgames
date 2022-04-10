@@ -8,13 +8,13 @@ const cwd = process.cwd();
 const cd = __dirname;
 
 process.on('SIGINT', function () {
-    console.log('SIGINT');
+    console.log('[ACOS] SIGINT');
 
     for (var i = 0; i < children.length; i++) {
         let child = children[i];
         if (child) {
             child.kill()
-            console.log("Killing child: ", i)
+            console.log("[ACOS] Killing child process: ", i)
         }
     }
     process.exit();

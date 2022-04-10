@@ -31,7 +31,7 @@ var globals = {
     },
     game: () => cloneObj(globalGame),
     actions: () => {
-        return globalActions
+        return cloneObj(globalActions)
     },
     killGame: () => {
         globalDone = true;

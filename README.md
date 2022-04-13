@@ -40,7 +40,7 @@ npm install acosgames --save-dev
 Note: You must run this from inside of your game project in same folder as the package.json file.
 
 ```bash
-node --enable-source-maps ./node_modules/acosgames/simulator/server.js
+npx acos
 ```
 
 

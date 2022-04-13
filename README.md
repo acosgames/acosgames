@@ -26,6 +26,8 @@ will be loaded on the server-side of simulator.
 
 [View TicTacToe code for example usage](https://github.com/acosgames/tictactoe)
 
+[View Memorize Up code for example usage](https://github.com/acosgames/memorize-up)
+
 --- 
 
 ## Install 

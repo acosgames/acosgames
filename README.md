@@ -46,7 +46,7 @@ npx acos
 ```
 
 
-## Find out more 
+## Community
 
 [Chat with us on Discord](https://discord.gg/ydHkCcNgHD)
 

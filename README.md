@@ -1,7 +1,9 @@
 
 ## ACOS Simulator
 
-![image](https://cdn.acos.games/file/acospub/acos-logo-combined.png)
+<a href="https://acos.games/"><img src="https://cdn.acos.games/file/acospub/acos-logo-combined.png"></a>
+
+[View Documentation](https://docs.acos.games)
 
 This package must be run from your game project.   
 
@@ -21,8 +23,6 @@ will be loaded inside an `<iframe>` at the end of the `<body>` tag.
 will be loaded on the server-side of simulator.  
 
 
-
-[View Documentation](https://docs.acos.games)
 
 [View TicTacToe code for example usage](https://github.com/acosgames/tictactoe)
 

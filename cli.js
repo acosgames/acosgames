@@ -73,12 +73,12 @@ function runScript(dirPath, command, callback) {
 
 }
 
-function runServer() {
+function runServer(isDev) {
     return new Promise(async (rs, rj) => {
 
-        console.log("[ACOS] Starting Simulator");
+        console.log("[ACOS] Starting Simulator Server");
 
-        const cmd = `npx nodemon --inspect --enable-source-maps --watch ./simulator ./simulator/server.js "${cwd}"`;
+        const cmd = `npx nodemon --enable-source-maps --watch ./simulator/server --watch ./simulator/server/public ./simulator/server/server.js "${cwd}"`;
         // console.log("STARTING ACOSGAMES SIMULATOR >>>>>>>\n", cmd);
 
         runScript(cd, cmd, async (err, sigint) => {
@@ -89,7 +89,34 @@ function runServer() {
             }
             // console.log("Finished loading ACOS Simulator.");
 
+            if (isDev) {
+                await runClient();
+            }
+
             await runBrowserSync();
+
+            rs(true);
+        })
+    })
+}
+
+function runClient() {
+    return new Promise(async (rs, rj) => {
+
+        console.log("[ACOS] Starting Simulator Client");
+
+        const cmd = `cd ./simulator/client && npm start`;
+        // console.log("STARTING ACOSGAMES SIMULATOR >>>>>>>\n", cmd);
+
+        runScript(cd, cmd, async (err, sigint) => {
+            if (err) {
+                console.error(err);
+                rj(err);
+                return;
+            }
+            // console.log("Finished loading ACOS Simulator.");
+
+            // await runBrowserSync();
 
             rs(true);
         })
@@ -99,7 +126,7 @@ function runServer() {
 function runBrowserSync() {
     return new Promise((rs, rj) => {
 
-        console.log("[ACOS] Starting BrowserSync");
+        console.log("[ACOS] Starting Simulator BrowserSync");
 
         let gameClientPath = path.join(cwd, '/game-client/**');
         let buildsClientPath = path.join(cwd, '/builds/client/**');
@@ -147,10 +174,10 @@ function getCommand(argv) {
 const command = getCommand(process.argv);
 // console.log("[ACOS] RUNNING COMMAND!!!: ", command);
 if (command == '') {
-    runServer();
+    runServer(false);
 }
 else if (command == 'dev') {
-    runServer();
+    runServer(true);
 }
 else if (command == 'deploy') {
     runDeploy();

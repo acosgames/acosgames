@@ -23,7 +23,6 @@
     "openskill": "^1.4.1",
     "shelljs": "^0.8.5",
     "socket.io": "^4.4.1",
-    "source-map-support": "^0.5.21",
     "vm2": "^3.9.9",
     "yargs": "^17.0.1"
   },

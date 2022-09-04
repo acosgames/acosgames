@@ -241,7 +241,7 @@ function bufToBn(buf) {
 
 
 
-console.log("[ACOS] ENCODER VERSION = " + encoderVersion);
+console.log("ENCODER VERSION = " + encoderVersion);
 
 let testJSON = {
     "type": "ping",
@@ -363,6 +363,7 @@ var defaultOrder = [
     'rating',
     'ratingTxt',
     'score',
+    'highscore',
     '_win',
     '_loss',
     '_tie',
@@ -473,9 +474,14 @@ var defaultOrder = [
     'item',
     'items',
     'bestOf',
-
     'achievements',
-    'achievement'
+    'achievement',
+    'chat',
+    'message',
+    'displayname',
+    'timestamp',
+    'icon',
+    'lastUpdate'
 ]
 
 var defaultDict = null;
@@ -600,7 +606,7 @@ function serializeEX(json, buffer, dict, cache) {
         if (json in cache) {
             let pos = cache[json];
             // console.log("Found cache for:", json, "at", pos);
-            if (json.length <= 255) {
+            if (pos <= 255) {
                 buffer.push(TYPE_STRING_DICT1);
                 dv.setUint8(0, pos);
                 buffer.push(dv.getUint8(0));
@@ -1413,7 +1419,7 @@ function encode(json, storedDict) {
         // console.time('serialize');
         let encoded = serialize(json, dict);
         // console.timeEnd('serialize');
-        console.log('[ACOS] Encoded Size: ', encoded.byteLength)
+        console.log('Encoded Size: ', encoded.byteLength, json)
         // let jsonStr = JSON.stringify(json);
         // let buffer = encoder.encode(jsonStr);
         // let deflated = pako.deflate(encoded);
@@ -1508,12 +1514,12 @@ function test() {
     let decoded = decode(jsonEncoded);
 
     // console.timeEnd("decode");
-    console.log('[ACOS] ' + decoded);
+    console.log(decoded);
     // console.log("Dict: ", dict);
     // console.log("Buffer:", encoded.byteLength);
     // console.log("Dict length: ", dictLen);
     // console.log("Buffer+Dict length: ", dictLen + encoded.byteLength);
-    console.log("[ACOS] JSON length: ", JSON.stringify(testJSON2).length);
+    console.log("JSON length: ", JSON.stringify(testJSON2).length);
     // console.log("compressed byte len: ", deflated.length);
     // console.log("compressed JSON str byte len: ", jsonDeflated.length);
     // var dataview = new DataView(encoded);

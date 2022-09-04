@@ -29,8 +29,9 @@ export function detachFromFrame() {
 }
 
 export function sendFrameMessage(msg) {
-    let iframe = fs.get('gamepanel>iframe');
-    if (iframe?.current) iframe.current.contentWindow.postMessage(msg, '*');
+    let iframe = fs.get('iframe');
+    if (iframe?.current)
+        iframe.current.contentWindow.postMessage(msg, '*');
 }
 
 export function recvFrameMessage(evt) {

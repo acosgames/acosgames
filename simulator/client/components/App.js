@@ -16,6 +16,24 @@ fs.set("isMobile", false);
 
 function App(props) {
 
+  let [, setIsMobile] = useState(false);
+
+  const onResize = () => {
+    let screenWidth = window.screen.width;
+    let isMobile = screenWidth <= 600;
+    setIsMobile(isMobile);
+    fs.set("isMobile", isMobile)
+  }
+
+  useEffect(() => {
+    window.addEventListener('resize', onResize);
+    onResize();
+
+    return () => {
+      window.removeEventListener('resize', onResize);
+    }
+  }, [])
+
   useEffect(() => {
 
     let defaultConfig = {

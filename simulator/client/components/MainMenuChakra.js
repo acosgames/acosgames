@@ -6,6 +6,7 @@ import {
     HStack,
     Icon,
     Button,
+    Text,
 } from '@chakra-ui/react';
 import fs from 'flatstore';
 import { Link, withRouter } from 'react-router-dom';
@@ -40,7 +41,7 @@ function ACOSHeader(props) {
                                 src={`https://cdn.acos.games/file/acospub/acos-logo-standalone4.png`}
                                 h={['1.8rem', '1.8rem', "3rem"]} maxHeight={'90%'}
                             />
-
+                            <Text fontSize="1rem">SIMULATOR</Text>
                         </Link>
                     </Box>
                 </HStack>

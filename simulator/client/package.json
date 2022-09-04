@@ -11,7 +11,7 @@
     "build:dev": "NODE_ENV=localhost npx webpack --config webpack/dev.config.js --watch .",
     "build:prod": "NODE_ENV=production npx webpack --config webpack/prod.config.js"
   },
-  "proxy": "http://localhost:8080",
+  "proxy": "http://localhost:3100",
   "dependencies": {
     "@chakra-ui/react": "^1.7.2",
     "@emotion/react": "^11.7.1",
@@ -24,7 +24,6 @@
     "react-dom": "^17.0.2",
     "react-icons": "^4.3.1",
     "react-router-dom": "^5.2.0",
-    "socket.io": "^4.4.1",
     "socket.io-client": "^4.5.2"
   },
   "devDependencies": {

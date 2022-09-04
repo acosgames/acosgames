@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "proxy": "http://localhost:3100",
   "bin": {
     "acos": "./cli.js"
   },
@@ -22,7 +23,8 @@
     "form-data": "^4.0.0",
     "openskill": "^1.4.1",
     "shelljs": "^0.8.5",
-    "socket.io": "^4.4.1",
+    "socket.io": "^4.5.2",
+    "vlq": "^2.0.4",
     "vm2": "^3.9.9",
     "yargs": "^17.0.1"
   },

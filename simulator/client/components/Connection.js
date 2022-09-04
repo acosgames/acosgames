@@ -7,13 +7,13 @@ import {
 
 import fs from 'flatstore';
 
-import { connect } from '../actions/websocket'
+// import { connect } from '../actions/websocket'
 import { attachToFrame, detachFromFrame } from "../actions/gamepanel";
 
 function Connection(props) {
 
     useEffect(() => {
-        connect();
+        // connect();
         attachToFrame();
 
         return () => { detachFromFrame() }

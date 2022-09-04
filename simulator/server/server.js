@@ -8,7 +8,7 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const options = {
-    transports: ["websocket"]
+    transports: ['websocket']
 }
 const io = new Server(server, options);
 const { Worker } = require("worker_threads")
@@ -39,39 +39,45 @@ const stringHashCode = (str) => {
     return hash;
 };
 
+setInterval(() => {
+    if (gameDeadline == 0)
+        return;
+    let now = (new Date()).getTime();
+    if (now > gameDeadline) {
+        if (queuedActions.length > 0) {
+            worker.postMessage(queuedActions);
+            queuedActions = [];
+            gameDeadline = 0;
+            return;
+        }
+
+        worker.postMessage([{ type: 'skip' }]);
+        gameDeadline = 0;
+    }
+}, 500)
+
 io.on('connection', (socket) => {
     userCount++;
     let name = socket.handshake.query.username;
     if (!name)
         return;
 
-    let id = stringHashCode(name);
-    socket.user = { name, id }
-    clients[socket.user.id] = socket;
+    let id = socket.id;
+    let shortid = "USER" + stringHashCode(name);
+    let user = { shortid, name, id }
+    clients[socket.id] = { socket, ...user };
 
-    console.log('[ACOS] user connected: ' + socket.user.name);
-    socket.emit('connected', encode(socket.user));
+    console.log('[ACOS] user connected: ' + name);
+    socket.emit('connected', encode(user));
 
-    setInterval(() => {
-        if (gameDeadline == 0)
-            return;
-        let now = (new Date()).getTime();
-        if (now > gameDeadline) {
-            if (queuedActions.length > 0) {
-                worker.postMessage(queuedActions);
-                queuedActions = [];
-                gameDeadline = 0;
-                return;
-            }
 
-            worker.postMessage([{ type: 'skip' }]);
-            gameDeadline = 0;
-        }
-    }, 500)
 
-    socket.on('disconnect', () => {
-        console.log('[ACOS] user disconnected: ' + socket.user.name);
-        delete clients[socket.user.id];
+    socket.on('disconnect', (e) => {
+        let client = clients[socket.id];
+        if (!client) return;
+
+        console.log('[ACOS] user disconnected: ' + client.name, e);
+        delete clients[socket.id];
         userCount--;
     });
 
@@ -96,7 +102,10 @@ io.on('connection', (socket) => {
             console.log('[ACOS] \x1b[33m%s\x1b[0m', warning);
         }
 
-        action.user = socket.user;
+        let client = clients[socket.id];
+        if (!client) return;
+
+        action.user = { id: client.shortid, name: client.name };
 
         if (action && action.type) {
 
@@ -114,7 +123,7 @@ io.on('connection', (socket) => {
                 if (hiddenPlayers)
                     for (var id in hiddenPlayers) {
                         if (hiddenPlayers[action.user.id] && clients[action.user.id])
-                            clients[id].emit('private', encode(hiddenPlayers[id]))
+                            clients[id].socket.emit('private', encode(hiddenPlayers[id]))
                     }
 
                 // socket.emit('join', encode(lastGame || {}));
@@ -272,9 +281,9 @@ function createWorker(index) {
             gameDeadline = 0;
             lastGame = {};
             setTimeout(() => {
-                for (var id in clients) {
-                    clients[id].disconnect();
-                }
+                // for (var id in clients) {
+                //     clients[id].disconnect();
+                // }
                 gameHistory = [];
             }, 1000);
 

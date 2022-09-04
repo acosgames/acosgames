@@ -4,6 +4,7 @@ const { VM, VMScript, NodeVM } = require('vm2');
 const path = require('path');
 const profiler = require('./profiler');
 const chokidar = require('chokidar');
+const vlq = require('vlq');
 
 const rank = require('./rank');
 const delta = require('../shared/delta');
@@ -47,7 +48,7 @@ var globals = {
 const vm = new VM({
     console: false,
     wasm: false,
-    eval: false,
+    eval: true,
     fixAsync: false,
     //timeout: 100,
     sandbox: { globals },
@@ -66,7 +67,10 @@ class FSGWorker {
     constructor() {
         this.action = {};
         this.gameHistory = [];
-        this.bundlePath = path.join(workerData.dir, './builds/server/server.bundle.js');
+        this.bundlePath = path.join(workerData.dir, './builds/server/');
+        this.bundleFilename = 'server.dev.bundle.js';
+        this.bundleFilePath = path.join(this.bundlePath, 'server.dev.bundle.js');
+        this.entryFilePath = path.join(workerData.dir, './game-server/index.js');
         this.dbPath = path.join(workerData.dir, './game-server/database.json');
         if (!fs.existsSync(this.dbPath))
             this.dbPath = null;
@@ -83,8 +87,13 @@ class FSGWorker {
     }
 
     makeGame(clearPlayers) {
-        if (!globalGame)
-            globalGame = {};
+        //if (!globalGame)
+        let players = {};
+        if (globalGame.players) {
+            players = globalGame.players;
+        }
+
+        globalGame = {};
         if (globalGame.killGame) {
             delete globalGame['killGame'];
         }
@@ -99,8 +108,8 @@ class FSGWorker {
         }
         else {
             let newPlayers = {};
-            for (var id in globalGame.players) {
-                let player = globalGame.players[id];
+            for (var id in players) {
+                let player = players[id];
                 newPlayers[id] = {
                     name: player.name
                 }
@@ -164,8 +173,10 @@ class FSGWorker {
             globalIgnore = false;
             if (!globalGame)
                 this.makeGame();
-            else
+            else {
+                globalGame.events = {};
                 before = cloneObj(globalGame);
+            }
 
             let timeleft = this.calculateTimeleft(globalGame);
             if (globalGame.timer) {
@@ -177,35 +188,41 @@ class FSGWorker {
             }
 
 
+
             if (actions.length == 1) {
                 if (actions[0].type == 'join') {
-                    let userid = actions[0].user.id;
+                    let shortid = actions[0].user.id;
                     let username = actions[0].user.name;
 
-                    if (!globalRatings[userid]) {
-                        globalRatings[userid] = {
+                    if (!globalRatings[shortid]) {
+                        globalRatings[shortid] = {
                             rating: 2500,
                             mu: 25.0,
                             sigma: 5.0
                         }
                     }
 
-                    if (!userid) {
-                        console.error("Invalid player: " + userid);
+                    if (!shortid) {
+                        console.error("Invalid player: " + shortid);
                         return;
                     }
 
                     if (!globalGame.players)
                         globalGame.players = {};
 
-                    if (!(userid in globalGame.players)) {
-                        globalGame.players[userid] = {
+                    if (!(shortid in globalGame.players)) {
+                        globalGame.players[shortid] = {
                             name: username
                         }
                     }
                     else {
-                        globalGame.players[userid].name = username;
+                        globalGame.players[shortid].name = username;
                     }
+
+                    if (!globalGame?.events?.join) {
+                        globalGame.events.join = [];
+                    }
+                    globalGame.events.join.push(shortid);
                 }
                 else if (actions[0].type == 'reset') {
                     this.makeGame();
@@ -224,6 +241,8 @@ class FSGWorker {
                 actions = [actions];
             }
             globalActions = cloneObj(actions);
+
+            //RUN GAME SERVER SCRIPT 
             await this.run();
 
             if (globalIgnore)
@@ -232,7 +251,7 @@ class FSGWorker {
             //should we kill the game?
             if (globalResult && globalResult.events && globalResult.events.gameover) {
 
-                this.processPlayerRatings(globalResult.players, globalResult.teams);
+                // this.processPlayerRatings(globalResult.players, globalResult.teams);
 
 
                 // this.makeGame(true);
@@ -244,11 +263,26 @@ class FSGWorker {
             //game still live, process timer and history
             else {
                 if (globalResult) {
+                    if (actions[0].type == 'join') {
+                        let shortid = actions[0].user.id;
 
-                    if (actions[0].type == 'gamestart') {
+                        if (!globalResult?.events?.join) {
+                            if (!globalResult?.events)
+                                globalResult.events = {};
+                            globalResult.events.join = [];
+                        }
+                        globalResult.events.join.push(shortid);
+                    }
+                    else if (actions[0].type == 'reset') {
+
+                    }
+                    else if (actions[0].type == 'gamestart') {
                         if (globalResult.state)
                             globalResult.state.gamestatus = 'gamestart';
                     }
+
+
+
 
                     this.processTimelimit(globalResult.timer);
                     this.storeGame(globalResult);
@@ -331,9 +365,9 @@ class FSGWorker {
     async reloadServerBundle(filepath) {
         profiler.Start('Reload Bundle');
         {
-            filepath = filepath || this.bundlePath;
+            filepath = filepath || this.bundleFilePath;
             var data = await fs.promises.readFile(filepath, 'utf8');
-            this.gameScript = new VMScript(data, this.bundlePath).compile();
+            this.gameScript = new VMScript(data, this.bundleFilePath).compile();
         }
         profiler.End('Reload Bundle');
 
@@ -349,10 +383,10 @@ class FSGWorker {
             this.reloadServerBundle();
             this.reloadServerDatabase();
 
-            let watchPath = this.bundlePath.substr(0, this.bundlePath.lastIndexOf(path.sep));
+            let watchPath = this.bundleFilePath.substr(0, this.bundleFilePath.lastIndexOf(path.sep));
             chokidar.watch(watchPath).on('change', (path) => {
                 this.reloadServerBundle();
-                console.log(`[ACOS] ${this.bundlePath} file Changed`, watchPath);
+                console.log(`[ACOS] ${this.bundleFilePath} file Changed`, watchPath);
             });
 
             if (this.dbPath) {
@@ -388,11 +422,96 @@ class FSGWorker {
                 rs(true);
             }
             catch (e) {
-                console.error(e);
+                console.error(this.bundleFilePath);
+                let fixed = this.convertStack(e.stack);
+                console.error(e.message, fixed);
                 rs(false);
             }
         })
 
+    }
+
+    convertStack(stackTrace) {
+        let regex = /server\.dev\.bundle\.js:([0-9]+):([0-9]+)/ig
+        let matches = [...stackTrace.matchAll(regex)]
+
+
+        let sourcemap = this.decodeSourceMap();
+
+
+        for (const match of matches) {
+            let lineNumber = Number.parseInt(match[1]) - 1;
+            if (lineNumber >= sourcemap.decoded.length) {
+                continue;
+            }
+            let lineInfo = this.findLineInfo(sourcemap, lineNumber);
+            let newLineTrace = lineInfo[0] + ':' + lineInfo[1] + ':' + match[2];
+            stackTrace = stackTrace.replace(this.bundleFilePath + ':' + match[1] + ':' + match[2], newLineTrace);
+        }
+
+        return stackTrace;
+    }
+
+    decodeSourceMap() {
+        let sourceMapPath = path.join(this.bundlePath, this.bundleFilename + '.map');
+        let jsonStr = fs.readFileSync(sourceMapPath);
+        let json = JSON.parse(jsonStr);
+
+        let mappings = json.mappings;
+        let vlqs = mappings.split(';').map(line => line.split(','));
+        let decoded = vlqs.map(line => line.map(vlq.decode));
+
+        let sourceFileIndex = 0;   // second field
+        let sourceCodeLine = 0;    // third field
+        let sourceCodeColumn = 0;  // fourth field
+        let nameIndex = 0;         // fifth field
+
+        decoded = decoded.map(line => {
+            let generatedCodeColumn = 0; // first field - reset each time
+
+            return line.map(segment => {
+                if (segment.length === 0) {
+                    return [];
+                }
+                generatedCodeColumn += segment[0];
+
+                const result = [generatedCodeColumn];
+
+                if (segment.length === 1) {
+                    // only one field!
+                    return result;
+                }
+
+                sourceFileIndex += segment[1];
+                sourceCodeLine += segment[2];
+                sourceCodeColumn += segment[3];
+
+                result.push(sourceFileIndex, sourceCodeLine, sourceCodeColumn);
+
+                if (segment.length === 5) {
+                    nameIndex += segment[4];
+                    result.push(nameIndex);
+                }
+
+                return result;
+            });
+        });
+
+        // console.log(decoded);
+        return { decoded, json };
+    }
+
+
+    findLineInfo(sourcemap, compiledLineNumber) {
+        let json = sourcemap.json;
+        let decoded = sourcemap.decoded;
+        let lineMapping = decoded[compiledLineNumber][0];
+
+        let sourceFile = json.sources[lineMapping[1]].replace("file:///", "");
+        let lineNumber = Number.parseInt(lineMapping[2]) + 1;
+        let columnNumber = Number.parseInt(lineMapping[3]) + 1;
+
+        return [sourceFile, lineNumber, columnNumber];
     }
 }
 

@@ -41,5 +41,7 @@ export function recvFrameMessage(evt) {
     }
     // console.time('ActionLoop');
     let socket = fs.get('socket');
+    let socketUser = fs.get('socketUser');
+    data.user = { id: socketUser.id, name: socketUser.name };
     if (socket) socket.emit('action', encode(data));
 }

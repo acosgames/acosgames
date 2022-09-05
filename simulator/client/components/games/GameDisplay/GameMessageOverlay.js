@@ -40,6 +40,7 @@ function GameMessageOverlay(props) {
     // let game = fs.get('games>' + game_slug) || {};
     let gamestate = gamepanel.gamestate;// fs.get('gamestate') || {};
     let state = gamestate?.state;
+    let gameroom = gamestate?.room;
     let events = gamestate?.events;
     if (!state) {
         return <></>
@@ -71,10 +72,10 @@ function GameMessageOverlay(props) {
 
     let message = null;
 
-    let isPregame = state?.gamestatus == 'pregame';
-    let isStarting = state?.gamestatus == 'starting';
-    let isGamestart = state?.gamestatus == 'gamestart';
-    let isGameover = state?.gamestatus == 'gameover' || events?.gameover;
+    let isPregame = gameroom?.status == 'pregame';
+    let isStarting = gameroom?.status == 'starting';
+    let isGamestart = gameroom?.status == 'gamestart';
+    let isGameover = gameroom?.status == 'gameover' || events?.gameover;
 
     let roomStatus = getRoomStatus(room_slug);
     // if (isGamestart)

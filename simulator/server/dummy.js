@@ -9,7 +9,7 @@ const fs = require('fs');
 
 function testSourceMap() {
 
-    let jsonStr = fs.readFileSync('../memorize-up/builds/server/server.dev.bundle.js.map');
+    let jsonStr = fs.readFileSync('../memorize-up/builds/server/server.bundle.dev.js.map');
     let json = JSON.parse(jsonStr);
 
 
@@ -70,7 +70,7 @@ function testSourceMap() {
     let columnNumber = Number.parseInt(lineMapping[3]) + 1;
     console.log(sourceFile, lineNumber + ':' + columnNumber);
 
-    //E:\GitHub\acos-games\memorize-up\builds\server\server.dev.bundle.js:277:27
+    //E:\GitHub\acos-games\memorize-up\builds\server\server.bundle.dev.js:277:27
 }
 
 function run() {

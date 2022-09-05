@@ -23,6 +23,8 @@ function GamePanel(props) {
     let key = 'gamepanel';
     let [gamepanel] = fs.useWatch(key, fs.get(key));
     let [loaded] = fs.useWatch(key + '>loaded');
+    let [wsStatus] = fs.useWatch('wsStatus');
+
     // const gamepanel = props.gamepanel;
     // if (!gamepanel) {
     //     return <LoadingBox />
@@ -36,6 +38,9 @@ function GamePanel(props) {
     // if (!room)
     //     return <LoadingBox />
 
+    if (wsStatus != 'ingame') {
+        return <></>
+    }
     // let game = getGame(room.game_slug);
     // if (!game)
     // return <LoadingBox />

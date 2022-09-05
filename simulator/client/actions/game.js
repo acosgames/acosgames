@@ -22,7 +22,7 @@ export function onGameUpdate(message) {
         // showStateView(message, document.getElementById('state'));
         if (!message.players) return;
 
-        let localPlayer = message.players[socketUser.shortid];
+        let localPlayer = message.players[socketUser.id];
         if (localPlayer) fs.set('wsStatus', 'ingame');
 
         // if (localPlayer) note.textContent = 'Status: ingame';
@@ -42,6 +42,7 @@ export function onGameUpdate(message) {
             lastMessage = message;
         }
 
+        fs.set('gameStatus', message?.room?.status || 'none');
         fs.set('lastMessage', lastMessage);
     }
     catch (e) {
@@ -57,7 +58,7 @@ export function onGamePrivateUpdate(message) {
 
         let socketUser = fs.get('socketUser');
 
-        let localPlayer = lastMessage.players[socketUser.shortid];
+        let localPlayer = lastMessage.players[socketUser.id];
 
         if (localPlayer) {
             localPlayer = DELTA.merge(localPlayer || {}, message);
@@ -75,21 +76,49 @@ export function onGamePrivateUpdate(message) {
         console.error(e);
     }
 }
+
 export function leaveGame(message) {
     let socket = fs.get('socket');
+    let socketUser = fs.get('socketUser');
+    let user = { id: socketUser.id, name: socketUser.name };
 
     fs.set('lastMessage', {});
-    socket.emit('action', encode({ type: 'leave' }));
+    socket.emit('action', encode({ type: 'leave', user }));
+    fs.set('gameStatus', 'none');
 }
+
+export function joinGame() {
+    let socket = fs.get('socket');
+    let socketUser = fs.get('socketUser');
+    let user = { id: socketUser.id, name: socketUser.name };
+
+    fs.set('lastMessage', {});
+    socket.emit('action', encode({ type: 'join', user }));
+}
+
 export function startGame(message) {
     let socket = fs.get('socket');
+    let socketUser = fs.get('socketUser');
+    let user = { id: socketUser.id, name: socketUser.name };
+
     fs.set('lastMessage', {});
-    socket.emit('action', encode({ type: 'gamestart' }));
+    socket.emit('action', encode({ type: 'gamestart', user }));
+}
+
+export function newGame(message) {
+    let socket = fs.get('socket');
+    let socketUser = fs.get('socketUser');
+    let user = { id: socketUser.id, name: socketUser.name };
+
+    fs.set('lastMessage', {});
+    socket.emit('action', encode({ type: 'newgame', user }));
 }
 
 export function onLeave(message) {
     try {
         fs.set('lastMessage', {});
+        fs.set('wsStatus', 'connected');
+        fs.set('gameStatus', 'none');
     }
     catch (e) {
         console.error(e);
@@ -119,14 +148,14 @@ export function onJoin(message) {
 
         if (!message.players) return;
 
-        let localPlayer = message.players[socketUser.shortid];
+        let localPlayer = message.players[socketUser.id];
         // if (localPlayer) note.textContent = 'Status: ingame';
         // console.log('Game: ', message);
         message.local = localPlayer;
         message.local.id = socketUser.name;
 
         // message.local = Object.assign({}, socket.user, localPlayer);
-        // sendFrameMessage(message);
+        sendFrameMessage(message);
         // console.timeEnd('ActionLoop');
 
         if (message && message.events && message.events.gameover) {
@@ -135,6 +164,10 @@ export function onJoin(message) {
             lastMessage = message;
         }
 
+        if (message?.room?.status) {
+            fs.set('gameStatus', message.room.status);
+        }
+        fs.set('wsStatus', 'ingame');
         fs.set('lastMessage', lastMessage);
     }
     catch (e) {

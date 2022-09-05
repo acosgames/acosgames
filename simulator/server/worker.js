@@ -9,6 +9,10 @@ const vlq = require('vlq');
 const rank = require('./rank');
 const delta = require('../shared/delta');
 
+const NANOID = require('nanoid');
+const { isObject } = require("./util");
+const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
+
 var globalRatings = {};
 
 var globalDatabase = null;
@@ -19,9 +23,17 @@ var globalResult = {};
 var globalDone = null;
 var globalIgnore = false;
 
+var globalGameSettings = {};
+
 var globals = {
-    log: (msg) => { console.log(msg) },
-    error: (msg) => { console.error(msg) },
+    log: (args) => {
+        console.log.apply(console, args);
+        //console.log(msg) 
+    },
+    error: (args) => {
+        console.error.apply(console, args);
+        // console.error(msg) 
+    },
     finish: (newGame) => {
         try {
             globalResult = cloneObj(newGame);
@@ -68,9 +80,10 @@ class FSGWorker {
         this.action = {};
         this.gameHistory = [];
         this.bundlePath = path.join(workerData.dir, './builds/server/');
-        this.bundleFilename = 'server.dev.bundle.js';
-        this.bundleFilePath = path.join(this.bundlePath, 'server.dev.bundle.js');
+        this.bundleFilename = 'server.bundle.dev.js';
+        this.bundleFilePath = path.join(this.bundlePath, 'server.bundle.dev.js');
         this.entryFilePath = path.join(workerData.dir, './game-server/index.js');
+        this.settingsPath = path.join(workerData.dir, './game-settings.json');
         this.dbPath = path.join(workerData.dir, './game-server/database.json');
         if (!fs.existsSync(this.dbPath))
             this.dbPath = null;
@@ -97,6 +110,7 @@ class FSGWorker {
         if (globalGame.killGame) {
             delete globalGame['killGame'];
         }
+        globalGame.room = {};
         globalGame.state = {};
         globalGame.rules = {};
         globalGame.next = {};
@@ -142,161 +156,137 @@ class FSGWorker {
         delete timer.set;
     }
 
-    calculateTimeleft(game) {
-        if (!game || !game.timer || !game.timer.end)
-            return 0;
-
-        let deadline = game.timer.end;
-        let now = (new Date()).getTime();
-        let timeleft = deadline - now;
-        // if (action.type == 'skip') {
-        //     if (now < deadline)
-        //         return false;
-        // }
 
 
-        return timeleft;
-    }
-
-    async onAction(actions) {
+    async onAction({ room, action, gamestate }) {
         try {
-
-
             profiler.Start("[WorkerOnAction]")
-            if (!Array.isArray(actions)) {
-                console.log("[ACOS] Not an action: ", actions);
-                return;
-            }
+            console.log("[ACOS] Executing Action: ", action);
+            globalGame = gamestate;
 
-            let before = {};
-            console.log("[ACOS] Executing Action: ", actions);
+            //validate gamestate
             globalIgnore = false;
             if (!globalGame)
                 this.makeGame();
             else {
                 globalGame.events = {};
-                before = cloneObj(globalGame);
-            }
-
-            let timeleft = this.calculateTimeleft(globalGame);
-            if (globalGame.timer) {
-                for (var i = 0; i < actions.length; i++) {
-                    actions[i].seq = globalGame.timer.seq || 0;
-                    actions[i].timeleft = timeleft;
-                }
-
             }
 
 
 
-            if (actions.length == 1) {
-                if (actions[0].type == 'join') {
-                    let shortid = actions[0].user.id;
-                    let username = actions[0].user.name;
+            //pre process actions
+            if (action.type == 'join') {
+                let shortid = action.user.id;
+                let username = action.user.name;
 
-                    if (!globalRatings[shortid]) {
-                        globalRatings[shortid] = {
-                            rating: 2500,
-                            mu: 25.0,
-                            sigma: 5.0
-                        }
-                    }
-
-                    if (!shortid) {
-                        console.error("Invalid player: " + shortid);
-                        return;
-                    }
-
-                    if (!globalGame.players)
-                        globalGame.players = {};
-
-                    if (!(shortid in globalGame.players)) {
-                        globalGame.players[shortid] = {
-                            name: username
-                        }
-                    }
-                    else {
-                        globalGame.players[shortid].name = username;
-                    }
-
-                    if (!globalGame?.events?.join) {
-                        globalGame.events.join = [];
-                    }
-                    globalGame.events.join.push(shortid);
+                if (!shortid) {
+                    console.error("Invalid player: " + shortid);
+                    return;
                 }
-                else if (actions[0].type == 'reset') {
-                    this.makeGame();
-                    before = {};
+
+                if (!('players' in globalGame))
+                    globalGame.players = {};
+
+                //first player joined, begin pregame mode
+                if (Object.keys(globalGame.players).length == 0) {
+                    if (!('state' in globalGame))
+                        globalGame.state = {};
+
+                    room.status = 'pregame';
+                    room.sequence = 0;
                 }
-                else if (actions[0].type == 'gamestart') {
-                    this.makeGame();
-                    before = {};
-                }
+
+                //add player into the game 
+                if (!(shortid in globalGame.players))
+                    globalGame.players[shortid] = {}
+                globalGame.players[shortid].name = username;
+
+            }
+            else if (action.type == 'reset') {
+                this.makeGame();
+            }
+            else if (action.type == 'gamestart') {
+                room.status = 'gamestart';
             }
 
-            // console.log("(2)Executing Action: ", msg);
+            globalActions = cloneObj([action]);
 
-            globalGame = cloneObj(globalGame);
-            if (!Array.isArray(actions)) {
-                actions = [actions];
-            }
-            globalActions = cloneObj(actions);
+            //add room data to gamestate
+            globalGame.room = room;
 
+            //------------------------------------
             //RUN GAME SERVER SCRIPT 
             await this.run();
 
-            if (globalIgnore)
+            if (globalIgnore) {
+                profiler.End("[WorkerOnAction]")
                 return;
+            }
+            //------------------------------------
 
             //should we kill the game?
-            if (globalResult && globalResult.events && globalResult.events.gameover) {
-
-                // this.processPlayerRatings(globalResult.players, globalResult.teams);
-
-
-                // this.makeGame(true);
-                //before = {};
-                // globalDone = false;
-                this.gameHistory = [];
-                globalGame = {};
+            if (globalResult?.events?.gameover) {
+                room.status = 'gameover';
             }
             //game still live, process timer and history
             else {
-                if (globalResult) {
-                    if (actions[0].type == 'join') {
-                        let shortid = actions[0].user.id;
 
-                        if (!globalResult?.events?.join) {
-                            if (!globalResult?.events)
-                                globalResult.events = {};
-                            globalResult.events.join = [];
-                        }
-                        globalResult.events.join.push(shortid);
+                //post process actions
+                if (action.type == 'join') {
+                    let shortid = action.user.id;
+
+                    if (!globalResult?.events?.join) {
+                        if (!globalResult?.events)
+                            globalResult.events = {};
+                        globalResult.events.join = [];
                     }
-                    else if (actions[0].type == 'reset') {
-
-                    }
-                    else if (actions[0].type == 'gamestart') {
-                        if (globalResult.state)
-                            globalResult.state.gamestatus = 'gamestart';
-                    }
-
-
-
-
-                    this.processTimelimit(globalResult.timer);
-                    this.storeGame(globalResult);
+                    globalResult.events.join.push(shortid);
                 }
+                if (action.type == 'leave') {
+                    let shortid = action.user.id;
+
+                    if (!globalResult?.events?.leave) {
+                        if (!globalResult?.events)
+                            globalResult.events = {};
+                        globalResult.events.leave = [];
+                    }
+                    globalResult.events.leave.push(shortid);
+                }
+                else if (action.type == 'reset') {
+                    room.status = 'pregame';
+                    room.sequence = 0;
+                }
+                else if (action.type == 'gamestart') {
+                    // this.gameHistory = [];
+                    room.status = 'gamestart';
+                }
+
+                this.processTimelimit(globalResult.timer);
+
             }
 
-            let diff = delta.delta(before, globalResult, {});
+
+            room.sequence = room.sequence + 1;
+            globalResult.room = room;
+            globalResult.action = action;
+
+
+            // this.storeGame(globalResult);
+
+
 
             profiler.End("[WorkerOnAction]")
-            parentPort.postMessage(diff);
+            parentPort.postMessage(globalResult);
             globalResult = {};
         }
         catch (e) {
             console.error(e);
+        }
+    }
+
+    validateGameResult() {
+        if (!isObject(globalResult)) {
+            globalResult = m
         }
     }
 
@@ -348,35 +338,37 @@ class FSGWorker {
         if (!filepath)
             return this.gameScript;
 
-        profiler.Start('Reload Database');
+        profiler.Start('Reloaded Server Database in');
         {
             var data = await fs.promises.readFile(filepath, 'utf8');
             globalDatabase = Object.freeze(JSON.parse(data));
         }
-        profiler.End('Reload Database');
+        profiler.End('Reloaded Server Database in');
 
         let filename = filepath.split(/\/|\\/ig);
         filename = filename[filename.length - 1];
-        console.log("[ACOS] Database Reloaded: " + filename);
+        // console.log("[ACOS] Reloaded Server Database in " + filename);
 
         return this.gameScript;
     }
 
     async reloadServerBundle(filepath) {
-        profiler.Start('Reload Bundle');
+        profiler.Start('Reloaded Server Bundle in');
         {
             filepath = filepath || this.bundleFilePath;
             var data = await fs.promises.readFile(filepath, 'utf8');
             this.gameScript = new VMScript(data, this.bundleFilePath).compile();
         }
-        profiler.End('Reload Bundle');
+        profiler.End('Reloaded Server Bundle in');
 
         let filename = filepath.split(/\/|\\/ig);
         filename = filename[filename.length - 1];
-        console.log("[ACOS] Bundle Reloaded: " + filename);
+        // console.log("[ACOS] Bundle Reloaded: " + filename);
 
         return this.gameScript;
     }
+
+
 
     async start() {
         try {
@@ -399,7 +391,7 @@ class FSGWorker {
 
 
             parentPort.on('message', this.onAction.bind(this));
-            parentPort.postMessage({ status: "READY" });
+            // parentPort.postMessage({ status: "READY" });
         }
         catch (e) {
             console.error(e);

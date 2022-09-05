@@ -15,7 +15,8 @@ fs.set('socket', null);
 fs.set('latency', 0);
 fs.set('latencyStart', 0);
 fs.set('latencyOffsetTime', 0);
-
+fs.set('wsStatus', 'disconnected');
+fs.set('gameStatus', 'none');
 
 //--------------------------------------------------
 //WebSockets Connection / Management 
@@ -75,53 +76,84 @@ export function connect(username) {
 const onConnect = (evt) => {
     fs.set('wsStatus', 'connected');
     let socket = fs.get('socket');
-    socket.emit('action', encode({ type: 'join' }));
+    let socketUser = fs.get('socketUser');
+
+
 }
 
 const onConnected = (message) => {
-    //message should have { id, name }
-    message = decode(message);
+    try {
+        //message should have { id, name }
+        message = decode(message);
 
-    let socketUser = message;
-    fs.set('socketUser', socketUser);
-    ping();
+        let socketUser = message.user;
+        let gameSettings = message.gameSettings;
+        ping();
 
-    fs.set('wsStatus', 'connected');
+        fs.set('gameSettings', gameSettings);
+        fs.set('socketUser', socketUser);
+        fs.set('wsStatus', 'connected');
+    }
+    catch (e) {
+        console.error(e);
+    }
+
 }
 
 const ping = () => {
-    let latencyStart = new Date().getTime();
-    let socket = fs.get('socket');
-    socket.emit('ping', encode({ payload: latencyStart }));
-    fs.set('latencyStart', latencyStart);
+    try {
+        let latencyStart = new Date().getTime();
+        let socket = fs.get('socket');
+        socket.emit('ping', encode({ payload: latencyStart }));
+        fs.set('latencyStart', latencyStart);
+    }
+    catch (e) {
+        console.error(e);
+    }
 }
 
 const onPong = (message) => {
-    message = decode(message);
-    let latencyStart = fs.get('latencyStart');
-    let serverOffset = message.payload.offset;
-    let serverTime = message.payload.serverTime;
-    let currentTime = new Date().getTime();
-    let latency = currentTime - latencyStart;
-    let offsetTime = currentTime - serverTime;
-    let realTime = currentTime + offsetTime + Math.ceil(latency / 2);
-    console.log('Latency Start: ', latencyStart);
-    console.log('Latency: ', latency);
-    console.log('Offset Time: ', offsetTime);
-    console.log('Server Offset: ', serverOffset);
-    console.log('Server Time: ', serverTime);
-    console.log('Client Time: ', currentTime);
-    console.log('Real Time: ', realTime);
+    try {
+        message = decode(message);
+        let latencyStart = fs.get('latencyStart');
+        let serverOffset = message.payload.offset;
+        let serverTime = message.payload.serverTime;
+        let currentTime = new Date().getTime();
+        let latency = currentTime - latencyStart;
+        let offsetTime = currentTime - serverTime;
+        let realTime = currentTime + offsetTime + Math.ceil(latency / 2);
+        console.log('Latency Start: ', latencyStart);
+        console.log('Latency: ', latency);
+        console.log('Offset Time: ', offsetTime);
+        console.log('Server Offset: ', serverOffset);
+        console.log('Server Time: ', serverTime);
+        console.log('Client Time: ', currentTime);
+        console.log('Real Time: ', realTime);
+    }
+    catch (e) {
+        console.error(e);
+    }
 }
 
 const onLastAction = (message) => {
-    message = decode(message);
-    console.log('Last Action: ', message);
+    try {
+        message = decode(message);
+        console.log('Last Action: ', message);
+    }
+    catch (e) {
+        console.error(e);
+    }
 }
 
 const onDisconnect = (e) => {
-    fs.set('wsStatus', 'disconnected');
-    let socket = fs.get('socket');
-    console.log(socket.id + ' disconnect', e, socket.io.engine);
+    try {
+        fs.set('wsStatus', 'disconnected');
+        fs.set('gameStatus', 'none');
+        let socket = fs.get('socket');
+        console.log(socket.id + ' disconnect', e, socket.io.engine);
+    }
+    catch (e) {
+        console.error(e);
+    }
 }
 

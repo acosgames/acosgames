@@ -12,7 +12,7 @@ import { IoSend, BsChevronBarRight, BsChevronBarLeft, BsChevronBarUp, BsChevronB
 // import ColorHash from 'color-hash'
 import { Link, useLocation } from 'react-router-dom';
 import { connect } from '../actions/websocket';
-import { leaveGame, startGame } from '../actions/game';
+import { joinGame, leaveGame, newGame, startGame } from '../actions/game';
 // import GameActions from '../games/GameDisplay/GameActions';
 // import QueuePanel from '../games/QueuePanel.js';
 
@@ -158,9 +158,9 @@ function ChatHeader(props) {
             height={['3rem', '4rem', '5rem']}
             spacing={'2rem'}
             mt={'0 !important'} >
-            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'all' ? 'gray.100' : 'gray.300'} textShadow={mode == 'all' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('all') }}>All</Text>
-            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'game' ? 'gray.100' : 'gray.300'} textShadow={mode == 'game' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('game') }}>Game</Text>
-            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'party' ? 'gray.100' : 'gray.300'} textShadow={mode == 'party' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('party') }}>Party</Text>
+            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'all' ? 'gray.100' : 'gray.300'} textShadow={mode == 'all' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('all') }}>Actions</Text>
+            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'game' ? 'gray.100' : 'gray.300'} textShadow={mode == 'game' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('game') }}>Players</Text>
+            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'party' ? 'gray.100' : 'gray.300'} textShadow={mode == 'party' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('party') }}>Debug</Text>
         </HStack>
     )
 }
@@ -196,26 +196,41 @@ function GameActions(props) {
 
     let [socketUser] = fs.useWatch('socketUser');
     let [wsStatus] = fs.useWatch('wsStatus');
+    let [gameStatus] = fs.useWatch('gameStatus');
 
-    if (wsStatus != 'ingame') {
+    if (wsStatus == 'disconnected') {
         return <></>
     }
 
 
     return (
         <VStack>
-            <HStack>
+            <HStack display={gameStatus != 'none' ? 'flex' : 'none'}>
                 <Button onClick={() => {
                     leaveGame()
                 }}>
                     Leave Game
                 </Button>
             </HStack>
-            <HStack>
+            <HStack display={gameStatus == 'none' ? 'flex' : 'none'}>
+                <Button onClick={() => {
+                    joinGame()
+                }}>
+                    Join Game
+                </Button>
+            </HStack>
+            <HStack display={gameStatus != 'none' ? 'flex' : 'none'}>
                 <Button onClick={() => {
                     startGame()
                 }}>
                     Start Game
+                </Button>
+            </HStack>
+            <HStack display={gameStatus != 'none' ? 'flex' : 'none'}>
+                <Button onClick={() => {
+                    newGame()
+                }}>
+                    New Game
                 </Button>
             </HStack>
         </VStack>
@@ -249,7 +264,7 @@ function ChoosePlayerName(props) {
     }, [])
 
     let [wsStatus] = fs.useWatch('wsStatus');
-    if (wsStatus == 'ingame') {
+    if (wsStatus == 'connected' || wsStatus == 'ingame') {
         return <></>
     }
 

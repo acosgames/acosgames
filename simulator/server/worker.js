@@ -11,6 +11,7 @@ const delta = require('../shared/delta');
 
 const NANOID = require('nanoid');
 const { isObject } = require("./util");
+const DiscreteRandom = require("./DiscreteRandom");
 const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
 
 var globalRatings = {};
@@ -25,6 +26,7 @@ var globalIgnore = false;
 
 var globalGameSettings = {};
 
+
 var globals = {
     log: (args) => {
         console.log.apply(console, args);
@@ -37,6 +39,14 @@ var globals = {
     finish: (newGame) => {
         try {
             globalResult = cloneObj(newGame);
+        }
+        catch (e) {
+            console.error(e);
+        }
+    },
+    random: () => {
+        try {
+            return DiscreteRandom.random();
         }
         catch (e) {
             console.error(e);
@@ -214,6 +224,8 @@ class FSGWorker {
             //add room data to gamestate
             globalGame.room = room;
 
+            let seedStr = room.room_slug + room.starttime + room.sequence;
+            DiscreteRandom.seed(seedStr, room.sequence);
             //------------------------------------
             //RUN GAME SERVER SCRIPT 
             await this.run();

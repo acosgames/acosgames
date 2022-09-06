@@ -34,11 +34,27 @@ export function sendFrameMessage(msg) {
         iframe.current.contentWindow.postMessage(msg, '*');
 }
 
+export function getFrameByEvent(event) {
+    return Array.from(document.getElementsByTagName('iframe')).filter(iframe => {
+        return iframe.contentWindow === event.source;
+    })[0];
+}
+
+
+
+
 export function recvFrameMessage(evt) {
     let data = evt.data;
     if (data.type == '__ready') {
         return;
     }
+
+    // let iframe = getFrameByEvent(evt);
+
+    // if (!action.type) return;
+
+    // let gamepanel = findGamePanelByIFrame(iframe);
+
     // console.time('ActionLoop');
     let socket = fs.get('socket');
     let socketUser = fs.get('socketUser');

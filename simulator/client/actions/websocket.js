@@ -3,7 +3,7 @@ import fs from 'flatstore'
 import { decode, encode } from './encoder';
 import { io } from "socket.io-client";
 
-import { onGamePrivateUpdate, onGameUpdate, onJoin, onLeave } from './game';
+import { onFakePlayer, onGamePrivateUpdate, onGameUpdate, onJoin, onLeave, onSpectate } from './game';
 
 
 
@@ -66,6 +66,8 @@ export function connect(username) {
     socket.on('join', onJoin)
     socket.on('leave', onLeave);
     socket.on('game', onGameUpdate);
+    socket.on('spectate', onSpectate);
+    socket.on('fakeplayer', onFakePlayer);
     socket.on('private', onGamePrivateUpdate);
     socket.on('disconnect', onDisconnect);
 

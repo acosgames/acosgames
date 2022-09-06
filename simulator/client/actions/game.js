@@ -92,7 +92,7 @@ export function joinGame() {
     let socketUser = fs.get('socketUser');
     let user = { id: socketUser.id, name: socketUser.name };
 
-    fs.set('lastMessage', {});
+    //fs.set('lastMessage', {});
     socket.emit('action', encode({ type: 'join', user }));
 }
 
@@ -101,7 +101,7 @@ export function startGame(message) {
     let socketUser = fs.get('socketUser');
     let user = { id: socketUser.id, name: socketUser.name };
 
-    fs.set('lastMessage', {});
+    //fs.set('lastMessage', {});
     socket.emit('action', encode({ type: 'gamestart', user }));
 }
 
@@ -112,6 +112,16 @@ export function newGame(message) {
 
     fs.set('lastMessage', {});
     socket.emit('action', encode({ type: 'newgame', user }));
+}
+
+export function spawnFakePlayers(message) {
+    let socket = fs.get('socket');
+    let socketUser = fs.get('socketUser');
+    let user = { id: socketUser.id, name: socketUser.name };
+
+
+    fs.set('lastMessage', {});
+    socket.emit('fakeplayer', encode({ type: 'create', user, payload: 1 }));
 }
 
 export function onLeave(message) {
@@ -136,7 +146,7 @@ export function onJoin(message) {
         // let username = fs.get('username');
         // document.getElementById('delta').innerHTML = jsonViewer(message, true);
 
-        message = DELTA.merge(lastMessage || {}, message);
+        //message = DELTA.merge(lastMessage || {}, message);
         // showStateView(message, document.getElementById('state'));
 
         // document.getElementById('joingame').innerText = 'Join Game';
@@ -173,4 +183,35 @@ export function onJoin(message) {
     catch (e) {
         console.error(e);
     }
+}
+
+export function onSpectate(message) {
+
+}
+
+export function onFakePlayer(message) {
+    message = decode(message);
+    console.log('FAKEPLAYER: ', message);
+    if (!message || typeof message.type === 'undefined') return;
+
+    let socket = fs.get('socket');
+    let socketUser = fs.get('socketUser');
+
+    if (message.type == 'create') {
+        let fakePlayers = fs.get('fakePlayers') || {};
+
+        let newFakePlayers = message.payload;
+        for (const fakePlayer of newFakePlayers) {
+            fakePlayers[fakePlayer.shortid] = fakePlayer;
+        }
+
+        fs.set('fakePlayers', fakePlayers);
+    }
+    else if (message.type == 'join') {
+        let fakePlayers = fs.get('fakePlayers');
+    }
+    else if (message.type == 'leave') {
+
+    }
+
 }

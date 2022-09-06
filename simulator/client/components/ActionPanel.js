@@ -12,7 +12,7 @@ import { IoSend, BsChevronBarRight, BsChevronBarLeft, BsChevronBarUp, BsChevronB
 // import ColorHash from 'color-hash'
 import { Link, useLocation } from 'react-router-dom';
 import { connect } from '../actions/websocket';
-import { joinGame, leaveGame, newGame, startGame } from '../actions/game';
+import { joinGame, leaveGame, newGame, spawnFakePlayers, startGame } from '../actions/game';
 // import GameActions from '../games/GameDisplay/GameActions';
 // import QueuePanel from '../games/QueuePanel.js';
 
@@ -202,36 +202,48 @@ function GameActions(props) {
         return <></>
     }
 
+    let isGameRunning = gameStatus != 'gameover' && gameStatus != 'none';
+    let isPregame = gameStatus == 'pregame';
+    let isInGame = wsStatus == 'ingame' && gameStatus != 'pregame';
 
     return (
         <VStack>
-            <HStack display={gameStatus != 'none' ? 'flex' : 'none'}>
+            <HStack display={isGameRunning ? 'flex' : 'none'}>
                 <Button onClick={() => {
                     leaveGame()
                 }}>
                     Leave Game
                 </Button>
             </HStack>
-            <HStack display={gameStatus == 'none' ? 'flex' : 'none'}>
+            {/* <HStack display={gameStatus == 'none' ? 'flex' : 'none'}>
                 <Button onClick={() => {
                     joinGame()
                 }}>
                     Join Game
                 </Button>
-            </HStack>
-            <HStack display={gameStatus != 'none' ? 'flex' : 'none'}>
+            </HStack> */}
+            <HStack display={isPregame ? 'flex' : 'none'}>
                 <Button onClick={() => {
                     startGame()
                 }}>
                     Start Game
                 </Button>
             </HStack>
-            <HStack display={gameStatus != 'none' ? 'flex' : 'none'}>
+            <HStack display={isInGame ? 'flex' : 'none'}>
                 <Button onClick={() => {
                     newGame()
                 }}>
                     New Game
                 </Button>
+            </HStack>
+            <HStack pt="2rem">
+                <VStack>
+                    <Button onClick={() => {
+                        spawnFakePlayers();
+                    }}>
+                        Spawn Fake Players
+                    </Button>
+                </VStack>
             </HStack>
         </VStack>
     )

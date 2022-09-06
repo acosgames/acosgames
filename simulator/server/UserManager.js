@@ -44,16 +44,50 @@ class UserManager {
         let offset = Object.keys(this.allFakeUsers).length;
 
         for (let i = 0; i < count; i++) {
-            let shortid = generateShortId(6);
+            let shortid = nanoid(6);
             //avoid duplicate collisions
             while (shortid in this.allFakeUsers) {
-                shortid = generateShortId(6);
+                shortid = nanoid(6);
             }
             let fakeuser = { shortid, name: 'Player' + (offset + i), clientid };
             this.allFakeUsers[shortid] = fakeuser;
             fakeusers.push(fakeuser);
         }
         return fakeusers;
+    }
+
+    getFakeUsers() {
+        return this.allFakeUsers;
+    }
+
+    iterateFakeUsers(clientid, func) {
+        let fakeUsers = [];
+        for (const shortid in this.allFakeUsers) {
+            let fakeUser = this.allFakeUsers[shortid];
+            if (fakeUser.clientid == clientid) {
+                if (func)
+                    func(fakeUser);
+                fakeUsers.push(fakeUser);
+            }
+        }
+        return fakeUsers;
+    }
+
+    removeFakeUser(shortid) {
+        if (shortid in this.allFakeUsers) {
+            delete this.allFakeUsers[shortid];
+        }
+    }
+
+    getFakeUsersByParent(clientid) {
+        let fakeUsers = [];
+        for (const shortid in this.allFakeUsers) {
+            let fakeUser = this.allFakeUsers[shortid];
+            if (fakeUser.clientid == clientid) {
+                fakeUsers.push(fakeUser);
+            }
+        }
+        return fakeUsers;
     }
 
 

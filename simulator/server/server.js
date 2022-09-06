@@ -146,43 +146,44 @@ function onPing(socket, msg) {
 function onFakeUser(socket, msg) {
     msg = decode(msg);
     let type = msg.type;
-    let count = msg.payload;
-    let client = clients[socket.id];
+    let count = msg.payload || 1;
+
+    let client = UserManager.getUserBySocketId(socket.id);
+
+    // let client = clients[socket.id];
     let shortid = client.shortid;
     // let fakeUsers = clients[socket.id].fakeUsers;
 
     if (type == 'create') {
-        let newFakeUsers = createFakeUsers(socket.id, count);
-        socket.emit('fakeuser', encode({ type: 'created', payload: newFakeUsers }))
+        let newFakeUsers = UserManager.createFakeUsers(shortid, count);
+        socket.emit('fakeplayer', encode({ type: 'created', payload: newFakeUsers }))
     }
     else if (type == 'join') {
-        for (const fakeUser of allFakeUsers) {
-            if (fakeUser.clientid != shortid)
-                continue;
-
+        let newFakeUsers = UserManager.iterateFakeUsers(client.shortid, (fakeUser) => {
             let action = {
                 type: 'join',
                 user: { shortid: fakeUser.shortid, name: fakeUser.name },
                 payload: {}
             }
             onAction(socket, action, true);
-
-        }
-        socket.emit('fakeuser', encode({ type: 'join', payload: newFakeUsers }))
+        })
+        socket.emit('fakeplayer', encode({ type: 'join', payload: newFakeUsers }))
     }
     else if (type == 'leave') {
-        for (const fakeUser of fakeUsers) {
+        let newFakeUsers = UserManager.iterateFakeUsers(client.shortid, (fakeUser) => {
             let action = {
                 type: 'leave',
                 user: { shortid: fakeUser.shortid, name: fakeUser.name },
                 payload: {}
             }
             onAction(socket, action, true);
-        }
-        socket.emit('fakeuser', encode({ type: 'leave', payload: newFakeUsers }))
+        })
+
+
+        socket.emit('fakeplayer', encode({ type: 'leave', payload: newFakeUsers }))
     }
 
-    clients[socket.id].fakeUsers = fakeUsers;
+    // clients[socket.id].fakeUsers = fakeUsers;
 }
 io.on('connection', (socket) => {
 
@@ -191,7 +192,7 @@ io.on('connection', (socket) => {
     socket.on('disconnect', (e) => { onDisconnect(socket, e); });
     socket.on('ping', (msg) => { onPing(socket, msg); })
 
-    socket.on('fakeuser', (msg) => {
+    socket.on('fakeplayer', (msg) => {
         onFakeUser(socket, msg);
     })
 
@@ -234,10 +235,13 @@ const onJoinRequest = (action) => {
 }
 
 const sendUserSpectator = (user, room) => {
-    let client = UserManager.getParentUser(user.parentid);
+    let client = UserManager.getUserByShortid(user.id);
     if (!client) {
-        console.error("Invalid client found using: ", user);
-        return;
+        client = UserManager.getParentUser(user.parentid);;
+        if (!client) {
+            console.error("Invalid client found using: ", user);
+            return;
+        }
     }
     client.socket.join('spectator');
     room.addSpectator(user);

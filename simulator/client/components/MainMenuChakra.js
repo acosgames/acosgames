@@ -20,6 +20,7 @@ function ACOSHeader(props) {
 
     let [isMobile] = fs.useWatch('isMobile');
     let [actionToggle] = fs.useWatch('actionToggle');
+    let [gameStatus] = fs.useWatch('gameStatus');
 
 
     return (
@@ -45,8 +46,9 @@ function ACOSHeader(props) {
                         </Link>
                     </Box>
                 </HStack>
-                <Box w="100%" h="100%">
-                    {/* <GameActions /> */}
+                <Box w="100%" lineHeight="100%" pl="2rem" display={gameStatus == 'none' ? 'none' : 'block'}>
+                    <Text fontSize="2rem" fontWeight={'100'}>{gameStatus}</Text>
+                    {/* <GameActions />  */}
                 </Box>
                 <Flex alignItems={'center'} height="100%">
                     <Stack direction={'row'} spacing={0} height="100%">

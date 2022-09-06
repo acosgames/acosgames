@@ -152,7 +152,7 @@ function runBrowserSync(isDev) {
 function runDeploy() {
     return new Promise((rs, rj) => {
 
-        const cmd = `node ./simulator/deploy.js`;
+        const cmd = `node ./simulator/server/deploy.js`;
         console.log("[ACOS] Starting Deploy to ACOS.games");
         let buildPath = path.join(cwd, '/builds');
         let args = process.argv.splice(3, process.argv.length - 2);

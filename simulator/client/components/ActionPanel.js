@@ -6,13 +6,13 @@ import { useEffect, useRef, useState } from 'react';
 // import FSGButton from './widgets/inputs/FSGButton.js';
 // import FSGSubmit from './widgets/inputs/FSGSubmit';
 // import FSGTextInput from './widgets/inputs/FSGTextInput';
-import { IoSend, BsChevronBarRight, BsChevronBarLeft, BsChevronBarUp, BsChevronBarDown, BsChatDotsFill, AiFillCloseCircle } from '@react-icons';
+import { IoSend, BsChevronBarRight, BsChevronBarLeft, BsChevronBarUp, BsChevronBarDown, BsChatDotsFill, AiFillCloseCircle, ImEnter } from '@react-icons';
 
 // import config from '../../config'
 // import ColorHash from 'color-hash'
 import { Link, useLocation } from 'react-router-dom';
 import { connect } from '../actions/websocket';
-import { joinGame, leaveGame, newGame, spawnFakePlayers, startGame } from '../actions/game';
+import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, newGame, spawnFakePlayers, startGame } from '../actions/game';
 // import GameActions from '../games/GameDisplay/GameActions';
 // import QueuePanel from '../games/QueuePanel.js';
 
@@ -245,8 +245,59 @@ function GameActions(props) {
                     </Button>
                 </VStack>
             </HStack>
+            <Box>
+                <DisplayFakePlayers />
+            </Box>
         </VStack>
     )
+}
+
+function DisplayFakePlayers(props) {
+
+    let [fakePlayers] = fs.useWatch('fakePlayers');
+
+    const renderFakePlayers = () => {
+
+        let elems = [];
+        for (const shortid in fakePlayers) {
+            let fakePlayer = fakePlayers[shortid];
+
+            elems.push(
+                <HStack key={'fakeplayer-' + shortid}>
+                    <Text fontSize="1.5rem" width="70%">{fakePlayer.name}</Text>
+                    <IconButton
+                        fontSize={'2rem'}
+                        colorScheme={'clear'}
+                        icon={<ImEnter color="gray.300" />}
+                        onClick={() => {
+                            joinFakePlayer(fakePlayer);
+                        }}
+                    >
+                        Join Game
+                    </IconButton>
+                    <IconButton
+                        fontSize={'2rem'}
+                        colorScheme={'clear'}
+                        icon={<AiFillCloseCircle color="gray.300" />}
+                        onClick={() => {
+                            leaveFakePlayer(fakePlayer);
+                        }}
+                    >
+                        Leave Game
+                    </IconButton>
+                </HStack>
+            )
+        }
+
+        return elems;
+    }
+
+    return (
+        <VStack>
+            {renderFakePlayers()}
+        </VStack>
+    )
+
 }
 
 function ChoosePlayerName(props) {

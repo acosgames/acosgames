@@ -44,6 +44,7 @@ function runScript(dirPath, command, callback) {
 
     child.on('close', (code, signal) => {
         callback(null, { code, signal });
+        // child.exit();
     })
 
     child.on('disconnect', () => {
@@ -78,7 +79,7 @@ function runServer(isDev) {
 
         console.log("[ACOS] Starting Simulator Server");
 
-        const cmd = `npx nodemon --enable-source-maps --watch ./simulator/server --ignore ./simulator/server/public ./simulator/server/server.js "${cwd}"`;
+        const cmd = `npx nodemon --inspect --enable-source-maps --watch ./simulator/server --ignore ./simulator/server/public ./simulator/server/server.js "${cwd}"`;
         // console.log("STARTING ACOSGAMES SIMULATOR >>>>>>>\n", cmd);
 
         runScript(cd, cmd, async (err, sigint) => {
@@ -89,11 +90,6 @@ function runServer(isDev) {
             }
             // console.log("Finished loading ACOS Simulator.");
 
-            if (isDev) {
-                await runClient();
-            }
-
-            await runBrowserSync(isDev);
 
             rs(true);
         })
@@ -177,12 +173,22 @@ function getCommand(argv) {
 
 const command = getCommand(process.argv);
 // console.log("[ACOS] RUNNING COMMAND!!!: ", command);
-if (command == '') {
-    runServer(false);
+
+async function processCommand() {
+
+    if (command == '') {
+        await runServer(false);
+        await runClient();
+        await runBrowserSync(false);
+    }
+    else if (command == 'dev') {
+        await runServer(true);
+        await runClient();
+        await runBrowserSync(true);
+    }
+    else if (command == 'deploy') {
+        runDeploy();
+    }
 }
-else if (command == 'dev') {
-    runServer(true);
-}
-else if (command == 'deploy') {
-    runDeploy();
-}
+
+processCommand();

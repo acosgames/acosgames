@@ -4,7 +4,7 @@ const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
 class UserManager {
     constructor() {
 
-        this.allFakeUsers = {};
+        this.allFakePlayers = {};
         this.users = {};
     }
 
@@ -38,56 +38,60 @@ class UserManager {
     }
 
 
-    createFakeUsers = (clientid, count) => {
+    createFakePlayers = (clientid, count) => {
 
-        let fakeusers = [];
-        let offset = Object.keys(this.allFakeUsers).length;
+        let fakeplayers = [];
+        let offset = Object.keys(this.allFakePlayers).length;
 
         for (let i = 0; i < count; i++) {
-            let shortid = nanoid(6);
+            let id = nanoid(6);
             //avoid duplicate collisions
-            while (shortid in this.allFakeUsers) {
-                shortid = nanoid(6);
+            while (id in this.allFakePlayers) {
+                id = nanoid(6);
             }
-            let fakeuser = { shortid, name: 'Player' + (offset + i), clientid };
-            this.allFakeUsers[shortid] = fakeuser;
-            fakeusers.push(fakeuser);
+            let fakeplayer = { id, name: 'Player' + (offset + i), clientid };
+            this.allFakePlayers[id] = fakeplayer;
+            fakeplayers.push(fakeplayer);
         }
-        return fakeusers;
+        return fakeplayers;
     }
 
-    getFakeUsers() {
-        return this.allFakeUsers;
+    getFakePlayers() {
+        return this.allFakePlayers;
     }
 
-    iterateFakeUsers(clientid, func) {
-        let fakeUsers = [];
-        for (const shortid in this.allFakeUsers) {
-            let fakeUser = this.allFakeUsers[shortid];
-            if (fakeUser.clientid == clientid) {
+    iterateFakePlayers(clientid, func) {
+        let fakePlayers = [];
+        for (const shortid in this.allFakePlayers) {
+            let fakePlayer = this.allFakePlayers[shortid];
+            if (fakePlayer.clientid == clientid) {
                 if (func)
-                    func(fakeUser);
-                fakeUsers.push(fakeUser);
+                    func(fakePlayer);
+                fakePlayers.push(fakePlayer);
             }
         }
-        return fakeUsers;
+        return fakePlayers;
     }
 
-    removeFakeUser(shortid) {
-        if (shortid in this.allFakeUsers) {
-            delete this.allFakeUsers[shortid];
+    getFakePlayer(shortid) {
+        return this.allFakePlayers[shortid];
+    }
+
+    removeFakePlayer(shortid) {
+        if (shortid in this.allFakePlayers) {
+            delete this.allFakePlayers[shortid];
         }
     }
 
-    getFakeUsersByParent(clientid) {
-        let fakeUsers = [];
-        for (const shortid in this.allFakeUsers) {
-            let fakeUser = this.allFakeUsers[shortid];
-            if (fakeUser.clientid == clientid) {
-                fakeUsers.push(fakeUser);
+    getFakePlayersByParent(clientid) {
+        let fakePlayers = [];
+        for (const shortid in this.allFakePlayers) {
+            let fakePlayer = this.allFakePlayers[shortid];
+            if (fakePlayer.clientid == clientid) {
+                fakePlayers.push(fakePlayer);
             }
         }
-        return fakeUsers;
+        return fakePlayers;
     }
 
 
@@ -127,6 +131,8 @@ class UserManager {
                 return this.users[name];
             }
         }
+
+
         return null;
     }
 

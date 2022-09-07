@@ -12,6 +12,7 @@ import { Scrollbars } from 'react-custom-scrollbars-2';
 import { Box, HStack, VStack } from "@chakra-ui/react";
 import MainMenuChakra from "./MainMenuChakra";
 import ActionPanel from "./ActionPanel";
+import GamePanelList from "./GamePanelList";
 
 
 function MainPage(props) {
@@ -85,7 +86,7 @@ function MainPage(props) {
                                 maxW={['1200px']}
 
                             >
-
+                                <GamePanelList />
                             </Box>
 
                         </VStack>

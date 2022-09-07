@@ -1,81 +1,9 @@
-import { sendFrameMessage } from './gamepanel';
+import { createGamePanel, sendFrameMessage } from './gamepanel';
 import DELTA from './delta';
 const { decode, encode } = require('./encoder');
 import fs from 'flatstore';
 
-export function onGameUpdate(message) {
-    try {
-        let delta = decode(message);
-        console.log('GAME UPDATE: ', delta);
-        if (!delta) return;
 
-        // document.getElementById('delta').innerHTML = jsonViewer(delta, true);
-        let lastMessage = fs.get('lastMessage');
-        let socket = fs.get('socket');
-        let socketUser = fs.get('socketUser');
-
-        // let username = fs.get('username');
-
-        message = DELTA.merge(lastMessage || {}, delta);
-
-
-        // showStateView(message, document.getElementById('state'));
-        if (!message.players) return;
-
-        let localPlayer = message.players[socketUser.id];
-        if (localPlayer) fs.set('wsStatus', 'ingame');
-
-        // if (localPlayer) note.textContent = 'Status: ingame';
-        // console.log('Game: ', message);
-        message.local = localPlayer;
-        message.local.id = socketUser.name;
-
-        // console.log('Game: ', message);
-        // message.delta = delta;
-        // message.local = Object.assign({}, socket.user, localPlayer);
-        sendFrameMessage(message);
-        // console.timeEnd('ActionLoop');
-
-        if (message && message.events && message.events.gameover) {
-            lastMessage = null;
-        } else {
-            lastMessage = message;
-        }
-
-        fs.set('gameStatus', message?.room?.status || 'none');
-        fs.set('lastMessage', lastMessage);
-    }
-    catch (e) {
-        console.error(e);
-    }
-
-}
-
-export function onGamePrivateUpdate(message) {
-    try {
-        message = decode(message);
-        console.log('Private Data: ', message);
-
-        let socketUser = fs.get('socketUser');
-
-        let localPlayer = lastMessage.players[socketUser.id];
-
-        if (localPlayer) {
-            localPlayer = DELTA.merge(localPlayer || {}, message);
-            lastMessage.local = localPlayer;
-            lastMessage.private = message;
-        }
-
-        // showJSONView(message, document.getElementById('private'));
-
-        // message.local = Object.assign({}, socket.user, localPlayer);
-        sendFrameMessage(lastMessage);
-        console.timeEnd('[ACOS] ActionLoop');
-    }
-    catch (e) {
-        console.error(e);
-    }
-}
 
 export function leaveGame(message) {
     let socket = fs.get('socket');
@@ -122,6 +50,23 @@ export function spawnFakePlayers(message) {
 
     fs.set('lastMessage', {});
     socket.emit('fakeplayer', encode({ type: 'create', user, payload: 1 }));
+}
+
+export function joinFakePlayer(fakePlayer) {
+    let socket = fs.get('socket');
+    let user = { id: fakePlayer.id, name: fakePlayer.name };
+
+    //fs.set('lastMessage', {});
+    socket.emit('action', encode({ type: 'join', user }));
+}
+
+export function leaveFakePlayer(fakePlayer) {
+    let socket = fs.get('socket');
+    let socketUser = fs.get('socketUser');
+    let user = { id: fakePlayer.id, name: fakePlayer.name };
+
+    //fs.set('lastMessage', {});
+    socket.emit('action', encode({ type: 'leave', user }));
 }
 
 export function onLeave(message) {
@@ -186,8 +131,11 @@ export function onJoin(message) {
 }
 
 export function onSpectate(message) {
-
+    message = decode(message);
+    console.log("SPECTATOR UPDATE: ", message);
 }
+
+
 
 export function onFakePlayer(message) {
     message = decode(message);
@@ -197,15 +145,20 @@ export function onFakePlayer(message) {
     let socket = fs.get('socket');
     let socketUser = fs.get('socketUser');
 
-    if (message.type == 'create') {
+    if (message.type == 'created') {
         let fakePlayers = fs.get('fakePlayers') || {};
+
+
 
         let newFakePlayers = message.payload;
         for (const fakePlayer of newFakePlayers) {
-            fakePlayers[fakePlayer.shortid] = fakePlayer;
+            fakePlayers[fakePlayer.id] = fakePlayer;
+            createGamePanel(fakePlayer.id);
         }
 
         fs.set('fakePlayers', fakePlayers);
+
+
     }
     else if (message.type == 'join') {
         let fakePlayers = fs.get('fakePlayers');

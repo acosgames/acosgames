@@ -3,9 +3,9 @@ import fs from 'flatstore'
 import { decode, encode } from './encoder';
 import { io } from "socket.io-client";
 
-import { onFakePlayer, onGamePrivateUpdate, onGameUpdate, onJoin, onLeave, onSpectate } from './game';
+import { onFakePlayer, onJoin, onLeave, onSpectate } from './game';
 
-
+import { createGamePanel, onGamePrivateUpdate, onGameUpdate } from './gamepanel'
 
 // var latency = 0;
 // var latencyStart = 0;
@@ -36,7 +36,7 @@ export function connect(username) {
 
     let host = window.location.host;
     console.log(host);
-    socket = io('ws://localhost:3200',
+    socket = io('ws://' + host,
         {
             // jsonp: false,
             transports: ['websocket'],
@@ -66,7 +66,7 @@ export function connect(username) {
     socket.on('join', onJoin)
     socket.on('leave', onLeave);
     socket.on('game', onGameUpdate);
-    socket.on('spectate', onSpectate);
+    socket.on('spectator', onSpectate);
     socket.on('fakeplayer', onFakePlayer);
     socket.on('private', onGamePrivateUpdate);
     socket.on('disconnect', onDisconnect);
@@ -95,6 +95,8 @@ const onConnected = (message) => {
         fs.set('gameSettings', gameSettings);
         fs.set('socketUser', socketUser);
         fs.set('wsStatus', 'connected');
+
+        createGamePanel(socketUser.id);
     }
     catch (e) {
         console.error(e);

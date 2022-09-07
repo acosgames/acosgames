@@ -45,13 +45,13 @@ function GamePanel(props) {
     // if (!game)
     // return <LoadingBox />
 
-    let primaryCanvasRef = fs.get('primaryCanvasRef');
+    // let primaryCanvasRef = fs.get('primaryCanvasRef');
 
     return (
-        <Portal containerRef={primaryCanvasRef}>
+        <Box w="100%" h="100%">
             <GameIFrame gamepanel={gamepanel} />
-            <Connection />
-        </Portal>
+
+        </Box>
     )
 
 }
@@ -59,7 +59,7 @@ function GamePanel(props) {
 function GameIFrame(props) {
 
     let gamepanel = props.gamepanel;
-    let config = gamepanel.config;
+    let [screenConfig] = fs.useWatch('screenConfig');
 
     let [resize] = fs.useWatch('resize');
     let [isFullScreen] = fs.useWatch('isFullScreen');
@@ -76,10 +76,10 @@ function GameIFrame(props) {
     // const game_slug = room.game_slug;
     // const version = room.version;
 
-    let screentype = config.screentype;
-    let resow = config.resow;
-    let resoh = config.resoh;
-    let screenwidth = config.screenwidth;
+    let screentype = screenConfig.screentype;
+    let resow = screenConfig.resow;
+    let resoh = screenConfig.resoh;
+    let screenwidth = screenConfig.screenwidth;
 
 
     // if (room.mode == 'experimental') {
@@ -300,7 +300,7 @@ function GameIFrame(props) {
                         }}
                         src={`/iframe.html`}
                         // srcDoc={iframeSrc}
-                        sandbox="allow-scripts allow-same-origin"
+                        sandbox="allow-scripts"
                     />
                     {/* <GameMessageOverlay gamepanel={gamepanel} /> */}
 

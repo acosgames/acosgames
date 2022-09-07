@@ -1,5 +1,5 @@
 
-class FakeUserManager {
+class FakePlayerManager {
     constructor() {
 
     }
@@ -7,4 +7,4 @@ class FakeUserManager {
 
 }
 
-module.exports = new FakeUserManager();
+module.exports = new FakePlayerManager();

@@ -17,12 +17,10 @@ const { Worker } = require("worker_threads")
 const delta = require('../shared/delta');
 const { encode, decode } = require('../shared/encoder');
 
-const profiler = require('./profiler');
-const chokidar = require('chokidar');
+
+
 const NANOID = require('nanoid')
 const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
-
-const Room = require('./Room');
 
 const UserManager = require('./UserManager');
 const RoomManager = require('./RoomManager');
@@ -32,24 +30,9 @@ const port = process.env.PORT || 3100;
 
 const maxActionBytes = 150;
 
-var userCount = 0;
-var clients = {};
 
-let gameHistory = [];
-let rooms = [];
-
-// let roomHistory = [];
-
-
-// var gameHistory = [];
 var worker = createWorker(1);
-var locked = { seq: 0 };
 
-let gameUsers = {};
-let allFakeUsers = {};
-
-var queuedActions = [];
-var gameDeadline = 0;
 
 const gameWorkingDirectory = process.argv[2];
 
@@ -57,24 +40,6 @@ const GameSettingsManager = require('./GameSettingsManager');
 const { isObject } = require('./rank');
 const { cloneObj } = require('./util');
 const settings = new GameSettingsManager(gameWorkingDirectory);
-
-
-
-
-function getCurrentGame() {
-    if (gameHistory.length > 0)
-        return gameHistory[gameHistory.length - 1];
-    return null;
-}
-const stringHashCode = (str) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; ++i) hash = (Math.imul(31, hash) + str.charCodeAt(i)) | 0;
-    return hash;
-};
-
-const generateShortId = (len) => {
-    return nanoid(len || 6)
-}
 
 
 
@@ -119,6 +84,12 @@ function onConnect(socket) {
     //join user immediately into game
     onAction(socket, { type: 'join', user }, true);
 
+
+    let fakePlayers = UserManager.getFakePlayersByParent(user.id);
+    if (fakePlayers?.length > 0) {
+        socket.emit('fakeplayer', encode({ type: 'created', payload: fakePlayers }))
+    }
+
     //user is already in game, just rejoin them and send them full game state
     // let room = RoomManager.current();
     // if (room.hasPlayer(newUser.shortid)) {
@@ -143,47 +114,49 @@ function onPing(socket, msg) {
     socket.emit('pong', encode({ payload: { offset, serverTime } }))
 }
 
-function onFakeUser(socket, msg) {
+function onFakePlayer(socket, msg) {
     msg = decode(msg);
     let type = msg.type;
-    let count = msg.payload || 1;
+
 
     let client = UserManager.getUserBySocketId(socket.id);
 
-    // let client = clients[socket.id];
     let shortid = client.shortid;
-    // let fakeUsers = clients[socket.id].fakeUsers;
 
     if (type == 'create') {
-        let newFakeUsers = UserManager.createFakeUsers(shortid, count);
-        socket.emit('fakeplayer', encode({ type: 'created', payload: newFakeUsers }))
+        let count = msg.payload || 1;
+        let newFakePlayers = UserManager.createFakePlayers(shortid, count);
+        socket.emit('fakeplayer', encode({ type: 'created', payload: newFakePlayers }))
     }
     else if (type == 'join') {
-        let newFakeUsers = UserManager.iterateFakeUsers(client.shortid, (fakeUser) => {
+        let newFakePlayers = UserManager.iterateFakePlayers(client.shortid, (fakePlayer) => {
             let action = {
                 type: 'join',
-                user: { shortid: fakeUser.shortid, name: fakeUser.name },
+                user: { id: fakePlayer.shortid, name: fakePlayer.name },
                 payload: {}
             }
             onAction(socket, action, true);
         })
-        socket.emit('fakeplayer', encode({ type: 'join', payload: newFakeUsers }))
+        socket.emit('fakeplayer', encode({ type: 'join', payload: newFakePlayers }))
     }
     else if (type == 'leave') {
-        let newFakeUsers = UserManager.iterateFakeUsers(client.shortid, (fakeUser) => {
+        let fakePlayerIds = msg.payload;
+        let newFakePlayers = UserManager.iterateFakePlayers(client.shortid, (fakePlayer) => {
+            if (!fakePlayerIds.includes(fakePlayer.shortid))
+                return;
+
             let action = {
                 type: 'leave',
-                user: { shortid: fakeUser.shortid, name: fakeUser.name },
+                user: { id: fakePlayer.shortid, name: fakePlayer.name },
                 payload: {}
             }
             onAction(socket, action, true);
         })
 
 
-        socket.emit('fakeplayer', encode({ type: 'leave', payload: newFakeUsers }))
+        socket.emit('fakeplayer', encode({ type: 'leave', payload: newFakePlayers }))
     }
 
-    // clients[socket.id].fakeUsers = fakeUsers;
 }
 io.on('connection', (socket) => {
 
@@ -193,7 +166,7 @@ io.on('connection', (socket) => {
     socket.on('ping', (msg) => { onPing(socket, msg); })
 
     socket.on('fakeplayer', (msg) => {
-        onFakeUser(socket, msg);
+        onFakePlayer(socket, msg);
     })
 
     socket.on('action', (msg) => {
@@ -208,8 +181,6 @@ io.on('connection', (socket) => {
 });
 
 const onJoinRequest = (action) => {
-    let lastGame = getCurrentGame();
-    lastGame = lastGame || {};
 
     let room = RoomManager.current();
     let client = UserManager.getUserByShortid(action.user.id);
@@ -237,7 +208,7 @@ const onJoinRequest = (action) => {
 const sendUserSpectator = (user, room) => {
     let client = UserManager.getUserByShortid(user.id);
     if (!client) {
-        client = UserManager.getParentUser(user.parentid);;
+        client = UserManager.getParentUser(user.clientid);;
         if (!client) {
             console.error("Invalid client found using: ", user);
             return;
@@ -265,7 +236,10 @@ const sendUserGame = (client, room) => {
 const onLeaveRequest = (action) => {
     if (action.user.shortid in allFakeUsers) {
 
-        delete allFakeUsers[action.user.shortid];
+        let fakePlayers = UserManager.getFakePlayersByParent(action.user.clientid)
+        for (const fakePlayer of fakePlayers) {
+            UserManager.removeFakePlayer(fakePlayer.id);
+        }
     }
 
     let room = RoomManager.current();
@@ -329,9 +303,15 @@ function onAction(socket, action, skipDecode) {
     }
 
     //find the user by the action shortid
+    let user = null;
     let client = UserManager.getUserByShortid(action.user.id);
-    if (!client) return;
-    let user = UserManager.actionUser(client);
+    if (!client) {
+        user = UserManager.getFakePlayer(action.user.id);
+    } else {
+        user = UserManager.actionUser(client);
+    }
+
+    if (!user) return;
 
     let room = RoomManager.current();
     let gamestate = room.getGameState();
@@ -447,9 +427,9 @@ function createWorker(index) {
         console.log("[ACOS] Merged Game: ", stringify(gamestate));
 
         //remove private variables and send individually to palyers
-        let copy = JSON.parse(JSON.stringify(deltaGamestate));
-        let hiddenState = delta.hidden(copy.state);
-        let hiddenPlayers = delta.hidden(copy.players);
+        // let copy = JSON.parse(JSON.stringify(deltaGamestate));
+        // let hiddenState = delta.hidden(copy.state);
+        // let hiddenPlayers = delta.hidden(copy.players);
 
         if (gamestate?.events?.join) {
             for (const shortid of gamestate.events.join) {
@@ -458,14 +438,18 @@ function createWorker(index) {
             }
         }
 
-        io.to('gameroom').emit('game', encode(copy));
+        io.to('gameroom').emit('game', encode(gamestate));
 
-        if (hiddenPlayers)
-            for (var id in hiddenPlayers) {
-                let client = UserManager.getUserByShortid(id);
-                if (client)
-                    client.emit('private', encode({ players: { [id]: hiddenPlayers[id] } }))
-            }
+        if (room.spectators.length > 0) {
+            io.to('spectator').emit('spectator', encode(gamestate));
+        }
+
+        // if (hiddenPlayers)
+        //     for (var id in hiddenPlayers) {
+        //         let client = UserManager.getUserByShortid(id);
+        //         if (client)
+        //             client.emit('private', encode({ players: { [id]: hiddenPlayers[id] } }))
+        //     }
 
 
         room.updateGame(gamestate);
@@ -518,7 +502,7 @@ app.get('/index2.html', function (req, res) {
 });
 
 app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname, './public/index.html'));
+    res.sendFile(path.join(__dirname, './public/index2.html'));
 });
 
 app.get('/iframe.html', function (req, res) {

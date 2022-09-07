@@ -1,7 +1,9 @@
 // const settingsPath = path.join(gameWorkingDirectory, './game-settings.json');
 
 const path = require('path');
-
+const chokidar = require('chokidar');
+const profiler = require('./profiler');
+const fs = require('fs');
 const defaultGameSettings = { minplayers: 1, maxplayers: 1, minteams: 0, maxteams: 0, teams: [] };
 
 
@@ -11,6 +13,8 @@ class GameSettingsManager {
 
         this.settingsPath = path.join(gameWorkingDirectory, './game-settings.json');
         this.gameSettings = defaultGameSettings;
+
+        this.loadSettings();
     }
 
 
@@ -19,11 +23,11 @@ class GameSettingsManager {
     }
 
     loadSettings() {
-        reloadServerGameSettings();
+        this.reloadServerGameSettings(this.settingsPath);
 
         let watchPath = this.settingsPath.substr(0, this.settingsPath.lastIndexOf(path.sep));
         chokidar.watch(watchPath).on('change', (path) => {
-            reloadServerGameSettings(this.settingsPath);
+            this.reloadServerGameSettings(this.settingsPath);
             console.log(`[ACOS] ${this.settingsPath} file Changed`, watchPath);
         });
     }

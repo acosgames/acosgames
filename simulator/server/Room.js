@@ -77,7 +77,8 @@ class Room {
     }
 
     addSpectator(user) {
-        this.spectators.push(user.id);
+        if (!this.spectators.includes(user.id))
+            this.spectators.push(user.id);
     }
 
     setSettings(settings) {

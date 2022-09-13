@@ -23,7 +23,7 @@ function GamePanel(props) {
     // let key = 'gamepanel';
     // let [gamepanel] = fs.useWatch(key, fs.get(key));
     // let [loaded] = fs.useWatch(key + '>loaded');
-    let [wsStatus] = fs.useWatch('wsStatus');
+    // let [wsStatus] = fs.useWatch('wsStatus');
 
     // const gamepanel = props.gamepanel;
     // if (!gamepanel) {
@@ -59,12 +59,14 @@ function GamePanel(props) {
 function GameIFrame(props) {
 
     let gamepanel = props.gamepanel;
-    let [screenConfig] = fs.useWatch('screenConfig');
+    // let [screenConfig] = fs.useWatch('screenConfig');
 
-    let [resize] = fs.useWatch('resize');
-    let [isFullScreen] = fs.useWatch('isFullScreen');
+    // let [resize] = fs.useWatch('resize');
+    // let [isFullScreen] = fs.useWatch('isFullScreen');
     let [displayMode] = fs.useWatch('displayMode');
-    let [primaryGamePanel] = fs.useWatch('primaryGamePanel');
+    // let [primaryGamePanel] = fs.useWatch('primaryGamePanel');
+    let [gameSettings] = fs.useWatch('gameSettings');
+
 
     const [isOpen, setIsOpen] = useState(true);
     const [isLoaded, setIsLoaded] = useState(true);
@@ -77,10 +79,10 @@ function GameIFrame(props) {
     // const game_slug = room.game_slug;
     // const version = room.version;
 
-    let screentype = screenConfig.screentype;
-    let resow = screenConfig.resow;
-    let resoh = screenConfig.resoh;
-    let screenwidth = screenConfig.screenwidth;
+    let screentype = Number.parseInt(gameSettings.screentype);
+    let resow = gameSettings.resow;
+    let resoh = gameSettings.resoh;
+    let screenwidth = gameSettings.screenwidth;
 
 
     // if (room.mode == 'experimental') {
@@ -168,7 +170,7 @@ function GameIFrame(props) {
         bgWidth = (steps * resow);
         bgHeight = (steps * resoh);
 
-        if (screentype == '3') {
+        if (screentype == 3) {
             gamescreenRef.current.style.width = bgWidth + 'px';
             gamescreenRef.current.style.height = bgHeight + 'px';
             scale = ((bgWidth / screenwidth));
@@ -178,12 +180,12 @@ function GameIFrame(props) {
                 translateZ: '0'
             }) + `; transform-origin: left top; width:${screenwidth}px; height:${screenheight}px;`);
         }
-        else if (screentype == '2') {
+        else if (screentype == 2) {
             gamescreenRef.current.style.width = bgWidth + 'px';
             gamescreenRef.current.style.height = bgHeight + 'px';
             iframeRef.current.setAttribute('style', 'width:100%; height:100%;')
         }
-        else if (screentype == '1') {
+        else if (screentype == 1) {
             gamescreenRef.current.style.width = windowWidth + 'px';
             gamescreenRef.current.style.height = windowHeight + 'px';
             iframeRef.current.setAttribute('style', 'width:100%; height:100%;')
@@ -191,13 +193,23 @@ function GameIFrame(props) {
     }
 
 
+    let observerTimer = 0;
+
     const myObserver = new ResizeObserver(entries => {
         // this will get called whenever div dimension changes
         //  entries.forEach(entry => {
         //    console.log('width', entry.contentRect.width);
         //    console.log('height', entry.contentRect.height);
         //  });
+
         onResize();
+
+        // if (observerTimer)
+        //     clearTimeout(observerTimer);
+        // observerTimer = setTimeout(() => {
+        fs.set('primaryGamePanel', fs.get('primaryGamePanel'));
+        // }, 500)
+
     });
 
     const onFullScreenChange = (evt) => {
@@ -222,7 +234,10 @@ function GameIFrame(props) {
 
         fs.set('fullScreenElem', gameResizer);
 
-        myObserver.observe(gameResizer.current);
+        const mainPageRef = fs.get('mainPageRef');
+
+        // myObserver.observe(gameResizer.current);
+        myObserver.observe(mainPageRef.current);
 
         setTimeout(() => {
             setIsOpen(true);

@@ -114,6 +114,12 @@ function onPing(socket, msg) {
     socket.emit('pong', encode({ payload: { offset, serverTime } }))
 }
 
+function onNewGameSettings(socket, newGameSettings) {
+    newGameSettings = decode(newGameSettings);
+
+    settings.updateGameSettings(newGameSettings);
+}
+
 function onFakePlayer(socket, msg) {
     msg = decode(msg);
     let type = msg.type;
@@ -176,6 +182,10 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', (e) => { onDisconnect(socket, e); });
     socket.on('ping', (msg) => { onPing(socket, msg); })
+
+    socket.on('gameSettings', (newGameSettings) => {
+        onNewGameSettings(socket, newGameSettings);
+    })
 
     socket.on('fakeplayer', (msg) => {
         onFakePlayer(socket, msg);

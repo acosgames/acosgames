@@ -20,10 +20,13 @@ function MainPage(props) {
     let [isMobile] = fs.useWatch('isMobile');
     let [displayMode] = fs.useWatch('displayMode');
 
+    const mainPageRef = useRef();
     const primaryCanvasRef = useRef();
 
     useEffect(() => {
         fs.set('primaryCanvasRef', primaryCanvasRef);
+
+        fs.set('mainPageRef', mainPageRef);
     });
 
     useEffect(() => {
@@ -76,7 +79,9 @@ function MainPage(props) {
                             spacing="0"
                             justifyContent={'center'}
                             w="100%"
-                            height="100%" >
+                            height="100%"
+                            ref={mainPageRef}
+                        >
                             <Box
                                 position='relative'
                                 flexGrow='1 '

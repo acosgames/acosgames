@@ -10,6 +10,7 @@ import { createGamePanel, onGamePrivateUpdate, onGameUpdate } from './gamepanel'
 // var latency = 0;
 // var latencyStart = 0;
 // var offsetTime = 0;
+const defaultGameSettings = { minplayers: 1, maxplayers: 1, minteams: 0, maxteams: 0, teams: [], screentype: 3, resow: 4, resoh: 3, screenwidth: 800 };
 
 fs.set('socket', null);
 fs.set('latency', 0);
@@ -17,6 +18,7 @@ fs.set('latencyStart', 0);
 fs.set('latencyOffsetTime', 0);
 fs.set('wsStatus', 'disconnected');
 fs.set('gameStatus', 'none');
+fs.set('gameSettings', defaultGameSettings);
 
 //--------------------------------------------------
 //WebSockets Connection / Management 
@@ -74,6 +76,11 @@ export function connect(username) {
     fs.set('socket', socket);
 }
 
+export function updateGameSettings(newSettings) {
+    fs.set('gameSettings', newSettings);
+    let socket = fs.get('socket');
+    socket.emit('gameSettings', encode(newSettings));
+}
 
 const onConnect = (evt) => {
     fs.set('wsStatus', 'connected');

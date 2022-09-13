@@ -37,21 +37,25 @@ function GamePanelList(props) {
         if (fakePlayers) {
             let fakePlayerCount = Object.keys(fakePlayers).length;
             if (fakePlayerCount < 4) {
-                panelWidth = width / (fakePlayerCount + 1)
-                panelHeight = height;
+                panelWidth = 100.0 / (fakePlayerCount + 1)
+                panelHeight = 100;
             } else if (fakePlayerCount < 8) {
-                panelWidth = width / 4;
-                panelHeight = height / 2;
+                panelWidth = 25;
+                panelHeight = 50;
             }
             else if (fakePlayerCount < 16) {
-                panelWidth = width / 8;
-                panelHeight = height / 2;
+                panelWidth = 12.5;
+                panelHeight = 50;
             }
             else {
-                panelWidth = width / 8;//
-                panelHeight = height / (fakePlayerCount + 1)
+                panelWidth = 12.5;//
+                panelHeight = 100 / (fakePlayerCount + 1)
             }
 
+        }
+        else {
+            panelWidth = 100;
+            panelHeight = 100;
         }
 
         for (const id in gamepanels) {
@@ -103,10 +107,14 @@ const onClickOverlay = (e, id) => {
 
 function CompactLayout(props) {
 
+    let gamepanels = fs.get('gamepanels') || {};
+    let panelCount = Object.keys(gamepanels)?.length;
     return (
-        <Box w={props.panelWidth + 'px'}
-            h={props.panelHeight + 'px'}
-            display={'inline-block'}>
+        <Box w={props.panelWidth + '%'}
+            h={props.panelHeight + '%'}
+            borderRight={panelCount > 1 ? '1px solid' : 'none'}
+            borderRightColor={'gray.300'}
+            display={'inline-block'} >
             <VStack
                 onClick={(e) => { onClickOverlay(e, props.id) }}
 
@@ -114,26 +122,30 @@ function CompactLayout(props) {
                 w="100%"
                 h="100%"
             >
-                <Box>
-                    <Text
-                        cursor={'pointer'}
-                        display="inline-block"
-                        fontSize="xxs"
-                        fontWeight="light">
-                        {props.name}
-                    </Text>
-                    <Text
-                        cursor={'pointer'}
-                        display="inline-block"
-                        fontSize="xxs"
-                        color="gray.500"
-                        fontWeight="light">
-                        [{props.id}]
-                    </Text>
-                </Box>
+                {panelCount > 1 &&
+                    <Box display={'block'}>
+                        <Text
+                            cursor={'pointer'}
+                            display="inline-block"
+                            fontSize="xs"
+                            fontWeight="light">
+                            {props.name}
+                        </Text>
+                        &nbsp;
+                        <Text
+                            cursor={'pointer'}
+                            display="inline-block"
+                            fontSize="xxs"
+                            color="gray.300"
+                            fontWeight="light">
+                            [{props.id}]
+                        </Text>
+                    </Box>
+                }
+
                 < GamePanel id={props.id} />
             </VStack>
-        </Box>
+        </Box >
     )
 }
 

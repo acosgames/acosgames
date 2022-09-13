@@ -1,4 +1,4 @@
-import { createGamePanel, sendFrameMessage } from './gamepanel';
+import { createGamePanel, removeGamePanel, sendFrameMessage } from './gamepanel';
 import DELTA from './delta';
 const { decode, encode } = require('./encoder');
 import fs from 'flatstore';
@@ -63,7 +63,7 @@ export function joinFakePlayer(fakePlayer) {
 export function leaveFakePlayer(fakePlayer) {
     let socket = fs.get('socket');
     let socketUser = fs.get('socketUser');
-    let user = { id: fakePlayer.id, name: fakePlayer.name };
+    let user = { id: fakePlayer.id, name: fakePlayer.name, clientid: socketUser.id };
 
     //fs.set('lastMessage', {});
     socket.emit('action', encode({ type: 'leave', user }));
@@ -103,14 +103,47 @@ export function onJoin(message) {
 
         if (!message.players) return;
 
-        let localPlayer = message.players[socketUser.id];
-        // if (localPlayer) note.textContent = 'Status: ingame';
-        // console.log('Game: ', message);
-        message.local = localPlayer;
-        message.local.id = socketUser.name;
+        // let localPlayer = message.players[socketUser.id];
+        // // if (localPlayer) note.textContent = 'Status: ingame';
+        // // console.log('Game: ', message);
+        // message.local = localPlayer;
+        // message.local.id = socketUser.name;
+
+        // let gamepanels = fs.get('gamepanels');
+        // for (const id in gamepanels) {
+        //     let gamepanel = gamepanels[id];
+
+        //     if (gamepanel?.iframe?.current) {
+        //         sendFrameMessage(gamepanel.iframe.current, message);
+        //     }
+        // }
+
+        let copy = JSON.parse(JSON.stringify(message));
+        let hiddenState = DELTA.hidden(copy.state);
+        let hiddenPlayers = DELTA.hidden(copy.players);
+
+        let gamepanels = fs.get('gamepanels');
+        for (const id in gamepanels) {
+            let gamepanel = gamepanels[id];
+
+            if (!gamepanel?.iframe?.current)
+                continue;
+
+            if (hiddenPlayers && hiddenPlayers[id] && copy?.players[id]) {
+                copy.local = Object.assign({}, copy.players[id], hiddenPlayers[id]);
+                copy.private = { players: { [id]: hiddenPlayers[id] } };
+            }
+            else
+                copy.local = copy.players[id] || {};
+
+            copy.local.id = id;
+
+
+            sendFrameMessage(gamepanel, copy);
+        }
 
         // message.local = Object.assign({}, socket.user, localPlayer);
-        sendFrameMessage(message);
+        // sendFrameMessage(message);
         // console.timeEnd('ActionLoop');
 
         if (message && message.events && message.events.gameover) {
@@ -144,27 +177,32 @@ export function onFakePlayer(message) {
 
     let socket = fs.get('socket');
     let socketUser = fs.get('socketUser');
+    let fakePlayers = fs.get('fakePlayers') || {};
 
     if (message.type == 'created') {
-        let fakePlayers = fs.get('fakePlayers') || {};
-
-
 
         let newFakePlayers = message.payload;
         for (const fakePlayer of newFakePlayers) {
             fakePlayers[fakePlayer.id] = fakePlayer;
+        }
+        for (const fakePlayer of newFakePlayers) {
             createGamePanel(fakePlayer.id);
         }
-
         fs.set('fakePlayers', fakePlayers);
-
-
     }
     else if (message.type == 'join') {
-        let fakePlayers = fs.get('fakePlayers');
     }
     else if (message.type == 'leave') {
 
+    }
+    else if (message.type == 'removed') {
+        let id = message?.user?.id;
+
+        if (id && (id in fakePlayers)) {
+            delete fakePlayers[id];
+            fs.set('fakePlayers', fakePlayers);
+            removeGamePanel(id);
+        }
     }
 
 }

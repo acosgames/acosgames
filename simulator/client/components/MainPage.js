@@ -50,7 +50,7 @@ function MainPage(props) {
                     <MainMenuChakra />
                 </HStack>
 
-                <Box id="main-content" w="100%" h={["101%"]} position="relative" ref={primaryCanvasRef}>
+                <Box id="main-content" w="100%" h={["100%"]} position="relative" ref={primaryCanvasRef}>
                     <Scrollbars
                         renderView={(props) => (
                             <div
@@ -70,20 +70,26 @@ function MainPage(props) {
                         autoHideTimeout={2000}
                         autoHideDuration={200}
                     >
-                        <VStack px={['0.5rem', '1rem', '5rem']} pt={'2.5rem'} spacing="0" justifyContent={'center'} w="100%" height="100%" >
+                        <VStack
+                            px={['0.5rem', '1rem', '5rem']}
+                            // pt={'2.5rem'} 
+                            spacing="0"
+                            justifyContent={'center'}
+                            w="100%"
+                            height="100%" >
                             <Box
                                 position='relative'
                                 flexGrow='1 '
                                 height='100% '
                                 width='100%'
-                                maxWidth="1200px"
+                                // maxWidth="1200px"
                                 display='flex'
 
 
                                 flexDirection='column'
 
                                 transition={'filter 0.3s ease-in'}
-                                maxW={['1200px']}
+                            // maxW={['1200px']}
 
                             >
                                 <GamePanelList />

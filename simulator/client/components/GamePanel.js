@@ -20,9 +20,9 @@ fs.set('iframesLoaded', {});
 
 function GamePanel(props) {
 
-    let key = 'gamepanel';
-    let [gamepanel] = fs.useWatch(key, fs.get(key));
-    let [loaded] = fs.useWatch(key + '>loaded');
+    // let key = 'gamepanel';
+    // let [gamepanel] = fs.useWatch(key, fs.get(key));
+    // let [loaded] = fs.useWatch(key + '>loaded');
     let [wsStatus] = fs.useWatch('wsStatus');
 
     // const gamepanel = props.gamepanel;
@@ -38,9 +38,9 @@ function GamePanel(props) {
     // if (!room)
     //     return <LoadingBox />
 
-    if (wsStatus != 'ingame') {
-        return <></>
-    }
+    // if (wsStatus != 'ingame') {
+    //     return <></>
+    // }
     // let game = getGame(room.game_slug);
     // if (!game)
     // return <LoadingBox />
@@ -48,8 +48,8 @@ function GamePanel(props) {
     // let primaryCanvasRef = fs.get('primaryCanvasRef');
 
     return (
-        <Box w="100%" h="100%">
-            <GameIFrame gamepanel={gamepanel} />
+        <Box w="100%" h="100%" position="relative">
+            <GameIFrame id={props.id} />
 
         </Box>
     )
@@ -64,8 +64,9 @@ function GameIFrame(props) {
     let [resize] = fs.useWatch('resize');
     let [isFullScreen] = fs.useWatch('isFullScreen');
     let [displayMode] = fs.useWatch('displayMode');
+    let [primaryGamePanel] = fs.useWatch('primaryGamePanel');
 
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(true);
     const [isLoaded, setIsLoaded] = useState(true);
     const iframeRef = useRef(null)
     const gamescreenRef = useRef(null)
@@ -207,9 +208,17 @@ function GameIFrame(props) {
         }
     }
 
+
+
     useEffect(() => {
         window.addEventListener('resize', onResize);
         document.addEventListener('fullscreenchange', onFullScreenChange);
+
+        let gamepanels = fs.get('gamepanels');
+        let gamepanel = gamepanels[props.id];
+        if (gamepanel) {
+            gamepanel.iframe = iframeRef;
+        }
 
         fs.set('fullScreenElem', gameResizer);
 
@@ -230,6 +239,11 @@ function GameIFrame(props) {
 
 
     });
+
+    let lastMessage = fs.get('lastMessage');
+    let players = lastMessage?.players || {};
+
+    let isSpectator = !(props.id in players);
 
 
     return (
@@ -280,7 +294,11 @@ function GameIFrame(props) {
                         // onResize={onResize}
                         onLoad={() => {
 
-                            fs.set('iframe', iframeRef);
+                            let gamepanels = fs.get('gamepanels');
+                            let gamepanel = gamepanels[props.id];
+
+                            gamepanel.iframe = iframeRef;
+                            // fs.set('iframe', iframeRef);
                             //let gamepanel = findGamePanelByRoom(room_slug);
                             // gamepanel.iframe = iframeRef;
                             // setIFrame(room_slug, iframeRef);
@@ -307,6 +325,9 @@ function GameIFrame(props) {
                 </Box>
 
             </VStack>
+            {/* <Box display={!isSpectator ? 'none' : 'block'} w="100%" h="100%" position="absolute" top="0" left="0" zIndex={20} cursor={'not-allowed'} bgColor={'rgba(0,0,0,0.3)'}>
+
+            </Box> */}
             <Box position="absolute" bottom="1rem" right="1rem" display={(props.isFullScreen || displayMode == 'theatre') ? 'block' : 'none'}>
                 <IconButton
                     fontSize={'2rem'}

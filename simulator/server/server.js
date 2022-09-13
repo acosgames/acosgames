@@ -140,18 +140,30 @@ function onFakePlayer(socket, msg) {
         socket.emit('fakeplayer', encode({ type: 'join', payload: newFakePlayers }))
     }
     else if (type == 'leave') {
-        let fakePlayerIds = msg.payload;
-        let newFakePlayers = UserManager.iterateFakePlayers(client.shortid, (fakePlayer) => {
-            if (!fakePlayerIds.includes(fakePlayer.shortid))
-                return;
 
+        if (!Array.isArray(msg.payload))
+            return false;
+
+        let fakePlayerIds = msg.payload;
+        for (const id of fakePlayerIds) {
+            let fakePlayer = UserManager.getFakePlayer(id);
             let action = {
                 type: 'leave',
                 user: { id: fakePlayer.shortid, name: fakePlayer.name },
                 payload: {}
             }
             onAction(socket, action, true);
-        })
+
+            UserManager.removeFakePlayer(id);
+
+        }
+        let newFakePlayers = UserManager.iterateFakePlayers(client.shortid);
+        // let newFakePlayers = UserManager.iterateFakePlayers(client.shortid, (fakePlayer) => {
+        //     if (!fakePlayerIds.includes(fakePlayer.shortid))
+        //         return;
+
+
+        // })
 
 
         socket.emit('fakeplayer', encode({ type: 'leave', payload: newFakePlayers }))
@@ -234,15 +246,25 @@ const sendUserGame = (client, room) => {
 }
 
 const onLeaveRequest = (action) => {
-    if (action.user.shortid in allFakeUsers) {
+    if (action.user.id in UserManager.getFakePlayers()) {
 
-        let fakePlayers = UserManager.getFakePlayersByParent(action.user.clientid)
-        for (const fakePlayer of fakePlayers) {
-            UserManager.removeFakePlayer(fakePlayer.id);
+        // let fakePlayers = UserManager.getFakePlayersByParent(action.user.clientid)
+        // for (const fakePlayer of fakePlayers) {
+        if (action.user.clientid) {
+            let client = UserManager.getUserByShortid(action.user.clientid);
+            client.socket.emit('fakeplayer', encode({ type: 'removed', user: action.user }));
         }
+        UserManager.removeFakePlayer(action.user.id);
+
+        // }
     }
 
     let room = RoomManager.current();
+    let gamestate = room.getGameState();
+    if (!(action.user.id in gamestate?.players)) {
+        return false;
+    }
+
     io.to(room.room_slug).emit('leave', encode({ user: action.user }));
     return true;
 }

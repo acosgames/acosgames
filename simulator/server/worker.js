@@ -122,7 +122,7 @@ class FSGWorker {
         }
         globalGame.room = {};
         globalGame.state = {};
-        globalGame.rules = {};
+        // globalGame.rules = {};
         globalGame.next = {};
         globalGame.teams = {};
         globalGame.events = {};

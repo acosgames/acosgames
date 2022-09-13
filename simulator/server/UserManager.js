@@ -5,6 +5,7 @@ class UserManager {
     constructor() {
 
         this.allFakePlayers = {};
+        this.fakePlayerNames = {};
         this.users = {};
     }
 
@@ -51,6 +52,8 @@ class UserManager {
             }
             let fakeplayer = { id, name: 'Player' + (offset + i), clientid };
             this.allFakePlayers[id] = fakeplayer;
+            this.fakePlayerNames[fakeplayer.name] = fakeplayer;
+
             fakeplayers.push(fakeplayer);
         }
         return fakeplayers;
@@ -79,7 +82,9 @@ class UserManager {
 
     removeFakePlayer(shortid) {
         if (shortid in this.allFakePlayers) {
+            let fakeplayer = this.allFakePlayers[shortid];
             delete this.allFakePlayers[shortid];
+            delete this.fakePlayerNames[fakeplayer.name];
         }
     }
 

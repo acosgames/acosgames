@@ -20,6 +20,7 @@ fs.set('chat', []);
 fs.set('chatMessage', '');
 fs.set('chatMode', 'all');
 fs.set('actionToggle', true);
+fs.set('gamePanelLayout', 'compact');
 // const colorHash = new ColorHash({ lightness: 0.7 });
 
 function ActionPanel(props) {
@@ -197,6 +198,9 @@ function GameActions(props) {
     let [socketUser] = fs.useWatch('socketUser');
     let [wsStatus] = fs.useWatch('wsStatus');
     let [gameStatus] = fs.useWatch('gameStatus');
+    let [gamePanelLayout] = fs.useWatch('gamePanelLayout');
+
+    // gamePanelLayout = gamePanelLayout || 'compact';
 
     if (wsStatus == 'disconnected') {
         return <></>
@@ -234,6 +238,17 @@ function GameActions(props) {
                     newGame()
                 }}>
                     New Game
+                </Button>
+            </HStack>
+            <HStack display={isGameRunning ? 'flex' : 'none'}>
+                <Button onClick={() => {
+                    if (gamePanelLayout == 'compact') {
+                        fs.set('gamePanelLayout', 'expanded');
+                    } else {
+                        fs.set('gamePanelLayout', 'compact');
+                    }
+                }}>
+                    Simulator Layout ({gamePanelLayout})
                 </Button>
             </HStack>
             <HStack pt="2rem">

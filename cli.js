@@ -178,13 +178,13 @@ async function processCommand() {
 
     if (command == '') {
         await runServer(false);
-        await runClient();
-        await runBrowserSync(false);
+        runClient();
+        runBrowserSync(false);
     }
     else if (command == 'dev') {
         await runServer(true);
-        await runClient();
-        await runBrowserSync(true);
+        runClient();
+        runBrowserSync(true);
     }
     else if (command == 'deploy') {
         runDeploy();

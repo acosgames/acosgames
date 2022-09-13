@@ -10,6 +10,49 @@
     </head>
     <body>
         <div id="root"></div>
-        <script src="/client.bundle.dev.js"></script> 
+        <script>
+            function loadJS(url) {
+                loadScript(url, function(path, status) {
+                    if( status == 'ok')
+                        setTimeout(()=>{
+                            window.parent.postMessage({ type:'loaded' }, '*')
+                        },1)
+                });
+            }
+            function loadScript(path, callback) {
+                var done = false
+                let mainScript = document.createElement('script')
+                mainScript.onload = handleLoad
+                mainScript.onreadystatechange = handleReadyStateChange
+                mainScript.onerror = handleError
+                mainScript.src = path
+                document.body.appendChild(mainScript)
+                function handleLoad() {
+                    if (!done) {
+                        done = true
+                        callback(path, "ok")
+                    }
+                }
+                function handleReadyStateChange() {
+                    var state;
+                    if (!done) {
+                        state = mainScript.readyState
+                        if (state === "complete") {
+                            handleLoad()
+                        }
+                    }
+                }
+                function handleError() {
+                    if (!done) {
+                        done = true
+                        callback(path, "error")
+                    }
+                }
+            }
+
+            loadJS('/client.bundle.dev.js');
+
+        </script>
+        <!-- <script src="/client.bundle.dev.js"></script>  -->
     </body>
 </html>

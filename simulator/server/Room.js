@@ -76,6 +76,11 @@ class Room {
         return this.room_slug;
     }
 
+    removeSpectator(user) {
+        if (Array.isArray(this.spectators))
+            this.spectators = this.spectators.filter(u => u.id != user.id);
+    }
+
     addSpectator(user) {
         if (!this.spectators.includes(user.id))
             this.spectators.push(user.id);

@@ -46,9 +46,14 @@ function GamePanel(props) {
     // return <LoadingBox />
 
     // let primaryCanvasRef = fs.get('primaryCanvasRef');
+    let gamepanels = fs.get('gamepanels') || {};
+    let panelCount = Object.keys(gamepanels)?.length;
 
     return (
-        <Box w="100%" h="100%" position="relative">
+        <Box w="100%" h="100%" position="relative"
+        // borderRight={panelCount > 1 ? '1px solid' : 'none'}
+        // borderRightColor={'gray.300'}
+        >
             <GameIFrame id={props.id} />
 
         </Box>
@@ -277,7 +282,7 @@ function GameIFrame(props) {
             transition={'filter 0.3s ease-in, opacity 0.5s ease-in'}
             filter={isOpen ? 'opacity(1)' : 'opacity(0)'}
             className={'gameResizer'}
-            bgColor={'black'}
+        // bgColor={'black'}
         >
 
             <VStack

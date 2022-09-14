@@ -208,7 +208,7 @@ function GameActions(props) {
 
     let isGameRunning = gameStatus != 'gameover' && gameStatus != 'none';
     let isPregame = gameStatus == 'pregame';
-    let isInGame = wsStatus == 'ingame' && gameStatus != 'pregame';
+    let isInGame = gameStatus != 'pregame';
 
     return (
         <VStack>

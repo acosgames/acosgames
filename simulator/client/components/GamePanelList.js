@@ -43,13 +43,9 @@ function GamePanelList(props) {
                 panelWidth = 25;
                 panelHeight = 50;
             }
-            else if (fakePlayerCount < 16) {
-                panelWidth = 12.5;
-                panelHeight = 50;
-            }
             else {
                 panelWidth = 12.5;//
-                panelHeight = 100 / (fakePlayerCount + 1)
+                panelHeight = 33;
             }
 
         }
@@ -112,8 +108,7 @@ function CompactLayout(props) {
     return (
         <Box w={props.panelWidth + '%'}
             h={props.panelHeight + '%'}
-            borderRight={panelCount > 1 ? '1px solid' : 'none'}
-            borderRightColor={'gray.300'}
+
             display={'inline-block'} >
             <VStack
                 onClick={(e) => { onClickOverlay(e, props.id) }}
@@ -121,6 +116,7 @@ function CompactLayout(props) {
                 spacing="0"
                 w="100%"
                 h="100%"
+                pr="0.4rem"
             >
                 {panelCount > 1 &&
                     <Box display={'block'}>

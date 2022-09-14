@@ -73,21 +73,22 @@ export function onGameUpdate(message) {
 
         // document.getElementById('delta').innerHTML = jsonViewer(delta, true);
         let lastMessage = fs.get('lastMessage');
+
         let socket = fs.get('socket');
         let socketUser = fs.get('socketUser');
 
         // let username = fs.get('username');
 
         let copy = JSON.parse(JSON.stringify(message));
-
-        let delta = DELTA.delta(lastMessage, copy, {});
+        let lastCopy = JSON.parse(JSON.stringify(lastMessage));
+        let delta = DELTA.delta(lastCopy, copy, {});
 
         copy = JSON.parse(JSON.stringify(delta));
         let hiddenState = DELTA.hidden(copy.state);
         let hiddenPlayers = DELTA.hidden(copy.players);
 
 
-        message = DELTA.merge(lastMessage || {}, delta);
+        message = DELTA.merge(lastCopy || {}, delta);
 
 
         // showStateView(message, document.getElementById('state'));

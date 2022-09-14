@@ -236,7 +236,8 @@ const sendUserSpectator = (user, room) => {
             return;
         }
     }
-    client.socket.join('spectator');
+    // client.socket.join('spectator');
+    io.to.emit('spectator', encode({ type: 'join', user }));
     room.addSpectator(user);
 }
 
@@ -370,6 +371,7 @@ function onAction(socket, action, skipDecode) {
     }
 
     io.to('gameroom').emit('lastAction', encode({ action, gamestate }));
+    io.to('spectator').emit('lastAction', encode({ action, gamestate }));
     worker.postMessage({ action, room: room.json(), gamestate });
 }
 

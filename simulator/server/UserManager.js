@@ -44,13 +44,13 @@ class UserManager {
         let fakeplayers = [];
         let offset = Object.keys(this.allFakePlayers).length;
 
-        for (let i = 0; i < count; i++) {
+        for (let i = 1; i <= count; i++) {
             let id = nanoid(6);
             //avoid duplicate collisions
             while (id in this.allFakePlayers) {
                 id = nanoid(6);
             }
-            let fakeplayer = { id, name: 'Player' + (offset + i), clientid };
+            let fakeplayer = { id, name: 'Player_' + (offset + i), clientid };
             this.allFakePlayers[id] = fakeplayer;
             this.fakePlayerNames[fakeplayer.name] = fakeplayer;
 

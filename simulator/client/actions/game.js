@@ -164,8 +164,81 @@ export function onJoin(message) {
 }
 
 export function onSpectate(message) {
-    message = decode(message);
-    console.log("SPECTATOR UPDATE: ", message);
+
+
+    try {
+        message = decode(message);
+        console.log("SPECTATOR UPDATE: ", message);
+        if (!message) return;
+
+        let lastSpectatorMessage = fs.get('lastSpectatorMessage');
+
+        // let username = fs.get('username');
+
+        let copy = JSON.parse(JSON.stringify(message));
+        let lastCopy = JSON.parse(JSON.stringify(lastSpectatorMessage));
+        let delta = DELTA.delta(lastCopy, copy, {});
+
+        copy = JSON.parse(JSON.stringify(delta));
+        let hiddenState = DELTA.hidden(copy.state);
+        let hiddenPlayers = DELTA.hidden(copy.players);
+
+
+        message = DELTA.merge(lastCopy || {}, delta);
+
+
+        // showStateView(message, document.getElementById('state'));
+        if (!message.players) return;
+
+        // let localPlayer = message.players[socketUser.id];
+        // if (localPlayer) fs.set('wsStatus', 'ingame');
+
+        // if (localPlayer) note.textContent = 'Status: ingame';
+        // console.log('Game: ', message);
+
+        message.delta = copy;
+
+        // console.log('Game: ', message);
+        // message.delta = delta;
+        // message.local = Object.assign({}, socket.user, localPlayer);
+
+        let gamepanels = fs.get('gamepanels');
+        for (const id in gamepanels) {
+            let gamepanel = gamepanels[id];
+
+            if (!gamepanel?.iframe?.current)
+                continue;
+
+            if (message.private)
+                delete message.private;
+
+            if (hiddenPlayers && hiddenPlayers[id] && message?.players[id]) {
+                message.local = Object.assign({}, message.players[id], hiddenPlayers[id]);
+                message.private = { players: { [id]: hiddenPlayers[id] } };
+            }
+            else
+                message.local = message.players[id] || {};
+
+            message.local.id = id;
+
+            sendFrameMessage(gamepanel, message);
+        }
+
+        // console.timeEnd('ActionLoop');
+
+        if (message && message.events && message.events.gameover) {
+            lastSpectatorMessage = null;
+        } else {
+            lastSpectatorMessage = message;
+        }
+
+        fs.set('gameSpectatorStatus', message?.room?.status || 'none');
+        fs.set('lastSpectatorMessage', lastSpectatorMessage);
+    }
+    catch (e) {
+        console.error(e);
+    }
+
 }
 
 

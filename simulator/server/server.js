@@ -237,8 +237,10 @@ const sendUserSpectator = (user, room) => {
         }
     }
     // client.socket.join('spectator');
-    io.to.emit('spectator', encode({ type: 'join', user }));
-    room.addSpectator(user);
+    // UserManager.setSpectator(user.id);
+
+    // io.to.emit('spectator', encode({ type: 'join', user }));
+    // room.addSpectator(user);
 }
 
 const sendUserGame = (client, room) => {
@@ -528,7 +530,7 @@ app.get('/client.bundle.dev.js', function (req, res) {
 });
 
 app.get('/bundle.js', function (req, res) {
-    res.sendFile(path.join(__dirname, './public/bundle.js'));
+    res.sendFile(path.join(__dirname, './public/bundle.' + process.argv[3] + '.js'));
 })
 
 app.get('/index2.html', function (req, res) {
@@ -540,7 +542,7 @@ app.get('/', function (req, res) {
 });
 
 app.get('/iframe.html', function (req, res) {
-    res.sendFile(path.join(__dirname, './public/iframe.html'));
+    res.sendFile(path.join(__dirname, './public/iframe-' + process.argv[3] + '.html'));
 });
 
 server.listen(port, () => {

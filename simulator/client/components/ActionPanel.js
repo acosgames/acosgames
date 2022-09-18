@@ -332,7 +332,7 @@ function ChooseScreenSettings(props) {
                     <Select
                         fontSize="xs"
                         id="screenType"
-                        defaultValue={gameSettings?.screentype || '3'}
+                        value={gameSettings?.screentype || '3'}
                         onChange={(e) => {
                             let val = Number.parseInt(e.target.value);
 
@@ -384,7 +384,7 @@ function ChooseScreenSettings(props) {
                             }
 
                         }}
-                        defaultValue={gameSettings?.resow && (gameSettings?.resow + ':' + gameSettings?.resoh)}
+                        value={gameSettings?.resow && (gameSettings?.resow + ':' + gameSettings?.resoh)}
                         w="6rem"
                     />
                 </Box>
@@ -395,7 +395,7 @@ function ChooseScreenSettings(props) {
                         className=""
                         id="maxwidth"
                         aria-describedby=""
-                        defaultValue={gameSettings?.screenwidth || '800'}
+                        value={gameSettings?.screenwidth || '800'}
                         onChange={(e) => {
                             let val = Number.parseInt(e.target.value);
 

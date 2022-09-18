@@ -1,4 +1,4 @@
-import { Box, HStack, Text, VStack, Wrap, WrapItem } from "@chakra-ui/react";
+import { Box, HStack, Icon, Text, Tooltip, VStack, Wrap, WrapItem } from "@chakra-ui/react";
 import fs from 'flatstore';
 import { useEffect, useRef } from "react";
 import { createGamePanel } from "../actions/gamepanel";
@@ -6,6 +6,7 @@ import Connection from "./Connection";
 import GamePanel from "./GamePanel";
 
 
+import { GoEye, IoPlaySharp } from '@react-icons';
 function GamePanelList(props) {
 
     let [fakePlayers] = fs.useWatch('fakePlayers');
@@ -54,6 +55,8 @@ function GamePanelList(props) {
             panelHeight = 100;
         }
 
+        let lastMessage = fs.get('lastMessage');
+
         for (const id in gamepanels) {
             let gamepanel = gamepanels[id];
 
@@ -68,14 +71,16 @@ function GamePanelList(props) {
             if (!isPrimary)
                 cnt++;
 
+            let isInGame = (user.id in (lastMessage?.players || {}));
+
             if (layout == 'expanded') {
                 elems.push(
-                    <ExpandedLayout key={'gamepanel-' + id} id={id} name={user.name} isPrimary={isPrimary} />
+                    <ExpandedLayout key={'gamepanel-' + id} id={id} name={user.name} isPrimary={isPrimary} isInGame={isInGame} />
                 )
             }
             else if (layout == 'compact') {
                 elems.push(
-                    <CompactLayout key={'gamepanel-' + id} id={id} name={user.name} isPrimary={isPrimary} panelWidth={panelWidth} panelHeight={panelHeight} />
+                    <CompactLayout key={'gamepanel-' + id} id={id} name={user.name} isPrimary={isPrimary} isInGame={isInGame} panelWidth={panelWidth} panelHeight={panelHeight} />
                 )
             }
 
@@ -119,29 +124,48 @@ function CompactLayout(props) {
                 pr="0.4rem"
             >
                 {panelCount > 1 &&
-                    <Box display={'block'}>
-                        <Text
-                            cursor={'pointer'}
-                            display="inline-block"
-                            fontSize="xs"
-                            fontWeight="light">
-                            {props.name}
-                        </Text>
-                        &nbsp;
-                        <Text
-                            cursor={'pointer'}
-                            display="inline-block"
-                            fontSize="xxs"
-                            color="gray.300"
-                            fontWeight="light">
-                            [{props.id}]
-                        </Text>
-                    </Box>
+                    <DisplayUserInfo isInGame={props.isInGame} name={props.name} id={props.id} />
                 }
 
                 < GamePanel id={props.id} />
             </VStack>
         </Box >
+    )
+}
+
+function DisplayUserInfo(props) {
+
+    let [lastMessage] = fs.useWatch('lastMessage');
+
+    let isInGame = false;
+    let players = lastMessage?.players;
+    if (players && props.id in players) {
+        isInGame = true;
+    }
+
+    return (
+        <HStack spacing="1rem" px="3rem" width="100%" height="3rem" >
+            <Tooltip label={isInGame ? 'In game' : 'Spectator'}>
+                <Text as='span' h="2.1rem">
+                    <Icon as={isInGame ? IoPlaySharp : GoEye} w="2.1rem" h="2.1rem" />
+                </Text>
+            </Tooltip>
+            <Text
+                cursor={'pointer'}
+                display="inline-block"
+                fontSize="xs"
+                fontWeight="light">
+                {props.name}
+            </Text>
+            <Text
+                cursor={'pointer'}
+                display="inline-block"
+                fontSize="xxs"
+                color="gray.300"
+                fontWeight="light">
+                [{props.id}]
+            </Text>
+        </HStack >
     )
 }
 

@@ -336,7 +336,7 @@ function GameIFrame(props) {
                             // }, 1000);
                             // updateGamePanel(gamepanel);
                         }}
-                        src={`/iframe.html`}
+                        src={'//localhost:3300/iframe.html'}
                         // srcDoc={iframeSrc}
                         sandbox="allow-scripts"
                     />

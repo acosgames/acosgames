@@ -10,7 +10,7 @@ export function leaveGame(message) {
     let socketUser = fs.get('socketUser');
     let user = { id: socketUser.id, name: socketUser.name };
 
-    fs.set('lastMessage', {});
+    // fs.set('lastMessage', {});
     socket.emit('action', encode({ type: 'leave', user }));
     fs.set('gameStatus', 'none');
 }
@@ -48,7 +48,7 @@ export function spawnFakePlayers(message) {
     let user = { id: socketUser.id, name: socketUser.name };
 
 
-    fs.set('lastMessage', {});
+    // fs.set('lastMessage', {});
     socket.emit('fakeplayer', encode({ type: 'create', user, payload: 1 }));
 }
 
@@ -71,7 +71,7 @@ export function leaveFakePlayer(fakePlayer) {
 
 export function onLeave(message) {
     try {
-        fs.set('lastMessage', {});
+        // fs.set('lastMessage', {});
         fs.set('wsStatus', 'connected');
         fs.set('gameStatus', 'none');
     }
@@ -146,11 +146,11 @@ export function onJoin(message) {
         // sendFrameMessage(message);
         // console.timeEnd('ActionLoop');
 
-        if (message && message.events && message.events.gameover) {
-            lastMessage = null;
-        } else {
-            lastMessage = message;
-        }
+        // if (message && message.events && message.events.gameover) {
+        //     //lastMessage = null;
+        // } else {
+        lastMessage = message;
+        // }
 
         if (message?.room?.status) {
             fs.set('gameStatus', message.room.status);

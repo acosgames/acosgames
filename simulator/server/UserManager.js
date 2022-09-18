@@ -88,6 +88,17 @@ class UserManager {
         }
     }
 
+    setSpectator(id) {
+        let user = this.getUserByShortid(id);
+        if (!user && this.allFakePlayers[id]) {
+            user = this.allFakePlayers[id];
+        }
+
+        if (user) {
+            user.spectator = true;
+        }
+    }
+
     getFakePlayersByParent(clientid) {
         let fakePlayers = [];
         for (const shortid in this.allFakePlayers) {

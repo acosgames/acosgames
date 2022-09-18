@@ -130,11 +130,11 @@ export function onGameUpdate(message) {
 
         // console.timeEnd('ActionLoop');
 
-        if (message && message.events && message.events.gameover) {
-            lastMessage = null;
-        } else {
-            lastMessage = message;
-        }
+        // if (message && message.events && message.events.gameover) {
+        //     lastMessage = null;
+        // } else {
+        lastMessage = message;
+        // }
 
         fs.set('gameStatus', message?.room?.status || 'none');
         fs.set('lastMessage', lastMessage);

@@ -3,9 +3,10 @@ import fs from 'flatstore'
 import { decode, encode } from './encoder';
 import { io } from "socket.io-client";
 
-import { onFakePlayer, onJoin, onLeave, onSpectate } from './game';
+import { onFakePlayer, onJoin, onLeave, onSpectate, onGameUpdate } from './game';
 
-import { createGamePanel, onGamePrivateUpdate, onGameUpdate } from './gamepanel'
+import GamePanelService from '../services/GamePanelService';
+
 
 // var latency = 0;
 // var latencyStart = 0;
@@ -62,6 +63,7 @@ export function connect(username) {
     });
 
     socket.on('connect', onConnect);
+    socket.on('gameSettings', onGameSettings);
     socket.on('connected', onConnected);
     socket.on('pong', onPong);
     socket.on('lastAction', onLastAction)
@@ -70,16 +72,33 @@ export function connect(username) {
     socket.on('game', onGameUpdate);
     socket.on('spectator', onSpectate);
     socket.on('fakeplayer', onFakePlayer);
-    socket.on('private', onGamePrivateUpdate);
+    // socket.on('private', onGamePrivateUpdate);
     socket.on('disconnect', onDisconnect);
 
     fs.set('socket', socket);
 }
 
+export function wsSend(type, payload) {
+    let socket = fs.get('socket');
+    socket.emit(type, encode(payload));
+}
+
 export function updateGameSettings(newSettings) {
     fs.set('gameSettings', newSettings);
     let socket = fs.get('socket');
-    socket.emit('gameSettings', encode(newSettings));
+    wsSend('gameSettings', newSettings)
+}
+
+const onGameSettings = (message) => {
+    try {
+        //message should have { id, name }
+        message = decode(message);
+
+        fs.set('gameSettings', message.gameSettings);
+    }
+    catch (e) {
+        console.error(e);
+    }
 }
 
 const onConnect = (evt) => {
@@ -103,7 +122,7 @@ const onConnected = (message) => {
         fs.set('socketUser', socketUser);
         fs.set('wsStatus', 'connected');
 
-        createGamePanel(socketUser.id);
+        GamePanelService.createGamePanel(socketUser.id);
     }
     catch (e) {
         console.error(e);
@@ -115,7 +134,7 @@ const ping = () => {
     try {
         let latencyStart = new Date().getTime();
         let socket = fs.get('socket');
-        socket.emit('ping', encode({ payload: latencyStart }));
+        wsSend('ping', { payload: latencyStart })
         fs.set('latencyStart', latencyStart);
     }
     catch (e) {

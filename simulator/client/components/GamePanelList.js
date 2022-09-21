@@ -55,7 +55,7 @@ function GamePanelList(props) {
             panelHeight = 100;
         }
 
-        let lastMessage = fs.get('lastMessage');
+        let lastMessage = fs.get('gameState');
 
         for (const id in gamepanels) {
             let gamepanel = gamepanels[id];
@@ -135,7 +135,7 @@ function CompactLayout(props) {
 
 function DisplayUserInfo(props) {
 
-    let [lastMessage] = fs.useWatch('lastMessage');
+    let [lastMessage] = fs.useWatch('gameState');
 
     let isInGame = false;
     let players = lastMessage?.players;

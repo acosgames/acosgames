@@ -39,9 +39,15 @@ const gameWorkingDirectory = process.argv[2];
 const GameSettingsManager = require('./GameSettingsManager');
 const { isObject } = require('./rank');
 const { cloneObj } = require('./util');
-const settings = new GameSettingsManager(gameWorkingDirectory);
+const settings = new GameSettingsManager(gameWorkingDirectory, onGameSettingsReloaded);
 
 
+function onGameSettingsReloaded() {
+    // let user = UserManager.actionUser(newUser);
+    io.emit('gameSettings', encode({
+        gameSettings: settings.get()
+    }));
+}
 
 setInterval(() => {
     let room = RoomManager.current();

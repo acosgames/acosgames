@@ -260,7 +260,7 @@ function GameIFrame(props) {
 
     });
 
-    let lastMessage = fs.get('lastMessage');
+    let lastMessage = fs.get('gameState');
     let players = lastMessage?.players || {};
 
     let isSpectator = !(props.id in players);

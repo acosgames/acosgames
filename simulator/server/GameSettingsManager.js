@@ -9,8 +9,9 @@ const defaultGameSettings = { minplayers: 1, maxplayers: 1, minteams: 0, maxteam
 
 
 class GameSettingsManager {
-    constructor(gameWorkingDirectory) {
+    constructor(gameWorkingDirectory, callback) {
 
+        this.onGameSettingsReloaded = callback;
         this.settingsPath = path.join(gameWorkingDirectory, './game-settings.json');
         this.gameSettings = defaultGameSettings;
 
@@ -63,7 +64,9 @@ class GameSettingsManager {
 
         let watchPath = this.settingsPath.substr(0, this.settingsPath.lastIndexOf(path.sep));
         chokidar.watch(this.settingsPath).on('change', (path) => {
-            this.reloadServerGameSettings(this.settingsPath);
+            let s = this.reloadServerGameSettings(this.settingsPath);
+            if (s)
+                this.onGameSettingsReloaded();
             console.log(`[ACOS] ${this.settingsPath} file Changed`, watchPath);
         });
     }
@@ -114,6 +117,8 @@ class GameSettingsManager {
         // console.log("[ACOS] Game Settings Reloaded: " + filename);
 
         this.validateSettings();
+
+
 
         return this.gameSettings;
     }

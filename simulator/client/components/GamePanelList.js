@@ -122,9 +122,10 @@ function CompactLayout(props) {
                 h="100%"
                 pr="0.4rem"
             >
-                {panelCount > 1 &&
-                    <DisplayUserInfo isInGame={props.isInGame} name={props.name} id={props.id} />
-                }
+                {/* {panelCount > 1 && */}
+
+                {/* } */}
+                <Box height="3rem" w="100%"></Box>
 
                 < GamePanel id={props.id} />
             </VStack>
@@ -132,41 +133,7 @@ function CompactLayout(props) {
     )
 }
 
-function DisplayUserInfo(props) {
 
-    let [lastMessage] = fs.useWatch('gameState');
-
-    let isInGame = false;
-    let players = lastMessage?.players;
-    if (players && props.id in players) {
-        isInGame = true;
-    }
-
-    return (
-        <HStack spacing="1rem" px="3rem" width="100%" height="3rem" >
-            <Tooltip label={isInGame ? 'In game' : 'Spectator'}>
-                <Text as='span' h="2.1rem">
-                    <Icon as={isInGame ? IoPlaySharp : GoEye} w="2.1rem" h="2.1rem" />
-                </Text>
-            </Tooltip>
-            <Text
-                cursor={'pointer'}
-                display="inline-block"
-                fontSize="xs"
-                fontWeight="light">
-                {props.name}
-            </Text>
-            <Text
-                cursor={'pointer'}
-                display="inline-block"
-                fontSize="xxs"
-                color="gray.300"
-                fontWeight="light">
-                [{props.id}]
-            </Text>
-        </HStack >
-    )
-}
 
 function ExpandedLayout(props) {
 

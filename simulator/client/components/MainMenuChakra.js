@@ -12,6 +12,7 @@ import fs from 'flatstore';
 import { Link, withRouter } from 'react-router-dom';
 // import config from '../config'
 import { CgChevronDoubleRightR, CgChevronDoubleDownR, CgChevronDoubleUpR, CgChevronDoubleLeftR } from '@react-icons';
+import { ActionPanel } from './ActionPanel';
 // import GameActions from './games/GameDisplay/GameActions';
 
 
@@ -54,7 +55,7 @@ function ACOSHeader(props) {
                     <Stack direction={'row'} spacing={0} height="100%">
 
                         <Box>
-
+                            <ActionPanel />
                         </Box>
                         <Box p="0" m="0" height="100%" lineHeight={'100%'}>
                             <Button onClick={() => { fs.set('actionToggle', !actionToggle) }} height="100%">

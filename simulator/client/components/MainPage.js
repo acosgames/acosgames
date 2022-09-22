@@ -11,7 +11,7 @@ import fs from 'flatstore';
 import { Scrollbars } from 'react-custom-scrollbars-2';
 import { Box, HStack, VStack } from "@chakra-ui/react";
 import MainMenuChakra from "./MainMenuChakra";
-import ActionPanel from "./ActionPanel";
+import SidePanel from "./SidePanel";
 import GamePanelList from "./GamePanelList";
 
 
@@ -104,11 +104,11 @@ function MainPage(props) {
                     </Scrollbars>
                 </Box>
                 {isMobile && (
-                    <ActionPanel />
+                    <SidePanel />
                 )}
             </VStack>
             {!isMobile && (
-                <ActionPanel />
+                <SidePanel />
             )}
         </HStack >
     )

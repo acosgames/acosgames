@@ -88,7 +88,7 @@ function onConnect(socket) {
 
 
     //join user immediately into game
-    onAction(socket, { type: 'join', user }, true);
+    // onAction(socket, { type: 'join', user }, true);
 
 
     let fakePlayers = UserManager.getFakePlayersByParent(user.id);
@@ -280,6 +280,9 @@ const onLeaveRequest = (action) => {
 
     let room = RoomManager.current();
     let gamestate = room.getGameState();
+    if (!gamestate || !gamestate.players)
+        return false;
+
     if (!(action.user.id in gamestate?.players)) {
         return false;
     }
@@ -304,9 +307,12 @@ const onGameActionRequest = (action) => {
 }
 
 const onNewGameRequest = (action) => {
-    RoomManager.create();
+    let room = RoomManager.create();
     let client = UserManager.getUserByShortid(action.user.id);
-    onAction(client.socket, { type: 'join', user: action.user }, true);
+    // onAction(client.socket, { type: 'join', user: action.user }, true);
+    let prevGamestate = room.copyGameState();
+    io.to('gameroom').emit('newgame', encode(prevGamestate));
+
     return false;
 }
 
@@ -476,6 +482,11 @@ function createWorker(index) {
         if (gamestate?.events?.join) {
             for (const shortid of gamestate.events.join) {
                 let client = UserManager.getUserByShortid(shortid);
+                if (!client) {
+                    let fakeUser = UserManager.getFakePlayer(shortid);
+                    if (fakeUser)
+                        client = UserManager.getParentUser(fakeUser.clientid);
+                }
                 client.socket.join('gameroom');
             }
         }

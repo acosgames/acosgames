@@ -11,6 +11,7 @@ export function ChooseGameSettings(props) {
 
     return (
         <VStack>
+            <Text fontWeight={'bold'} fontSize='2rem' pt="2rem">Game Settings</Text>
             <HStack spacing="1rem" alignItems={'flex-end'}>
                 <Text w="6rem">Players</Text>
                 <SettingNumberInput id="minplayers" title="Min" placeholder="0" />
@@ -38,16 +39,21 @@ export function ChooseTeamSettings(props) {
 
         let elems = [];
         for (let i = 0; i < teams.length; i++) {
-            elems.push(<TeamSettings key={'key_' + teams[i].team_slug} team_order={i} />);
+            elems.push(<TeamSettings key={'key_' + teams[i].team_order + 'team'} team_order={i} />);
         }
 
         return elems;
     }
 
+    if (!gameSettings?.teams || gameSettings.teams.length == 0) {
+        return <></>
+    }
+
     return (
-        <Box>
+        <VStack>
+            <Text fontWeight={'bold'} fontSize='2rem' pt="2rem">Team Settings</Text>
             {renderTeams()}
-        </Box>
+        </VStack>
     )
 }
 
@@ -126,63 +132,61 @@ function TeamSettings(props) {
     return (
         <Box ref={teamRef} pt="2rem" pb="2rem" transition={'background 0.3s ease'} bgColor={active ? 'gray.600' : ''} _hover={{ bgColor: 'gray.700' }} borderTop={'1px solid'} borderTopColor={'gray.600'}>
             {/* <Grid templateColumns='80% 20%' bgColor={props.isOdd ? 'gray.900' : ''} w="100%" > */}
-            <VStack spacing="0">
-                <SettingTextInput id="team_name" team_order={props.team_order} />
+            <HStack spacing="2rem">
+                <VStack spacing="1rem" justifyContent={'center'} alignContent="center" w="4rem">
+                    <IconButton
+                        color={isUpActive ? 'gray.300' : 'gray.600'}
+                        _hover={{ color: isUpActive ? 'white' : 'gray.600' }}
+                        _active={{ color: isUpActive ? 'gray.100' : 'gray.600' }}
+                        onClick={() => {
+                            if (!isUpActive)
+                                return;
+                            onChangeOrder(-1);
+                        }}
+                        cursor={isUpActive ? 'pointer' : ''}
+                        icon={<FaArrowCircleUp size="2rem" />}
+                        width="2.8rem"
+                        height="2.8rem"
+                        isRound="true"
+                    />
+                    <Text as="span" backgroundColor="gray.600" w="3rem" h="3rem" borderRadius={'50%'} color="white" fontSize="xs" fontWeight={"bold"}>{props.team_order}</Text>
+                    <IconButton
+                        color={isDownActive ? 'gray.300' : 'gray.600'}
+                        cursor={isDownActive ? 'pointer' : ''}
+                        onClick={() => {
+                            if (!isDownActive)
+                                return;
+                            onChangeOrder(1);
+                        }}
+                        _hover={{ color: isDownActive ? 'white' : 'gray.600' }}
+                        _active={{ color: isDownActive ? 'gray.100' : 'gray.600' }}
+                        icon={<FaArrowCircleDown size="2rem" />}
+                        width="2.8rem"
+                        height="2.8rem"
+                        isRound="true"
+                    />
+                </VStack>
 
-                <HStack spacing="0">
-                    <HStack spacing="0">
 
-                        <VStack spacing="1rem" justifyContent={'center'} alignContent="center">
-                            <IconButton
-                                color={isUpActive ? 'gray.300' : 'gray.600'}
-                                _hover={{ color: isUpActive ? 'white' : 'gray.600' }}
-                                _active={{ color: isUpActive ? 'gray.100' : 'gray.600' }}
-                                onClick={() => {
-                                    if (!isUpActive)
-                                        return;
-                                    onChangeOrder(-1);
-                                }}
-                                cursor={isUpActive ? 'pointer' : ''}
-                                icon={<FaArrowCircleUp size="2rem" />}
-                                width="2.8rem"
-                                height="2.8rem"
-                                isRound="true"
-                            />
-                            <Text color="white" fontSize="xs" fontWeight={"bold"}>{props.team_order}</Text>
-                            <IconButton
-                                color={isDownActive ? 'gray.300' : 'gray.600'}
-                                cursor={isDownActive ? 'pointer' : ''}
-                                onClick={() => {
-                                    if (!isDownActive)
-                                        return;
-                                    onChangeOrder(1);
-                                }}
-                                _hover={{ color: isDownActive ? 'white' : 'gray.600' }}
-                                _active={{ color: isDownActive ? 'gray.100' : 'gray.600' }}
-                                icon={<FaArrowCircleDown size="2rem" />}
-                                width="2.8rem"
-                                height="2.8rem"
-                                isRound="true"
-                            />
-                        </VStack>
-                        <Wrap width="100%" px="2rem">
+                <VStack spacing="0.5rem">
+                    <SettingTextInput id="team_name" title="Name" textWidth="6rem" team_order={props.team_order} />
+                    <VStack w="100%" spacing="0">
 
-                            <VStack w="100%">
+                        <SettingTextInput id="team_slug" title="Slug" textWidth="6rem" team_order={props.team_order} />
 
-                                <SettingTextInput id="team_slug" title="Slug" team_order={props.team_order} />
-                            </VStack>
-                            <HStack w="100%">
-                                <SettingNumberInput id="minplayers" title="Min Players" team_order={props.team_order} />
-                                <SettingNumberInput id="maxplayers" title="Max Players" team_order={props.team_order} />
-                            </HStack>
-                        </Wrap>
-                    </HStack>
-                    <Box pt="3rem" pb="3rem">
+                        <HStack w="100%" pt="1rem">
+                            <SettingNumberInput id="minplayers" title="Min Players" team_order={props.team_order} />
+                            <SettingNumberInput id="maxplayers" title="Max Players" team_order={props.team_order} />
+                        </HStack>
+
+                    </VStack>
+                    <Box w="100%">
                         <SettingColorInput id="color" title="" team_order={props.team_order} />
 
                     </Box>
-                </HStack>
-            </VStack>
+                </VStack>
+
+            </HStack>
         </Box>
     )
 }
@@ -293,8 +297,8 @@ function SettingTextInput(props) {
     }
 
     return (
-        <HStack id={'setting-' + id} display={gameSettings?.screentype == 1 ? 'none' : 'flex'} alignItems={'flex-start'} width="100%">
-            <Text fontWeight={'bold'} as="label" display={props.title ? 'inline-block' : 'none'} pr="0.5rem" fontSize="xs" htmlFor={id}>{props.title}</Text>
+        <HStack key={'setting-' + id} id={'setting-' + id} display={gameSettings?.screentype == 1 ? 'none' : 'flex'} alignItems={'center'} width="100%" spacing="0">
+            <Text fontWeight={'bold'} as="label" w={props.textWidth || '100%'} display={props.title ? 'inline-block' : 'none'} pr="0.5rem" fontSize="xs" htmlFor={id}>{props.title}</Text>
             <Input
                 className=""
                 id={id}
@@ -318,6 +322,7 @@ function SettingTextInput(props) {
                         gameSettings.teams[team_order][id] = value;
                     }
                     updateGameSettings(gameSettings);
+                    // e.target.focus();
                 }}
                 value={currentValue}
                 w={props.width || "100%"}
@@ -340,7 +345,7 @@ function SettingNumberInput(props) {
     }
 
     return (
-        <VStack id={'setting-' + id}>
+        <VStack key={'setting-' + id} id={'setting-' + id}>
             <Text as="label" display={'inline-block'} pr="0.5rem" fontSize="xs" htmlFor={id}>{props.title}</Text>
             <NumberInput
                 className=""
@@ -393,30 +398,28 @@ export function ChooseScreenSettings(props) {
         if (!gameSettings)
             return <></>
         return (
-            <div>
-                <div>
+            <VStack>
+                <Text fontWeight={'bold'} fontSize='2rem'>Screen Settings</Text>
+                <Select
+                    fontSize="xs"
+                    id="screenType"
+                    value={gameSettings?.screentype || '3'}
+                    onChange={(e) => {
+                        let val = Number.parseInt(e.target.value);
 
-                    <Select
-                        fontSize="xs"
-                        id="screenType"
-                        value={gameSettings?.screentype || '3'}
-                        onChange={(e) => {
-                            let val = Number.parseInt(e.target.value);
+                        if (!val) {
+                            console.error("Invalid screentype value: ", val);
+                            return;
+                        }
 
-                            if (!val) {
-                                console.error("Invalid screentype value: ", val);
-                                return;
-                            }
-
-                            gameSettings.screentype = val;
-                            updateGameSettings(gameSettings);
-                        }}
-                    >
-                        <option value="1">(1) Full Screen</option>
-                        <option value="2">(2) Fixed Resolution</option>
-                        <option value="3">(3) Scaled Resolution</option>
-                    </Select>
-                </div>
+                        gameSettings.screentype = val;
+                        updateGameSettings(gameSettings);
+                    }}
+                >
+                    <option value="1">(1) Full Screen</option>
+                    <option value="2">(2) Fixed Resolution</option>
+                    <option value="3">(3) Scaled Resolution</option>
+                </Select>
                 <Box id="viewportResolution" display={gameSettings?.screentype == 1 ? 'none' : 'block'}>
                     <Text as="label" display={'inline-block'} pr="0.5rem" fontSize="xs" htmlFor="resolution">Resolution</Text>
                     <Input
@@ -478,7 +481,10 @@ export function ChooseScreenSettings(props) {
                         w="6rem"
                         fontSize="xs"
                     />
-                    <Text color="gray.500" as="label" display={'inline-block'} pr="0.5rem" fontSize="xs" htmlFor="maxheight">Height (px)</Text>
+
+                </Box>
+                <Box display={gameSettings?.screentype != 3 ? 'none' : 'block'}>
+                    <Text as="label" display={'inline-block'} pr="0.5rem" fontSize="xs" htmlFor="maxheight">Height (px)</Text>
                     <Input
                         type="text"
                         className=""
@@ -491,7 +497,7 @@ export function ChooseScreenSettings(props) {
                         w="6rem"
                     />
                 </Box>
-            </div>
+            </VStack>
         )
     }
     catch (err) {

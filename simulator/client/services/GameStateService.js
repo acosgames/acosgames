@@ -26,6 +26,14 @@ class GameStateService {
         return null;
     }
 
+    clearState() {
+        fs.set('gameState', {});
+        fs.set('deltaState', {});
+        fs.set('hiddenPlayerState', {});
+
+        this.updateGamePanels();
+    }
+
     updateState(newState) {
 
         let gameState = fs.get('gameState');

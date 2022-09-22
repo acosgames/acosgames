@@ -6,6 +6,7 @@ import { io } from "socket.io-client";
 import { onFakePlayer, onJoin, onLeave, onSpectate, onGameUpdate } from './game';
 
 import GamePanelService from '../services/GamePanelService';
+import GameStateService from '../services/GameStateService';
 
 
 // var latency = 0;
@@ -20,6 +21,7 @@ fs.set('latencyOffsetTime', 0);
 fs.set('wsStatus', 'disconnected');
 fs.set('gameStatus', 'none');
 fs.set('gameSettings', defaultGameSettings);
+fs.set('localGameSettings', defaultGameSettings);
 
 //--------------------------------------------------
 //WebSockets Connection / Management 
@@ -70,6 +72,7 @@ export function connect(username) {
     socket.on('join', onJoin)
     socket.on('leave', onLeave);
     socket.on('game', onGameUpdate);
+    socket.on('newgame', onNewGame);
     socket.on('spectator', onSpectate);
     socket.on('fakeplayer', onFakePlayer);
     // socket.on('private', onGamePrivateUpdate);
@@ -89,12 +92,24 @@ export function updateGameSettings(newSettings) {
     wsSend('gameSettings', newSettings)
 }
 
+export function saveGameSettings() {
+
+    let newSettings = fs.get('gameSettings');
+    wsSend('gameSettings', newSettings)
+}
+
+const onNewGame = (message) => {
+    GameStateService.clearState();
+}
+
 const onGameSettings = (message) => {
     try {
         //message should have { id, name }
         message = decode(message);
 
+        fs.set('localGameSettings', message.gameSettings);
         fs.set('gameSettings', message.gameSettings);
+
     }
     catch (e) {
         console.error(e);
@@ -118,7 +133,9 @@ const onConnected = (message) => {
         let gameSettings = message.gameSettings;
         ping();
 
+        fs.set('localGameSettings', gameSettings);
         fs.set('gameSettings', gameSettings);
+
         fs.set('socketUser', socketUser);
         fs.set('wsStatus', 'connected');
 

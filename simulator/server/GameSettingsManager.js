@@ -23,40 +23,144 @@ class GameSettingsManager {
         return this.gameSettings;
     }
 
+    arraymove = (arr, fromIndex, toIndex) => {
+        var element = arr[fromIndex];
+        arr.splice(fromIndex, 1);
+        arr.splice(toIndex, 0, element);
+    }
+
     validateSettings() {
         let s = this.gameSettings;
 
+        let dirty = false;
+
         if (!('minplayers' in s) || !Number.isInteger(s.minplayers)) {
             s.minplayers = 1;
+            dirty = true;
+        }
+        // else if (s.minplayers > s.maxplayers) {
+        //     s.minplayers = s.maxplayers;
+        //     dirty = true;
+        // } 
+        else if (s.minplayers < 0) {
+            s.minplayers = 0;
+            dirty = true;
         }
         if (!('maxplayers' in s) || !Number.isInteger(s.maxplayers)) {
             s.maxplayers = 1;
+            dirty = true;
+        } else if (s.maxplayers < s.minplayers) {
+            s.maxplayers = s.minplayers;
+            dirty = true;
+        } else if (s.maxplayers < 0) {
+            s.maxplayers = 0;
+            dirty = true;
         }
+
         if (!('minteams' in s) || !Number.isInteger(s.minteams)) {
             s.minteams = 0;
+            dirty = true;
         }
-        if (!('minplayers' in s) || !Number.isInteger(s.minplayers)) {
-            s.minplayers = 0;
+        // else if (s.minteams > s.maxteams) {
+        //     s.minteams = s.maxteams;
+        //     dirty = true;
+        // }
+        else if (s.minteams < 0) {
+            s.minteams = 0;
+            dirty = true;
         }
+
         if (!('maxteams' in s) || !Number.isInteger(s.maxteams)) {
             s.maxteams = 0;
+            dirty = true;
         }
+        else if (s.maxteams < s.minteams) {
+            s.maxteams = s.minteams;
+            dirty = true;
+        }
+        else if (s.maxteams < 0) {
+            s.maxteams = 0;
+            dirty = true;
+        }
+
         if (!('teams' in s) || !Array.isArray(s.teams)) {
             s.teams = [];
+            dirty = true;
         }
+        else if (s.maxteams > 0 && s.teams.length < s.maxteams) {
+            let missingCount = s.maxteams - s.teams.length;
+            for (let i = 0; i < missingCount; i++) {
+                s.teams.push({
+                    team_name: 'Team ' + (s.teams.length + i + 1),
+                    team_slug: 'team_' + (s.teams.length + i + 1),
+                    minplayers: 1,
+                    maxplayers: 1,
+                    team_order: s.teams.length,
+                    color: '#000000'
+                })
+                dirty = true;
+            }
+        }
+        else if (s.teams.length > s.maxteams) {
+            let overCount = s.teams.length - s.maxteams
+            for (let i = 0; i < overCount; i++) {
+                s.teams.pop();
+                dirty = true;
+            }
+        }
+
+        if ('teams' in s) {
+            if (s.teams.length > 0) {
+                for (let team of s.teams) {
+
+                    if (!('minplayers' in team) || !Number.isInteger(team.minplayers)) {
+                        team.minplayers = 1;
+                        dirty = true;
+                    }
+                    else if (team.minplayers < 0) {
+                        team.minplayers = 0;
+                        dirty = true;
+                    }
+                    if (!('maxplayers' in team) || !Number.isInteger(team.maxplayers)) {
+                        team.maxplayers = 1;
+                        dirty = true;
+                    } else if (team.maxplayers < team.minplayers) {
+                        team.maxplayers = team.minplayers;
+                        dirty = true;
+                    } else if (team.maxplayers < 0) {
+                        team.maxplayers = 0;
+                        dirty = true;
+                    }
+
+
+                }
+            }
+        }
+
         if (!('screentype' in s) || !Number.isInteger(s.screentype)) {
             s.screentype = 3;
+            dirty = true;
         }
         if (!('resow' in s) || !Number.isInteger(s.resow)) {
             s.resow = 4;
+            dirty = true;
         }
         if (!('resoh' in s) || !Number.isInteger(s.resoh)) {
             s.resoh = 3;
+            dirty = true;
         }
         if (!('screenwidth' in s) || !Number.isInteger(s.screenwidth)) {
             s.screenwidth = 800;
+            dirty = true;
         }
 
+
+        if (dirty) {
+            this.updateGameSettings(s);
+            return false;
+        }
+
+        return true;
     }
 
     loadSettings() {
@@ -77,6 +181,8 @@ class GameSettingsManager {
             let jsonStr = JSON.stringify(newGameSettings, null, 4);
             let json = JSON.parse(jsonStr);
             fs.writeFileSync(this.settingsPath, jsonStr, 'utf-8');
+
+            this.validateSettings();
         }
         catch (e) {
             console.error("Invalid JSON for updateGameSettings: ", newGameSettings, e);

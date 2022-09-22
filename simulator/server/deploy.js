@@ -15,15 +15,19 @@ let resow = argv.resow || 4;
 let resoh = argv.resoh || 4;
 let screenwidth = argv.screenwidth || 1200;
 
-let buildPath = argv.buildPath || process.cwd();
+let buildPath = argv.buildPath || path.join(process.cwd(), '/builds');
 let isScaled = argv.scaled || false;
 let apikey = argv._[0];
 let isLocal = argv.local || false;
+
+let settingsPath = argv.settings || path.join(process.cwd(), '/game-settings.json');
 
 // console.log(process.argv);
 // console.log(argv);
 
 // console.log("parsed: apikey=", apikey, ", isScaled=", isScaled);
+
+// let settingsPath = path.join(gameWorkingDirectory, './game-settings.json');
 
 async function deployAll() {
     let url = 'http://localhost:8080/api/v1/dev/update/game/bundle/';
@@ -57,6 +61,10 @@ async function deployAll() {
         console.error(err)
     }
 
+
+
+
+
     let serverFilePath = path.join(buildPath, '/server/server.bundle.js');
     var serverFile = fs.createReadStream(serverFilePath);
     form_data.append("server", serverFile);
@@ -64,6 +72,21 @@ async function deployAll() {
     let headers = form_data.getHeaders();
     headers['X-GAME-API-KEY'] = apikey || '';
     // headers['X-GAME-SCALED'] = isScaled ? 'yes' : 'no';
+
+    try {
+        if (!fs.existsSync(settingsPath)) {
+            //file exists
+            console.warn('[ACOS] No database exists. It is optional, but this is a reminder just incase you forgot it.  Format should be `./game-server/database.json`')
+        }
+        else {
+            var settingsFile = fs.readFileSync(settingsPath, 'utf-8');
+            let settings = JSON.parse(settingsFile);
+            headers['X-GAME-SETTINGS'] = JSON.stringify(settings); //puts json into a single line
+        }
+    } catch (err) {
+        console.error(err)
+    }
+
 
     headers['X-GAME-SCREENTYPE'] = screentype;
     headers['X-GAME-RESOW'] = resow;
@@ -81,8 +104,9 @@ async function deployAll() {
     try {
         let response = await axios.request(config);
         let ver = response.data;
+        console.log(`[ACOS] Deployed Game Information: `, ver);
         console.log(`[ACOS] Deployed version ${ver.version} successfully`);
-        console.log(`[ACOS] Screen Type: ${ver.screentype}${ver.screentype > 1 ? (', Resolution: ' + ver.resow + ':' + ver.resoh) : ''}${ver.screentype == 3 ? (', Width: ' + ver.screenwidth + 'px') : ''}`);
+        // console.log(`[ACOS] Screen Type: ${ver.screentype}${ver.screentype > 1 ? (', Resolution: ' + ver.resow + ':' + ver.resoh) : ''}${ver.screentype == 3 ? (', Width: ' + ver.screenwidth + 'px') : ''}`);
     }
     catch (e) {
         console.error('[ACOS] Error Deploying:', e);

@@ -13,6 +13,7 @@ import { IoSend, BsChevronBarRight, BsChevronBarLeft, BsChevronBarUp, BsChevronB
 import { Link, useLocation } from 'react-router-dom';
 import { connect, updateGameSettings } from '../actions/websocket';
 import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, newGame, spawnFakePlayers, startGame } from '../actions/game';
+import { ChooseGameSettings, ChooseScreenSettings, ChooseTeamSettings } from './GameSettings';
 // import GameActions from '../games/GameDisplay/GameActions';
 // import QueuePanel from '../games/QueuePanel.js';
 
@@ -70,7 +71,7 @@ function ActionPanel(props) {
             transition="width 0.3s ease, height 0.3s ease"
             // borderTop={(props.isMobile && toggle) ? '1px solid #333' : ''}
             zIndex={30}
-            width={isMobile ? "100%" : (toggle ? ['24.0rem', '24rem', '28.0rem'] : '0')}
+            width={isMobile ? "100%" : (toggle ? ['34.0rem', '34rem', '38.0rem'] : '0')}
             filter='drop-shadow(0 0 5px rgba(25,25,25,.25))'>
             {/* {props.isMobile && (
                 <GameActions />
@@ -212,9 +213,14 @@ function GameActions(props) {
 
     return (
         <VStack>
-            <HStack>
+            <VStack justifyContent={'flex-start'} spacing='2rem'>
+                <Text fontWeight={'bold'} fontSize='2rem'>Screen Settings</Text>
                 <ChooseScreenSettings />
-            </HStack>
+                <Text fontWeight={'bold'} fontSize='2rem' pt="2rem">Game Settings</Text>
+                <ChooseGameSettings />
+                <Text fontWeight={'bold'} fontSize='2rem' pt="2rem">Team Settings</Text>
+                <ChooseTeamSettings />
+            </VStack>
             <HStack display={isGameRunning ? 'flex' : 'none'}>
                 <Button onClick={() => {
                     leaveGame()
@@ -318,122 +324,6 @@ function DisplayFakePlayers(props) {
 
 }
 
-function ChooseScreenSettings(props) {
-
-    try {
-        let [gameSettings] = fs.useWatch('gameSettings');
-
-        if (!gameSettings)
-            return <></>
-        return (
-            <div>
-                <div>
-
-                    <Select
-                        fontSize="xs"
-                        id="screenType"
-                        value={gameSettings?.screentype || '3'}
-                        onChange={(e) => {
-                            let val = Number.parseInt(e.target.value);
-
-                            if (!val) {
-                                console.error("Invalid screentype value: ", val);
-                                return;
-                            }
-
-                            gameSettings.screentype = val;
-                            updateGameSettings(gameSettings);
-                        }}
-                    >
-                        <option value="1">1. Full Screen</option>
-                        <option value="2">2. Fixed Resolution</option>
-                        <option value="3">3. Scaled Resolution</option>
-                    </Select>
-                </div>
-                <Box id="viewportResolution" display={gameSettings?.screentype == 1 ? 'none' : 'block'}>
-                    <Text as="label" display={'inline-block'} pr="0.5rem" fontSize="xs" htmlFor="resolution">Resolution</Text>
-                    <Input
-                        type="text"
-                        className=""
-                        id="resolution"
-                        fontSize="xs"
-                        aria-describedby=""
-                        placeholder="4:3"
-                        onChange={(e) => {
-                            let parts = e.target.value.split(':');
-                            if (parts.length != 2) {
-                                console.log("Invalid format for resolution, please use #:# format", e.target.value);
-                                return;
-                            }
-
-                            try {
-                                let resow = Number.parseInt(parts[0]) || 0;
-                                let resoh = Number.parseInt(parts[1]) || 0;
-
-                                if (!resow || !resoh) {
-                                    console.error("Invalid resolution values: ", resow + ':' + resoh);
-                                    return;
-                                }
-
-                                gameSettings.resow = resow;
-                                gameSettings.resoh = resoh;
-                                updateGameSettings(gameSettings);
-                            }
-                            catch (e) {
-
-                            }
-
-                        }}
-                        value={gameSettings?.resow && (gameSettings?.resow + ':' + gameSettings?.resoh)}
-                        w="6rem"
-                    />
-                </Box>
-                <Box id="viewportSize" display={gameSettings?.screentype != 3 ? 'none' : 'block'}>
-                    <Text as="label" display={'inline-block'} pr="0.5rem" fontSize="xs" htmlFor="maxwidth">Width (px)</Text>
-                    <Input
-                        type="text"
-                        className=""
-                        id="maxwidth"
-                        aria-describedby=""
-                        value={gameSettings?.screenwidth || '800'}
-                        onChange={(e) => {
-                            let val = Number.parseInt(e.target.value);
-
-                            if (!val) {
-                                console.error("Invalid max width value: ", val);
-                                return;
-                            }
-
-                            gameSettings.screenwidth = val;
-                            updateGameSettings(gameSettings);
-                        }}
-                        placeholder={gameSettings?.screenwidth || '800'}
-                        w="6rem"
-                        fontSize="xs"
-                    />
-                    <Text color="gray.500" as="label" display={'inline-block'} pr="0.5rem" fontSize="xs" htmlFor="maxheight">Height (px)</Text>
-                    <Input
-                        type="text"
-                        className=""
-                        id="maxheight"
-                        readOnly
-                        aria-describedby=""
-                        color="gray.500"
-                        fontSize="xs"
-                        value={gameSettings?.screenwidth && (gameSettings?.screenwidth * (gameSettings.resoh / gameSettings.resow))}
-                        w="6rem"
-                    />
-                </Box>
-            </div>
-        )
-    }
-    catch (err) {
-        console.error(err);
-        return <></>
-    }
-
-
-}
 
 function ChoosePlayerName(props) {
 

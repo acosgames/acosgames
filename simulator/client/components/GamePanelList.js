@@ -1,7 +1,6 @@
 import { Box, HStack, Icon, Text, Tooltip, VStack, Wrap, WrapItem } from "@chakra-ui/react";
 import fs from 'flatstore';
 import { useEffect, useRef } from "react";
-import { createGamePanel } from "../actions/gamepanel";
 import Connection from "./Connection";
 import GamePanel from "./GamePanel";
 

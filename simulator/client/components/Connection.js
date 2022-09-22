@@ -6,17 +6,18 @@ import {
 } from "react-router-dom";
 
 import fs from 'flatstore';
+import GamePanelService from "../services/GamePanelService";
 
 // import { connect } from '../actions/websocket'
-import { attachToFrame, detachFromFrame } from "../actions/gamepanel";
 
 function Connection(props) {
 
     useEffect(() => {
         // connect();
-        attachToFrame();
+        // GamePanelService.attachToFrame();
+        // attachToFrame();
 
-        return () => { detachFromFrame() }
+        // return () => { detachFromFrame() }
     }, [])
 
     return (

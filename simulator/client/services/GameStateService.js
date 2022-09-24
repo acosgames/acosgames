@@ -19,6 +19,17 @@ class GameStateService {
         return players;
     }
 
+    getPlayersArray() {
+        let players = this.getPlayers();
+        let playerList = [];
+        for (const id in players) {
+            let player = players[id];
+            player.id = id;
+            playerList.push(player);
+        }
+        return playerList;
+    }
+
     getPlayer(id) {
         let players = this.getPlayers();
         if (id in players)

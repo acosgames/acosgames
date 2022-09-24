@@ -9,6 +9,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { connect, saveGameSettings, updateGameSettings } from '../actions/websocket';
 import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, newGame, removeFakePlayer, spawnFakePlayers, startGame } from '../actions/game';
 import { ChooseGameSettings, ChooseScreenSettings, ChooseTeamSettings } from './GameSettings';
+import { DisplayFakePlayers, DisplayGamePlayers } from './PlayerList';
 
 fs.set('chat', []);
 fs.set('chatMessage', '');
@@ -60,6 +61,7 @@ function SidePanel(props) {
                         <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0">
                             <Box pt="1rem">
                                 <ChoosePlayerName />
+                                <DisplayGamePlayers />
                                 <DisplayFakePlayers />
                             </Box>
                         </TabPanel>
@@ -89,68 +91,6 @@ function SidePanel(props) {
 
 
 
-function DisplayFakePlayers(props) {
-
-    let [fakePlayers] = fs.useWatch('fakePlayers');
-
-    let [wsStatus] = fs.useWatch('wsStatus');
-    if (wsStatus == 'disconnected') {
-        return <></>
-    }
-
-    const renderFakePlayers = () => {
-
-        let elems = [];
-        for (const shortid in fakePlayers) {
-            let fakePlayer = fakePlayers[shortid];
-
-            elems.push(
-                <HStack key={'fakeplayer-' + shortid}>
-                    <Text fontSize="1.5rem" width="70%">{fakePlayer.name}</Text>
-                    <IconButton
-                        fontSize={'2rem'}
-                        colorScheme={'clear'}
-                        icon={<ImEnter color="gray.300" />}
-                        onClick={() => {
-                            joinFakePlayer(fakePlayer);
-                        }}
-                    >
-                        Join Game
-                    </IconButton>
-                    <IconButton
-                        fontSize={'2rem'}
-                        colorScheme={'clear'}
-                        icon={<AiFillCloseCircle color="gray.300" />}
-                        onClick={() => {
-                            removeFakePlayer(fakePlayer);
-                        }}
-                    >
-                        Leave Game
-                    </IconButton>
-                </HStack>
-            )
-        }
-
-        return elems;
-    }
-
-    return (
-        <VStack>
-            {renderFakePlayers()}
-            <Box pt="2rem">
-                <Button
-                    leftIcon={<IoAddSharp color="white" />}
-                    fontSize={'xxs'}
-                    bgColor={'teal.700'}
-                    onClick={() => {
-                        spawnFakePlayers();
-                    }}>
-                    Add Fake Player
-                </Button>
-            </Box>
-        </VStack>
-    )
-}
 
 
 

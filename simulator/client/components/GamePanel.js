@@ -7,6 +7,7 @@ import { withRouter } from 'react-router-dom';
 import GamePanelService from '../services/GamePanelService';
 import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, validateNextUser } from '../actions/game';
 import GameStateService from '../services/GameStateService';
+import { DisplayUserActions } from './PlayerList';
 
 fs.set('iframes', {});
 fs.set('iframesLoaded', {});
@@ -266,65 +267,7 @@ function GameIFrame(props) {
     )
 }
 
-function DisplayUserActions(props) {
 
-    let [gameState] = fs.useWatch('gameState');
-
-    let user = GamePanelService.getUserById(props.id);
-    let isFakePlayer = 'clientid' in user;
-
-    let player = GameStateService.getPlayer(props.id);
-    let isInRoom = player != null
-    let hasVacancy = GameStateService.hasVacancy();
-
-    let isGameActive = gameState?.room?.status != 'gameover';
-
-    let isJoinAllowed = !isInRoom && hasVacancy;
-    let isLeaveAllowed = isInRoom;
-
-    if (!isGameActive)
-        return <></>
-
-    return (
-        <HStack>
-            <Button
-                display={isJoinAllowed ? 'block' : 'none'}
-                fontSize={'xxs'}
-                bgColor={'green.500'}
-                height={'1.4rem'}
-                lineHeight='1.4rem'
-                onClick={() => {
-                    if (isFakePlayer) {
-                        let fakePlayer = GamePanelService.getUserById(props.id);
-                        joinFakePlayer(fakePlayer);
-                        return;
-                    }
-                    joinGame();
-                }}
-            >
-                Join
-            </Button>
-
-            <Button
-                display={isLeaveAllowed ? 'block' : 'none'}
-                fontSize={'xxs'}
-                height={'1.4rem'}
-                lineHeight='1.4rem'
-                bgColor={'red.500'}
-                onClick={() => {
-                    if (isFakePlayer) {
-                        let fakePlayer = GamePanelService.getUserById(props.id);
-                        leaveFakePlayer(fakePlayer);
-                        return;
-                    }
-                    leaveGame();
-                }}
-            >
-                Leave
-            </Button>
-        </HStack>
-    )
-}
 
 function DisplayUserInfo(props) {
 

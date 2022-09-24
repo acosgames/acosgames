@@ -104,7 +104,8 @@ function Timeleft(props) {
 
     return (
         <HStack width="100%" height={'100%'} alignContent='center' justifyContent={'center'}>
-            <Icon as={IoTimeOutline} fontSize='sm' color={'gray.200'}></Icon> <Text color={'gray.100'} fontSize='md'>{timeleft}</Text>
+            <Icon as={IoTimeOutline} fontSize='sm' color={'gray.200'}></Icon>
+            <Text color={'gray.100'} fontSize='md'>{timeleft}</Text>
         </HStack>
     )
 }

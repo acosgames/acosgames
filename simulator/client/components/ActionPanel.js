@@ -1,6 +1,6 @@
-import { Box, Button, HStack, VStack } from '@chakra-ui/react';
+import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
 import fs from 'flatstore';
-import { leaveGame, newGame, startGame } from '../actions/game';
+import { leaveGame, newGame, replayNext, replayPrev, startGame } from '../actions/game';
 
 
 export function ActionPanel(props) {
@@ -29,7 +29,8 @@ function GameActions(props) {
 
     let isGameRunning = gameStatus != 'gameover' && gameStatus != 'none';
     let isPregame = gameStatus == 'pregame';
-    let isInGame = gameStatus != 'pregame';
+    let isInGame = true;// gameStatus != 'gamestart';
+    let isGameOver = gameStatus == 'gameover';
 
     return (
         <HStack height="100%" justifyItems={'center'} alignItems='center'>
@@ -49,23 +50,24 @@ function GameActions(props) {
                     Join Game
                 </Button>
             </HStack> */}
+            <ReplayControls gameStatus={gameStatus} />
+            <HStack display={isInGame ? 'flex' : 'none'}>
+                <Button
+                    fontSize={'xxs'}
+                    bgColor={'gray.900'}
+                    onClick={newGame}>
+                    {isGameRunning || isGameOver ? 'Reset Game' : 'New Game'}
+                </Button>
+
+            </HStack>
             <HStack display={isPregame ? 'flex' : 'none'}>
                 <Button
                     fontSize={'xxs'}
-                    bgColor={'green.800'}
+                    bgColor={'green.300'}
                     onClick={startGame}>
                     {'Start Game'}
                 </Button>
 
-
-            </HStack>
-            <HStack display={isInGame ? 'flex' : 'none'}>
-                <Button
-                    fontSize={'xxs'}
-                    bgColor={'yellow.500'}
-                    onClick={newGame}>
-                    {'New Game'}
-                </Button>
 
             </HStack>
             {/* <HStack display={isGameRunning ? 'flex' : 'none'}>
@@ -85,5 +87,41 @@ function GameActions(props) {
             </HStack> */}
 
         </HStack>
+    )
+}
+
+
+function ReplayControls(props) {
+
+    let [replayStats] = fs.useWatch('replayStats');
+    let hasGameReplay = props.gameStatus != 'none' && props.gameStatus != 'pregame';
+
+    if (!hasGameReplay)
+        return <></>
+
+    return (
+        <Box>
+            <HStack>
+                <Button
+                    fontSize={'xxs'}
+                    bgColor={'gray.500'}
+                    onClick={() => {
+                        replayPrev();
+                    }}>
+                    &lt;
+                </Button>
+                <Text as="span">{replayStats.position}</Text>
+                <Text as="span">/</Text>
+                <Text as="span">{replayStats.total}</Text>
+                <Button
+                    fontSize={'xxs'}
+                    bgColor={'gray.500'}
+                    onClick={() => {
+                        replayNext();
+                    }}>
+                    &gt;
+                </Button>
+            </HStack>
+        </Box>
     )
 }

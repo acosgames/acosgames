@@ -279,6 +279,7 @@ class FSGWorker {
 
 
             room.sequence = room.sequence + 1;
+            room.updated = Date.now();
             globalResult.room = room;
             globalResult.action = action;
 

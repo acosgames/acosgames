@@ -26,6 +26,18 @@ class GameStateService {
         return null;
     }
 
+    hasVacancy() {
+        let gameSettings = fs.get('gameSettings');
+
+        let gameState = fs.get('gameState');
+        let players = gameState?.players || {};
+        let playerList = Object.keys(players);
+        if (playerList.length >= gameSettings.maxplayers)
+            return false;
+
+        return true;
+    }
+
     clearState() {
         fs.set('gameState', {});
         fs.set('deltaState', {});
@@ -34,9 +46,11 @@ class GameStateService {
         this.updateGamePanels();
     }
 
-    updateState(newState) {
 
-        let gameState = fs.get('gameState');
+
+    updateState(newState, prevState) {
+
+        let gameState = prevState || fs.get('gameState');
         gameState = JSON.parse(JSON.stringify(gameState));
 
         let delta = DELTA.delta(gameState, newState, {});
@@ -51,33 +65,40 @@ class GameStateService {
         fs.set('deltaState', delta);
         fs.set('hiddenPlayerState', hiddenPlayers);
 
+
         this.updateGamePanels();
     }
 
     updateGamePanel(id) {
-        let gameState = fs.get('gameState');
-        let gamepanels = fs.get('gamepanels');
-        let gamepanel = gamepanels[id];
+        try {
+            let gameState = fs.get('gameState');
+            let gamepanels = fs.get('gamepanels');
+            let gamepanel = gamepanels[id];
 
-        let pstate = JSON.parse(JSON.stringify(gameState));
+            let pstate = JSON.parse(JSON.stringify(gameState));
 
-        if (!gamepanel?.iframe?.current)
-            return;
+            if (!gamepanel?.iframe?.current)
+                return;
 
-        if (pstate.private)
-            delete pstate.private;
+            if (pstate.private)
+                delete pstate.private;
 
-        let hiddenPlayers = fs.set('hiddenPlayerState');
-        if (hiddenPlayers && hiddenPlayers[id] && pstate?.players[id]) {
-            pstate.local = Object.assign({}, pstate.players[id], hiddenPlayers[id]);
-            pstate.private = { players: { [id]: hiddenPlayers[id] } };
+            let hiddenPlayers = fs.set('hiddenPlayerState');
+            if (hiddenPlayers && hiddenPlayers[id] && pstate?.players[id]) {
+                pstate.local = Object.assign({}, pstate.players[id], hiddenPlayers[id]);
+                pstate.private = { players: { [id]: hiddenPlayers[id] } };
+            }
+            else
+                pstate.local = { id };
+
+            pstate.local.id = id;
+
+            GamePanelService.sendFrameMessage(gamepanel, pstate);
         }
-        else
-            pstate.local = pstate.players[id] || {};
+        catch (e) {
+            console.error(e);
+        }
 
-        pstate.local.id = id;
-
-        GamePanelService.sendFrameMessage(gamepanel, pstate);
     }
 
     updateGamePanels() {

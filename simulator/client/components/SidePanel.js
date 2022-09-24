@@ -3,11 +3,11 @@ import { Box, HStack, VStack, Text, IconButton, Image, Flex, Button, Icon, Input
 import fs from 'flatstore';
 import { useEffect, useRef, useState } from 'react';
 
-import { IoSend, BsChevronBarRight, BsChevronBarLeft, BsChevronBarUp, BsChevronBarDown, BsChatDotsFill, AiFillCloseCircle, ImEnter } from '@react-icons';
+import { IoSend, IoAddSharp, BsChevronBarLeft, BsChevronBarUp, BsChevronBarDown, BsChatDotsFill, AiFillCloseCircle, ImEnter } from '@react-icons';
 
 import { Link, useLocation } from 'react-router-dom';
 import { connect, saveGameSettings, updateGameSettings } from '../actions/websocket';
-import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, newGame, spawnFakePlayers, startGame } from '../actions/game';
+import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, newGame, removeFakePlayer, spawnFakePlayers, startGame } from '../actions/game';
 import { ChooseGameSettings, ChooseScreenSettings, ChooseTeamSettings } from './GameSettings';
 
 fs.set('chat', []);
@@ -25,9 +25,6 @@ function SidePanel(props) {
     let toggle = actionToggle && displayMode != 'theatre';
     let desktopIcon = toggle ? <Icon as={AiFillCloseCircle} filter={'drop-shadow(0px -12px 24px rgba(0,0,0,0.2))'} fontSize="2rem" color={'gray.400'} /> : <Icon as={BsChatDotsFill} filter={'drop-shadow(0px -12px 24px rgba(0,0,0,0.2))'} fontSize="2rem" color={'gray.100'} />;
     let mobileIcon = toggle ? <Icon as={AiFillCloseCircle} filter={'drop-shadow(0px -12px 24px rgba(0,0,0,0.2))'} fontSize="2rem" color={'gray.400'} /> : <Icon as={BsChatDotsFill} filter={'drop-shadow(0px -12px 24px rgba(0,0,0,0.2))'} fontSize="2rem" color={'gray.100'} />
-
-
-
 
     return (
         <HStack
@@ -59,24 +56,12 @@ function SidePanel(props) {
                         <Tab>Settings</Tab>
                     </TabList>
 
-                    <TabPanels h="100%">
+                    <TabPanels h="100%" pb="5rem" >
                         <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0">
-                            <Box pl={'1rem'} flex="1" alignSelf="stretch" width="100%" overflow="hidden" overflowY="scroll" >
-                                <VStack width="100%" height="100%" spacing={['0.2rem', '0.3rem', "0.5rem"]} justifyContent={'flex-start'} >
-                                    <ChoosePlayerName />
-                                    <HStack pt="2rem">
-                                        <VStack>
-                                            <Button onClick={() => {
-                                                spawnFakePlayers();
-                                            }}>
-                                                Spawn Fake Players
-                                            </Button>
-                                        </VStack>
-                                    </HStack>
-                                    <Box>
-                                        <DisplayFakePlayers />
-                                    </Box>
-                                </VStack></Box>
+                            <Box pt="1rem">
+                                <ChoosePlayerName />
+                                <DisplayFakePlayers />
+                            </Box>
                         </TabPanel>
                         <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0">
                             {/* <Box pl={'1rem'} flex="1" alignSelf="stretch" width="100%" overflow="hidden" overflowY="scroll" >
@@ -86,7 +71,7 @@ function SidePanel(props) {
                         </TabPanel>
                         <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0">
 
-                            <VStack justifyContent={'flex-start'} spacing='2rem' pb={"4rem"} px="0">
+                            <VStack justifyContent={'flex-start'} spacing='2rem' pt="1rem" pb={"4rem"} px="0">
 
                                 <ChooseScreenSettings />
 
@@ -96,78 +81,9 @@ function SidePanel(props) {
                             </VStack>
                         </TabPanel>
                     </TabPanels>
-
                 </Tabs>
             </VStack>
         </HStack>
-    )
-}
-
-function SaveSettingButton(props) {
-
-    let [gameSettings] = fs.useWatch('gameSettings');
-    let [localGameSettings] = fs.useWatch('localGameSettings');
-    let needsUpdate = false;
-    if (JSON.stringify(gameSettings) != JSON.stringify(localGameSettings))
-        needsUpdate = true;
-
-    return <>
-    </>
-    return (
-        <Button
-            display={needsUpdate ? 'block' : 'none'}
-            fontSize={'xxs'}
-            bgColor={'green.800'}
-            onClick={saveGameSettings}>
-            {'Save'}
-        </Button>
-    )
-}
-
-
-function ChatHeader(props) {
-
-    let [mode, setMode] = useState('all');
-
-    const onChangeMode = (mode) => {
-        setMode(mode);
-        fs.set('chatMode', mode);
-    }
-    return (
-        <HStack
-            boxShadow={'0 10px 15px -3px rgba(0, 0, 0, .2), 0 4px 6px -2px rgba(0, 0, 0, .1);'}
-            pl={'1rem'}
-            width={props.isMobile ? '100%' : (props.toggle ? ['24.0rem', '24rem', '34.0rem'] : '0rem')}
-            height={['3rem', '4rem', '5rem']}
-            spacing={'2rem'}
-            mt={'0 !important'} >
-            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'all' ? 'gray.100' : 'gray.300'} textShadow={mode == 'all' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('all') }}>Actions</Text>
-            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'game' ? 'gray.100' : 'gray.300'} textShadow={mode == 'game' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('game') }}>Players</Text>
-            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'party' ? 'gray.100' : 'gray.300'} textShadow={mode == 'party' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('party') }}>Debug</Text>
-        </HStack>
-    )
-}
-ChatHeader = fs.connect([])(ChatHeader);
-
-function ChatMessages(props) {
-
-    // useEffect(() => {
-    //     clearChatMessages();
-    // }, [])
-
-    const location = useLocation();
-    const messageListRef = useRef();
-    const scrollRef = useRef();
-
-    return (
-        <Box pl={'1rem'} flex="1" alignSelf="stretch" width="100%" overflow="hidden" overflowY="scroll" ref={scrollRef}>
-            <VStack width="100%" height="100%" spacing={['0.2rem', '0.3rem', "0.5rem"]} justifyContent={'flex-start'} >
-                <ChoosePlayerName />
-                <GameActions />
-                <div ref={messageListRef} />
-            </VStack>
-        </Box>
-
     )
 }
 
@@ -176,6 +92,11 @@ function ChatMessages(props) {
 function DisplayFakePlayers(props) {
 
     let [fakePlayers] = fs.useWatch('fakePlayers');
+
+    let [wsStatus] = fs.useWatch('wsStatus');
+    if (wsStatus == 'disconnected') {
+        return <></>
+    }
 
     const renderFakePlayers = () => {
 
@@ -201,7 +122,7 @@ function DisplayFakePlayers(props) {
                         colorScheme={'clear'}
                         icon={<AiFillCloseCircle color="gray.300" />}
                         onClick={() => {
-                            leaveFakePlayer(fakePlayer);
+                            removeFakePlayer(fakePlayer);
                         }}
                     >
                         Leave Game
@@ -216,10 +137,21 @@ function DisplayFakePlayers(props) {
     return (
         <VStack>
             {renderFakePlayers()}
+            <Box pt="2rem">
+                <Button
+                    leftIcon={<IoAddSharp color="white" />}
+                    fontSize={'xxs'}
+                    bgColor={'teal.700'}
+                    onClick={() => {
+                        spawnFakePlayers();
+                    }}>
+                    Add Fake Player
+                </Button>
+            </Box>
         </VStack>
     )
-
 }
+
 
 
 function ChoosePlayerName(props) {
@@ -294,7 +226,57 @@ function ChoosePlayerName(props) {
 
     )
 }
-// ChatSend = fs.connect(['chatMessage'])(ChatSend);
+
+
+
+
+function SaveSettingButton(props) {
+
+    let [gameSettings] = fs.useWatch('gameSettings');
+    let [localGameSettings] = fs.useWatch('localGameSettings');
+    let needsUpdate = false;
+    if (JSON.stringify(gameSettings) != JSON.stringify(localGameSettings))
+        needsUpdate = true;
+
+    return <>
+    </>
+    return (
+        <Button
+            display={needsUpdate ? 'block' : 'none'}
+            fontSize={'xxs'}
+            bgColor={'green.800'}
+            onClick={saveGameSettings}>
+            {'Save'}
+        </Button>
+    )
+}
+
+
+function ChatHeader(props) {
+
+    let [mode, setMode] = useState('all');
+
+    const onChangeMode = (mode) => {
+        setMode(mode);
+        fs.set('chatMode', mode);
+    }
+    return (
+        <HStack
+            boxShadow={'0 10px 15px -3px rgba(0, 0, 0, .2), 0 4px 6px -2px rgba(0, 0, 0, .1);'}
+            pl={'1rem'}
+            width={props.isMobile ? '100%' : (props.toggle ? ['24.0rem', '24rem', '34.0rem'] : '0rem')}
+            height={['3rem', '4rem', '5rem']}
+            spacing={'2rem'}
+            mt={'0 !important'} >
+            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'all' ? 'gray.100' : 'gray.300'} textShadow={mode == 'all' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('all') }}>Actions</Text>
+            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'game' ? 'gray.100' : 'gray.300'} textShadow={mode == 'game' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('game') }}>Players</Text>
+            <Text cursor='pointer' as={'span'} fontSize={'xxs'} color={mode == 'party' ? 'gray.100' : 'gray.300'} textShadow={mode == 'party' ? '0px 0px 5px #63ed56' : ''} onClick={() => { onChangeMode('party') }}>Debug</Text>
+        </HStack>
+    )
+}
+ChatHeader = fs.connect([])(ChatHeader);
+
+
 
 export default SidePanel;
 

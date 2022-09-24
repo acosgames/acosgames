@@ -3,7 +3,7 @@ import fs from 'flatstore'
 import { decode, encode } from './encoder';
 import { io } from "socket.io-client";
 
-import { onFakePlayer, onJoin, onLeave, onSpectate, onGameUpdate } from './game';
+import { onFakePlayer, onJoin, onLeave, onSpectate, onGameUpdate, onReplay, onReplayStats } from './game';
 
 import GamePanelService from '../services/GamePanelService';
 import GameStateService from '../services/GameStateService';
@@ -22,7 +22,7 @@ fs.set('wsStatus', 'disconnected');
 fs.set('gameStatus', 'none');
 fs.set('gameSettings', defaultGameSettings);
 fs.set('localGameSettings', defaultGameSettings);
-
+fs.set('replayStats', { position: 0, total: 0 });
 //--------------------------------------------------
 //WebSockets Connection / Management 
 //--------------------------------------------------
@@ -77,6 +77,9 @@ export function connect(username) {
     socket.on('fakeplayer', onFakePlayer);
     // socket.on('private', onGamePrivateUpdate);
     socket.on('disconnect', onDisconnect);
+
+    socket.on('replay', onReplay);
+    socket.on('replayStats', onReplayStats);
 
     fs.set('socket', socket);
 }

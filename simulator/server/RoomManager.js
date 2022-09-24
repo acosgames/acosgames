@@ -36,6 +36,8 @@ class RoomManager {
         return room;
     }
 
+
+
     gamestate(room) {
         return room ? room.getGameState() : this.current().getGameState();
     }
@@ -47,9 +49,9 @@ class RoomManager {
         }
 
         if (currentRoom) {
-            if (currentRoom.isGameOver()) {
-                return this.create();
-            }
+            // if (currentRoom.isGameOver()) {
+            //     return this.create();
+            // }
             return currentRoom;
         }
         return this.create();

@@ -1,11 +1,11 @@
-import { Box, Center, Fade, Flex, Heading, HStack, Icon, IconButton, Image, Portal, ScaleFade, Text, Tooltip, useToast, VStack, Wrap, WrapItem } from '@chakra-ui/react';
+import { Box, Button, Center, Fade, Flex, Heading, HStack, Icon, IconButton, Image, Portal, ScaleFade, Text, Tooltip, useToast, VStack, Wrap, WrapItem } from '@chakra-ui/react';
 
 import { useEffect, useRef, useState } from 'react';
 import fs from 'flatstore';
 import { BsArrowsFullscreen, ImEnter, AiFillCloseCircle, IoPlaySharp, GoEye, CgMinimizeAlt } from '@react-icons';
 import { withRouter } from 'react-router-dom';
 import GamePanelService from '../services/GamePanelService';
-import { joinGame, leaveGame } from '../actions/game';
+import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, validateNextUser } from '../actions/game';
 import GameStateService from '../services/GameStateService';
 
 fs.set('iframes', {});
@@ -275,62 +275,53 @@ function DisplayUserActions(props) {
 
     let player = GameStateService.getPlayer(props.id);
     let isInRoom = player != null
+    let hasVacancy = GameStateService.hasVacancy();
 
     let isGameActive = gameState?.room?.status != 'gameover';
+
+    let isJoinAllowed = !isInRoom && hasVacancy;
+    let isLeaveAllowed = isInRoom;
 
     if (!isGameActive)
         return <></>
 
-    if (isFakePlayer)
-        return (
-            <HStack>
-                <IconButton
-                    fontSize={'2rem'}
-                    colorScheme={'clear'}
-                    icon={<ImEnter color="gray.300" />}
-                    onClick={() => {
-                        joinFakePlayer(fakePlayer);
-                    }}
-                >
-                    Join Game
-                </IconButton>
-                <IconButton
-                    fontSize={'2rem'}
-                    colorScheme={'clear'}
-                    icon={<AiFillCloseCircle color="gray.300" />}
-                    onClick={() => {
-                        leaveFakePlayer(fakePlayer);
-                    }}
-                >
-                    Leave Game
-                </IconButton>
-            </HStack>
-        )
-
     return (
         <HStack>
-            <IconButton
-                display={!isInRoom ? 'block' : 'none'}
-                fontSize={'2rem'}
-                colorScheme={'clear'}
-                icon={<ImEnter color="gray.300" />}
+            <Button
+                display={isJoinAllowed ? 'block' : 'none'}
+                fontSize={'xxs'}
+                bgColor={'green.500'}
+                height={'1.4rem'}
+                lineHeight='1.4rem'
                 onClick={() => {
+                    if (isFakePlayer) {
+                        let fakePlayer = GamePanelService.getUserById(props.id);
+                        joinFakePlayer(fakePlayer);
+                        return;
+                    }
                     joinGame();
                 }}
             >
-                Join Game
-            </IconButton>
-            <IconButton
-                display={isInRoom ? 'block' : 'none'}
-                fontSize={'2rem'}
-                colorScheme={'clear'}
-                icon={<AiFillCloseCircle color="gray.300" />}
+                Join
+            </Button>
+
+            <Button
+                display={isLeaveAllowed ? 'block' : 'none'}
+                fontSize={'xxs'}
+                height={'1.4rem'}
+                lineHeight='1.4rem'
+                bgColor={'red.500'}
                 onClick={() => {
+                    if (isFakePlayer) {
+                        let fakePlayer = GamePanelService.getUserById(props.id);
+                        leaveFakePlayer(fakePlayer);
+                        return;
+                    }
                     leaveGame();
                 }}
             >
-                Leave Game
-            </IconButton>
+                Leave
+            </Button>
         </HStack>
     )
 }
@@ -347,16 +338,23 @@ function DisplayUserInfo(props) {
 
     let user = GamePanelService.getUserById(props.id);
 
+    let isUserNext = validateNextUser(props.id);
+
+    let color = 'white';
+    if (!isInGame || !isUserNext)
+        color = 'gray.400'
+
     return (
         <HStack spacing="1rem" px="3rem" width="100%" height="3rem" >
             <Tooltip label={isInGame ? 'In game' : 'Spectator'}>
                 <Text as='span' h="2.1rem">
-                    <Icon as={isInGame ? IoPlaySharp : GoEye} w="2.1rem" h="2.1rem" />
+                    <Icon color={color} as={isInGame ? IoPlaySharp : GoEye} w="1.4rem" h="1.4rem" />
                 </Text>
             </Tooltip>
             <Tooltip label={user.id}>
                 <Text
                     cursor={'pointer'}
+                    color={color}
                     display="inline-block"
                     fontSize="xs"
                     fontWeight="light">

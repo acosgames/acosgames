@@ -36,8 +36,20 @@ function GamePanelList(props) {
 
         if (fakePlayers) {
             let fakePlayerCount = Object.keys(fakePlayers).length;
-            if (fakePlayerCount < 4) {
-                panelWidth = 100.0 / (fakePlayerCount + 1)
+            if (fakePlayerCount == 0) {
+                panelWidth = 100;
+                panelHeight = 100;
+            }
+            else if (fakePlayerCount < 2) {
+                panelWidth = 50;
+                panelHeight = 100;
+            }
+            else if (fakePlayerCount < 3) {
+                panelWidth = 33;
+                panelHeight = 100;
+            }
+            else if (fakePlayerCount < 4) {
+                panelWidth = 25;
                 panelHeight = 100;
             } else if (fakePlayerCount < 8) {
                 panelWidth = 25;
@@ -55,6 +67,7 @@ function GamePanelList(props) {
         }
 
         let lastMessage = fs.get('gameState');
+        let gamepanels = fs.get('gamepanels');
 
         for (const id in gamepanels) {
             let gamepanel = gamepanels[id];

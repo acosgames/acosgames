@@ -88,7 +88,9 @@ function onConnect(socket) {
 
 
     //join user immediately into game
-    // onAction(socket, { type: 'join', user }, true);
+    let room = RoomManager.current();
+    if (room.hasPlayer(user.id))
+        onAction({ type: 'join', user }, true);
 
 
     let fakePlayers = UserManager.getFakePlayersByParent(user.id);
@@ -140,45 +142,16 @@ function onFakePlayer(socket, msg) {
         let newFakePlayers = UserManager.createFakePlayers(shortid, count);
         socket.emit('fakeplayer', encode({ type: 'created', payload: newFakePlayers }))
     }
-    else if (type == 'join') {
-        let newFakePlayers = UserManager.iterateFakePlayers(client.shortid, (fakePlayer) => {
-            let action = {
-                type: 'join',
-                user: { id: fakePlayer.shortid, name: fakePlayer.name },
-                payload: {}
-            }
-            onAction(socket, action, true);
-        })
-        socket.emit('fakeplayer', encode({ type: 'join', payload: newFakePlayers }))
-    }
-    else if (type == 'leave') {
+    else if (type == 'remove') {
 
-        if (!Array.isArray(msg.payload))
-            return false;
+        msg.type = 'leave';
+        onAction(msg, true);
 
-        let fakePlayerIds = msg.payload;
-        for (const id of fakePlayerIds) {
-            let fakePlayer = UserManager.getFakePlayer(id);
-            let action = {
-                type: 'leave',
-                user: { id: fakePlayer.shortid, name: fakePlayer.name },
-                payload: {}
-            }
-            onAction(socket, action, true);
-
-            UserManager.removeFakePlayer(id);
-
-        }
-        let newFakePlayers = UserManager.iterateFakePlayers(client.shortid);
-        // let newFakePlayers = UserManager.iterateFakePlayers(client.shortid, (fakePlayer) => {
-        //     if (!fakePlayerIds.includes(fakePlayer.shortid))
-        //         return;
+        UserManager.removeFakePlayer(msg.user.id);
 
 
-        // })
-
-
-        socket.emit('fakeplayer', encode({ type: 'leave', payload: newFakePlayers }))
+        // let newFakePlayers = UserManager.iterateFakePlayers(client.shortid);
+        socket.emit('fakeplayer', encode({ type: 'removed', payload: msg.user.id }))
     }
 
 }
@@ -196,9 +169,11 @@ io.on('connection', (socket) => {
     socket.on('fakeplayer', (msg) => {
         onFakePlayer(socket, msg);
     })
-
+    socket.on('replay', (msg) => {
+        onReplay(msg)
+    });
     socket.on('action', (msg) => {
-        onAction(socket, msg)
+        onAction(msg)
     });
     socket.on('reload', (msg) => {
         msg = decode(msg);
@@ -251,6 +226,9 @@ const sendUserSpectator = (user, room) => {
 
 const sendUserGame = (client, room) => {
 
+    if (!client || !client.socket)
+        return;
+
     client.socket.join('gameroom');
 
     let gamestate = room.copyGameState();
@@ -269,11 +247,11 @@ const onLeaveRequest = (action) => {
 
         // let fakePlayers = UserManager.getFakePlayersByParent(action.user.clientid)
         // for (const fakePlayer of fakePlayers) {
-        if (action.user.clientid) {
-            let client = UserManager.getUserByShortid(action.user.clientid);
-            client.socket.emit('fakeplayer', encode({ type: 'removed', user: action.user }));
-        }
-        UserManager.removeFakePlayer(action.user.id);
+        // if (action.user.clientid) {
+        //     let client = UserManager.getUserByShortid(action.user.clientid);
+        // client.socket.emit('fakeplayer', encode({ type: 'removed', user: action.user }));
+        // }
+        // UserManager.removeFakePlayer(action.user.id);
 
         // }
     }
@@ -316,14 +294,6 @@ const onNewGameRequest = (action) => {
     return false;
 }
 
-const actionTypes = {
-    'join': onJoinRequest,
-    'leave': onLeaveRequest,
-    'skip': onSkipRequest,
-    'newgame': onNewGameRequest,
-    'gamestart': onGameStartRequest,
-}
-
 const calculateTimeleft = (gamestate) => {
     if (!gamestate || !gamestate.timer || !gamestate.timer.end)
         return 0;
@@ -335,7 +305,66 @@ const calculateTimeleft = (gamestate) => {
     return timeleft;
 }
 
-function onAction(socket, action, skipDecode) {
+function onNextRequest(action) {
+    let room = RoomManager.current();
+    let states = room.jumpNextState();
+    io.emit('replayStats', encode(room.replayStats()));
+    io.emit('replay', encode(states));
+}
+
+function onPrevRequest(action) {
+    let room = RoomManager.current();
+    let states = room.jumpPrevState();
+    io.emit('replayStats', encode(room.replayStats()));
+    io.emit('replay', encode(states));
+
+}
+
+function onJumpRequest(action) {
+    let room = RoomManager.current();
+    let states = room.jumpToState(action.payload);
+    io.emit('replayStats', encode(room.replayStats()));
+    io.emit('replay', encode(states));
+
+}
+
+function onLoadRequest(action) {
+
+}
+
+const replayTypes = {
+    'next': onNextRequest,
+    'prev': onPrevRequest,
+    'jump': onJumpRequest,
+    'load': onLoadRequest,
+}
+
+const actionTypes = {
+    'join': onJoinRequest,
+    'leave': onLeaveRequest,
+    'skip': onSkipRequest,
+    'newgame': onNewGameRequest,
+    'gamestart': onGameStartRequest,
+}
+
+function noop() {
+    return false;
+}
+
+function onReplay(action, skipDecode) {
+    if (!skipDecode)
+        action = decode(action);
+    // msg.userid = socket.user.userid;
+    if (typeof action !== 'object' || !('type' in action))
+        return;
+
+    let replayFunc = replayTypes[action.type] || noop;
+    if (!replayFunc(action))
+        return;
+}
+
+
+function onAction(action, skipDecode) {
     if (!skipDecode)
         action = decode(action);
     // msg.userid = socket.user.userid;
@@ -507,6 +536,8 @@ function createWorker(index) {
 
         room.updateGame(gamestate);
 
+        io.emit('replayStats', encode(room.replayStats()));
+
 
         console.timeEnd('[ACOS] [WorkerOnMessage]')
         console.timeEnd('[ACOS] [ActionLoop]')
@@ -560,6 +591,10 @@ app.get('/', function (req, res) {
 
 app.get('/iframe.html', function (req, res) {
     res.sendFile(path.join(__dirname, './public/iframe-' + process.argv[3] + '.html'));
+});
+
+app.get('/favicon.ico', function (req, res) {
+    res.sendFile(path.join(__dirname, './public/favicon.ico'));
 });
 
 server.listen(port, () => {

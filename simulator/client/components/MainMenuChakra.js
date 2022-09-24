@@ -7,11 +7,12 @@ import {
     Icon,
     Button,
     Text,
+    Divider,
 } from '@chakra-ui/react';
 import fs from 'flatstore';
 import { Link, withRouter } from 'react-router-dom';
 // import config from '../config'
-import { CgChevronDoubleRightR, CgChevronDoubleDownR, CgChevronDoubleUpR, CgChevronDoubleLeftR } from '@react-icons';
+import { CgChevronDoubleRightR, CgChevronDoubleDownR, CgChevronDoubleUpR, CgChevronDoubleLeftR, IoTimeOutline } from '@react-icons';
 import { ActionPanel } from './ActionPanel';
 // import GameActions from './games/GameDisplay/GameActions';
 
@@ -24,6 +25,18 @@ function ACOSHeader(props) {
     let [gameStatus] = fs.useWatch('gameStatus');
 
 
+    let statusColor = 'white';
+    if (gameStatus == 'pregame')
+        statusColor = 'yellow.200';
+    else if (gameStatus == 'gameover') {
+        statusColor = 'red.300';
+    }
+    else if (gameStatus == 'gamestart') {
+        statusColor = 'green.200';
+    }
+    else if (gameStatus == 'none') {
+        gameStatus = 'waiting'
+    }
     return (
         <Box
             zIndex="20"
@@ -47,10 +60,12 @@ function ACOSHeader(props) {
                         </Link>
                     </Box>
                 </HStack>
-                <Box w="100%" lineHeight="100%" pl="2rem" display={gameStatus == 'none' ? 'none' : 'block'}>
-                    <Text fontSize="2rem" fontWeight={'100'}>{gameStatus}</Text>
-                    {/* <GameActions />  */}
-                </Box>
+                <HStack w="100%" lineHeight="100%" pl="2rem" >
+                    <Text fontSize="2rem" fontWeight={'100'} color={statusColor}>{gameStatus}</Text>
+                    <Divider orientation='vertical' />
+                    <Timeleft />
+                </HStack>
+
                 <Flex alignItems={'center'} height="100%">
                     <Stack direction={'row'} spacing={0} height="100%">
 
@@ -68,5 +83,31 @@ function ACOSHeader(props) {
         </Box >
     );
 }
+
+function Timeleft(props) {
+
+    let [timeleftUpdated] = fs.useWatch('timeleftUpdated');
+
+
+    let timeleft = fs.get('timeleft') || 0;
+
+    try {
+        timeleft = Number.parseInt(timeleft) / 1000;
+
+        if (timeleft > 10)
+            timeleft = Math.floor(timeleft);
+    }
+    catch (e) {
+        timeleft = 0;
+    }
+
+
+    return (
+        <HStack width="100%" height={'100%'} alignContent='center' justifyContent={'center'}>
+            <Icon as={IoTimeOutline} fontSize='sm' color={'gray.200'}></Icon> <Text color={'gray.100'} fontSize='md'>{timeleft}</Text>
+        </HStack>
+    )
+}
+
 
 export default fs.connect(['actionToggle', 'isMobile'])(withRouter(ACOSHeader));

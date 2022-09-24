@@ -1,9 +1,10 @@
-import { Box, Button, HStack, Icon, IconButton, Table, Tbody, Td, Text, Th, Thead, Tooltip, Tr, VStack } from '@chakra-ui/react';
+import { Box, Button, Divider, HStack, Icon, IconButton, Table, Tbody, Td, Text, Th, Thead, Tooltip, Tr, VStack } from '@chakra-ui/react';
 import fs from 'flatstore';
 import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, removeFakePlayer, spawnFakePlayers } from '../actions/game';
-import { IoAddSharp, AiFillCloseCircle, ImEnter, IoPlaySharp, GoEye } from '@react-icons';
+import { IoAddSharp, FaChevronRight, AiFillCloseCircle, ImEnter, IoPlaySharp, GoEye } from '@react-icons';
 import GameStateService from '../services/GameStateService';
 import GamePanelService from '../services/GamePanelService';
+import { ReplayControls } from './ActionPanel';
 
 
 export function DisplayGamePlayers(props) {
@@ -28,14 +29,24 @@ export function DisplayGamePlayers(props) {
         let elems = [];
         for (const player of playerList) {
 
+            let isUserNext = GameStateService.validateNextUser(player.id);
+
             elems.push(
 
-                <Tr pb="2rem">
-                    <Td>
-                        <Text display={typeof player?.rank !== 'undefined' ? 'inline-block' : 'none'}>{player.rank})</Text>
+                <Tr key={'ingameplayers-' + player.id} pb="2rem" bgColor={isUserNext ? 'gray.600' : "gray.900"} >
+                    <Td >
+                        <Text display={typeof player?.rank !== 'undefined' ? 'inline-block' : 'none'}>{player.rank}</Text>
                     </Td>
                     <Td>
-                        <Text>{player.name}</Text>
+                        <HStack>
+                            <Icon display={isUserNext ? 'inline-block' : 'none'} color="white" as={FaChevronRight} />
+                            <Tooltip label={player.id}>
+                                <Text>
+
+                                    {player.name}
+                                </Text>
+                            </Tooltip>
+                        </HStack>
                     </Td>
                     <Td>
                         <Text display={typeof player?.score !== 'undefined' ? 'inline-block' : 'none'}>{player.score}</Text>
@@ -51,7 +62,7 @@ export function DisplayGamePlayers(props) {
 
     return (
 
-        <VStack>
+        <VStack pt="4rem" pb="4rem">
             <Text fontWeight='bold'>In-Game Players</Text>
             <Table variant='simple' width="100%">
                 <Thead>
@@ -97,7 +108,7 @@ export function DisplayUserActions(props) {
             <Button
                 display={isJoinAllowed ? 'block' : 'none'}
                 fontSize={'xxs'}
-                bgColor={'green.500'}
+                bgColor={'green.800'}
                 height={'1.4rem'}
                 lineHeight='1.4rem'
                 onClick={() => {
@@ -117,7 +128,7 @@ export function DisplayUserActions(props) {
                 fontSize={'xxs'}
                 height={'1.4rem'}
                 lineHeight='1.4rem'
-                bgColor={'red.500'}
+                bgColor={'red.800'}
                 onClick={() => {
                     if (isFakePlayer) {
                         let fakePlayer = GamePanelService.getUserById(props.id);
@@ -133,7 +144,7 @@ export function DisplayUserActions(props) {
     )
 }
 
-export function DisplayFakePlayers(props) {
+export function DisplayMyPlayers(props) {
 
     let [fakePlayers] = fs.useWatch('fakePlayers');
     let [gameStatus] = fs.useWatch('gameStatus');
@@ -145,25 +156,61 @@ export function DisplayFakePlayers(props) {
 
     fakePlayers = fakePlayers || {};
     let fakePlayerIds = Object.keys(fakePlayers);
-    if (fakePlayerIds.length == 0)
-        return <></>
 
-    const renderFakePlayers = () => {
+    const renderMyPlayers = () => {
 
         let players = GameStateService.getPlayers();
         let elems = [];
+
+
+        // if (fakePlayerIds.length == 0)
+        //     return elems;
+
+        let myplayers = [];
+        let socketUser = fs.get('socketUser');
+        myplayers.push(socketUser);
+
         for (const shortid in fakePlayers) {
             let fakePlayer = fakePlayers[shortid];
+            myplayers.push(fakePlayer);
+        }
 
-            let isInGame = shortid in players;
-            if (isInGame)
+        for (const p of myplayers) {
+            // let fakePlayer = fakePlayers[shortid];
+            if (!p || !p.id)
                 continue;
 
+            let isInGame = p.id in players;
+            // if (isInGame)
+            //     continue;
+
+            let isUserNext = GameStateService.validateNextUser(p.id);
+
+            let color = 'white';
+            if (!isInGame || !isUserNext)
+                color = 'gray.400'
+
             elems.push(
-                <HStack key={'fakeplayer-' + shortid}>
-                    <Text fontSize="1.5rem" width="70%">{fakePlayer.name}</Text>
-                    <DisplayUserActions id={shortid} />
-                    {/* <IconButton
+                <Tr bgColor="gray.900" key={'myplayers-' + p.id}>
+
+                    <Td>
+                        <HStack alignItems={'center'} justifyContent='flex-start'>
+                            <Tooltip label={isInGame ? 'In game' : 'Spectator'}>
+                                <Text as='span' lineHeight="2.1rem" h="2.1rem">
+                                    <Icon color={color} as={isInGame ? IoPlaySharp : GoEye} w="1.4rem" h="1.4rem" />
+                                </Text>
+                            </Tooltip>
+                            <Tooltip label={p.id}>
+                                <Text lineHeight="2.1rem" h="2.1rem" fontSize="1.5rem">{p.name}</Text>
+                            </Tooltip>
+                        </HStack>
+                    </Td>
+                    <Td>
+                        <HStack justifyContent={'flex-end'}>
+
+                            <DisplayUserActions id={p.id} />
+
+                            {/* <IconButton
                         fontSize={'2rem'}
                         colorScheme={'clear'}
                         icon={<ImEnter color="gray.300" />}
@@ -173,17 +220,21 @@ export function DisplayFakePlayers(props) {
                     >
                         Join Game
                     </IconButton> */}
-                    <IconButton
-                        fontSize={'2rem'}
-                        colorScheme={'clear'}
-                        icon={<AiFillCloseCircle color="gray.300" />}
-                        onClick={() => {
-                            removeFakePlayer(fakePlayer);
-                        }}
-                    >
-                        Remove Fake Player
-                    </IconButton>
-                </HStack>
+                            <IconButton
+                                display={p.clientid ? 'block' : 'none'}
+                                fontSize={'2rem'}
+                                colorScheme={'clear'}
+                                icon={<AiFillCloseCircle color="gray.300" />}
+                                onClick={() => {
+                                    if (p.clientid)
+                                        removeFakePlayer(p);
+                                }}
+                            >
+                                Remove Fake Player
+                            </IconButton>
+                        </HStack>
+                    </Td>
+                </Tr>
             )
         }
 
@@ -191,9 +242,23 @@ export function DisplayFakePlayers(props) {
     }
 
     return (
-        <VStack pt="2rem">
-            <Text fontWeight='bold'>Fake Players</Text>
-            {renderFakePlayers()}
+        <VStack pt="4rem">
+            <Text fontWeight='bold'>My Players</Text>
+
+            <Table variant='simple' width="100%">
+                {/* <Thead>
+                    <Tr>
+                        <Th color={'gray.100'} fontSize="xxs" lineHeight="3rem" height="3rem" >Player</Th>
+                        <Th color={'gray.100'} fontSize="xxs" lineHeight="3rem" height="3rem">Actions</Th>
+                    </Tr>
+                </Thead> */}
+                <Tbody>
+                    {renderMyPlayers()}
+                </Tbody>
+            </Table>
+
+
+
             <Box pt="2rem">
                 <Button
                     leftIcon={<IoAddSharp color="white" />}

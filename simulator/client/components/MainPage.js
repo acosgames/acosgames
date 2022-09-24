@@ -9,10 +9,13 @@ import fs from 'flatstore';
 
 
 import { Scrollbars } from 'react-custom-scrollbars-2';
-import { Box, HStack, VStack } from "@chakra-ui/react";
+import { Box, HStack, IconButton, Input, Text, VStack } from "@chakra-ui/react";
 import MainMenuChakra from "./MainMenuChakra";
 import SidePanel from "./SidePanel";
 import GamePanelList from "./GamePanelList";
+
+import { IoSend } from '@react-icons';
+import { connect } from "../actions/websocket";
 
 
 function MainPage(props) {
@@ -97,6 +100,7 @@ function MainPage(props) {
                             // maxW={['1200px']}
 
                             >
+                                <ChoosePlayerName />
                                 <GamePanelList />
                             </Box>
 
@@ -113,6 +117,80 @@ function MainPage(props) {
         </HStack >
     )
 
+}
+
+
+function ChoosePlayerName(props) {
+
+    let [username] = fs.useWatch('username');
+    let [isMobile] = fs.useWatch('isMobile');
+
+
+    const inputChange = (e) => {
+        let name = e.target.name;
+        let value = e.target.value;
+
+        fs.set('username', value);
+    }
+
+    const onSubmit = async (e) => {
+
+        localStorage.setItem('username', username);
+        connect(username)
+    }
+
+    useEffect(() => {
+        let savedUsername = localStorage.getItem('username');
+        if (savedUsername) {
+            fs.set('username', savedUsername);
+        }
+    }, [])
+
+    let [wsStatus] = fs.useWatch('wsStatus');
+    if (wsStatus == 'connected' || wsStatus == 'ingame') {
+        return <></>
+    }
+
+    return (
+        <VStack w="100%" h="100%" alignContent={'center'} alignItems='center' justifyContent={'center'}>
+            <Text fontWeight="bold" fontSize="3rem">Choose Player Name</Text>
+            <HStack
+                width={isMobile ? "100%" : ['24.0rem', '24rem', '28.0rem']}
+                height="3rem" px="2rem">
+
+                <Input
+                    name="name"
+                    id="name"
+                    title=""
+                    maxLength="120"
+                    height="3rem"
+                    autoComplete="off"
+                    value={username || ''}
+                    onChange={inputChange}
+                    onKeyUp={(e) => {
+                        if (e.key === 'Enter') {
+                            onSubmit(e)
+                        }
+                    }}
+                />
+                <Box
+                    width="3rem"
+                    height="3rem"
+                >
+                    <IconButton
+                        onClick={onSubmit}
+
+                        icon={<IoSend size="1.6rem" />}
+                        width="2.8rem"
+                        height="2.8rem"
+                        isRound="true"
+                    />
+                </Box>
+
+            </HStack>
+        </VStack>
+
+    )
 }
 
 export default withRouter(MainPage);

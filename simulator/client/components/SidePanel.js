@@ -9,7 +9,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { connect, saveGameSettings, updateGameSettings } from '../actions/websocket';
 import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, newGame, removeFakePlayer, spawnFakePlayers, startGame } from '../actions/game';
 import { ChooseGameSettings, ChooseScreenSettings, ChooseTeamSettings } from './GameSettings';
-import { DisplayFakePlayers, DisplayGamePlayers } from './PlayerList';
+import { DisplayMyPlayers, DisplayGamePlayers, DisplayGameActions } from './PlayerList';
+import { ActionPanel, GameActionsExpanded } from './ActionPanel';
+import { StateViewer } from './StateViewer';
 
 fs.set('chat', []);
 fs.set('chatMessage', '');
@@ -53,25 +55,25 @@ function SidePanel(props) {
                 <Tabs h="100%" px="0">
                     <TabList>
                         <Tab>Players</Tab>
-                        <Tab>State</Tab>
+                        <Tab>JSON</Tab>
                         <Tab>Settings</Tab>
                     </TabList>
 
-                    <TabPanels h="100%" pb="5rem" >
-                        <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0">
-                            <Box pt="1rem">
-                                <ChoosePlayerName />
+                    <TabPanels h="100%" p="0" >
+                        <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0" p="0">
+                            <Box pt="1rem" pb="5rem">
+
+                                <GameActionsExpanded />
                                 <DisplayGamePlayers />
-                                <DisplayFakePlayers />
+                                <DisplayMyPlayers />
                             </Box>
                         </TabPanel>
-                        <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0">
-                            {/* <Box pl={'1rem'} flex="1" alignSelf="stretch" width="100%" overflow="hidden" overflowY="scroll" >
-                                <VStack width="100%" height="100%" spacing={['0.2rem', '0.3rem', "0.5rem"]} justifyContent={'flex-start'} >
-                                    <GameActions />
-                                </VStack></Box> */}
+                        <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0" p="0">
+                            <Box pt="1rem" pb="5rem">
+                                <StateViewer />
+                            </Box>
                         </TabPanel>
-                        <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0">
+                        <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0" p="0" padding={0}>
 
                             <VStack justifyContent={'flex-start'} spacing='2rem' pt="1rem" pb={"4rem"} px="0">
 
@@ -94,78 +96,6 @@ function SidePanel(props) {
 
 
 
-function ChoosePlayerName(props) {
-
-    let [username] = fs.useWatch('username');
-    let [isMobile] = fs.useWatch('isMobile');
-
-
-    const inputChange = (e) => {
-        let name = e.target.name;
-        let value = e.target.value;
-
-        fs.set('username', value);
-    }
-
-    const onSubmit = async (e) => {
-
-        localStorage.setItem('username', username);
-        connect(username)
-    }
-
-    useEffect(() => {
-        let savedUsername = localStorage.getItem('username');
-        if (savedUsername) {
-            fs.set('username', savedUsername);
-        }
-    }, [])
-
-    let [wsStatus] = fs.useWatch('wsStatus');
-    if (wsStatus == 'connected' || wsStatus == 'ingame') {
-        return <></>
-    }
-
-    return (
-        <VStack>
-            <Text fontSize="1rem">Choose Player Name</Text>
-            <HStack
-                width={isMobile ? "100%" : ['24.0rem', '24rem', '28.0rem']}
-                height="3rem" px="2rem">
-
-                <Input
-                    name="name"
-                    id="name"
-                    title=""
-                    maxLength="120"
-                    height="3rem"
-                    autoComplete="off"
-                    value={username || ''}
-                    onChange={inputChange}
-                    onKeyUp={(e) => {
-                        if (e.key === 'Enter') {
-                            onSubmit(e)
-                        }
-                    }}
-                />
-                <Box
-                    width="3rem"
-                    height="3rem"
-                >
-                    <IconButton
-                        onClick={onSubmit}
-
-                        icon={<IoSend size="1.6rem" />}
-                        width="2.8rem"
-                        height="2.8rem"
-                        isRound="true"
-                    />
-                </Box>
-
-            </HStack>
-        </VStack>
-
-    )
-}
 
 
 

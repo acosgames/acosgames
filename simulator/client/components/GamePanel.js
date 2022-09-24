@@ -5,7 +5,7 @@ import fs from 'flatstore';
 import { BsArrowsFullscreen, ImEnter, AiFillCloseCircle, IoPlaySharp, GoEye, CgMinimizeAlt } from '@react-icons';
 import { withRouter } from 'react-router-dom';
 import GamePanelService from '../services/GamePanelService';
-import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, validateNextUser } from '../actions/game';
+import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame } from '../actions/game';
 import GameStateService from '../services/GameStateService';
 import { DisplayUserActions } from './PlayerList';
 
@@ -281,7 +281,7 @@ function DisplayUserInfo(props) {
 
     let user = GamePanelService.getUserById(props.id);
 
-    let isUserNext = validateNextUser(props.id);
+    let isUserNext = GameStateService.validateNextUser(props.id);
 
     let color = 'white';
     if (!isInGame || !isUserNext)
@@ -300,7 +300,7 @@ function DisplayUserInfo(props) {
                     color={color}
                     display="inline-block"
                     fontSize="xs"
-                    fontWeight="light">
+                    fontWeight="bold">
                     {user.name}
                 </Text>
             </Tooltip>

@@ -59,6 +59,65 @@ class GameStateService {
 
 
 
+    validateNextUser(userid) {
+        let gamestate = this.getGameState();
+        let next = gamestate?.next;
+        let nextid = next?.id;
+        let room = gamestate.room;
+
+        if (room?.status == 'pregame')
+            return true;
+
+        if (!next || !nextid)
+            return false;
+
+        if (!gamestate.state)
+            return false;
+
+        //check if we ven have teams
+        let teams = gamestate?.teams;
+
+
+        if (typeof nextid === 'string') {
+            //anyone can send actions
+            if (nextid == '*')
+                return true;
+
+            //only specific user can send actions
+            if (nextid == userid)
+                return true;
+
+            //validate team has players
+            if (!teams || !teams[nextid] || !teams[nextid].players)
+                return false;
+
+            //allow players on specified team to send actions
+            if (Array.isArray(teams[nextid].players) && teams[nextid].players.includes(userid)) {
+                return true;
+            }
+        }
+        else if (Array.isArray(nextid)) {
+
+            //multiple users can send actions if in the array
+            if (nextid.includes(userid))
+                return true;
+
+            //validate teams exist
+            if (!teams)
+                return false;
+
+            //multiple teams can send actions if in the array
+            for (var i = 0; i < nextid.length; i++) {
+                let teamid = nextid[i];
+                if (Array.isArray(teams[teamid].players) && teams[teamid].players.includes(userid)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     updateState(newState, prevState) {
 
         let gameState = prevState || fs.get('gameState');
@@ -69,6 +128,12 @@ class GameStateService {
 
         gameState = DELTA.merge(gameState || {}, delta);
         if (!gameState.players) return;
+
+        if ('$' in delta)
+            delete delta['$'];
+
+        if ('action' in delta)
+            delete delta['action'];
 
         gameState.delta = delta;
 

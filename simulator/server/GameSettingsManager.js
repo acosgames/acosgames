@@ -11,6 +11,8 @@ const defaultGameSettings = { minplayers: 1, maxplayers: 1, minteams: 0, maxteam
 class GameSettingsManager {
     constructor(gameWorkingDirectory, callback) {
 
+        if (!gameWorkingDirectory)
+            return;
         this.onGameSettingsReloaded = callback;
         this.settingsPath = path.join(gameWorkingDirectory, './game-settings.json');
         this.gameSettings = defaultGameSettings;

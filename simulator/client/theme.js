@@ -109,7 +109,25 @@ const components = {
         defaultProps: {
             variant: 'base'
         }
-    }
+    },
+    Tabs: {
+        variants: {
+            base: {
+                paddingY: '4',
+                marging: '0',
+                tab: {
+                    _selected: {
+                        color: 'white',
+                        boxShadow: 'none',
+                        borderBottom: '2px solid',
+                        borderBottomColor: 'gray.400',
+                        fontWeight: 'bold'
+                    },
+                    color: 'gray.400'
+                },
+            },
+        },
+    },
 }
 
 // 3. extend the theme

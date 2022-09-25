@@ -170,7 +170,7 @@ class FSGWorker {
 
     async onAction({ room, action, gamestate }) {
         try {
-            profiler.Start("[WorkerOnAction]")
+            // profiler.Start("[WorkerOnAction]")
             console.log("[ACOS] Executing Action: ", action);
             globalGame = gamestate;
 
@@ -215,8 +215,35 @@ class FSGWorker {
             else if (action.type == 'reset') {
                 this.makeGame();
             }
+            else if (action.type == 'ready') {
+                if (room.status != 'pregame')
+                    return;
+                let shortid = action.user.id;
+                if (typeof action.payload === 'boolean' || typeof action.payload === 'undefined')
+                    globalGame.players[shortid].ready = action.payload || true;
+            }
+            else if (action.type == 'loaded') {
+                return;
+            }
             else if (action.type == 'gamestart') {
                 room.status = 'gamestart';
+            }
+            else if (action.type == 'skip') {
+
+                //on repeated 2nd skip kill the game
+                // developer should have handled it, too bad so sad
+                if (globalGame.action && globalGame.action.type == 'skip') {
+                    room.status = 'gameover';
+                    room.sequence = room.sequence + 1;
+                    room.updated = Date.now();
+                    globalResult.room = room;
+                    globalResult.action = action;
+
+                    parentPort.postMessage(globalResult);
+                    globalResult = {};
+                    return;
+                }
+
             }
 
             globalActions = cloneObj([action]);
@@ -288,7 +315,7 @@ class FSGWorker {
 
 
 
-            profiler.End("[WorkerOnAction]")
+            // profiler.End("[WorkerOnAction]")
             parentPort.postMessage(globalResult);
             globalResult = {};
         }

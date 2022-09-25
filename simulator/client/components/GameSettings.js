@@ -10,8 +10,8 @@ export function ChooseGameSettings(props) {
 
 
     return (
-        <VStack>
-            <Text fontWeight={'bold'} fontSize='2rem' pt="2rem">Game Settings</Text>
+        <VStack pt="2rem" pb="2rem">
+            <Text fontWeight={'bold'} >Game Settings</Text>
             <VStack bgColor="gray.900" py="3rem" px="2rem">
                 <HStack spacing="1rem" alignItems={'flex-end'}>
                     <Text w="6rem">Players</Text>
@@ -21,7 +21,17 @@ export function ChooseGameSettings(props) {
                 <HStack spacing="1rem" alignItems={'flex-end'}>
                     <Text w="6rem">Teams</Text>
                     <SettingNumberInput id="minteams" title="Min" placeholder="0" />
-                    <SettingNumberInput id="maxteams" title="Max" placeholder="0" />
+                    <SettingNumberInput id="maxteams" title="Max" placeholder="0" onChange={(id, value) => {
+                        let teamSettingsRef = fs.get('teamSettingsRef');
+                        let gameSettings = fs.get('prevGameSettings');
+                        if (teamSettingsRef && gameSettings.maxteams == 0 && value == 1) {
+                            setTimeout(() => {
+
+                                teamSettingsRef.current.parentNode.parentNode.scrollTop = teamSettingsRef.current.parentNode.scrollHeight;//({ behavior: 'smooth', block: "nearest", inline: "nearest" });
+
+                            }, 100)
+                        }
+                    }} />
                 </HStack>
             </VStack>
         </VStack>
@@ -30,7 +40,10 @@ export function ChooseGameSettings(props) {
 
 export function ChooseTeamSettings(props) {
 
+    const teamSettingsRef = useRef();
+
     let [gameSettings] = fs.useWatch('gameSettings');
+
 
     const renderTeams = () => {
 
@@ -47,13 +60,19 @@ export function ChooseTeamSettings(props) {
         return elems;
     }
 
-    if (!gameSettings?.teams || gameSettings.teams.length == 0) {
-        return <></>
-    }
+
+
+    useEffect(() => {
+        fs.set('teamSettingsRef', teamSettingsRef);
+    }, [])
+
+    // if (!gameSettings?.teams || gameSettings.teams.length == 0) {
+    //     return <></>
+    // }
 
     return (
-        <VStack>
-            <Text fontWeight={'bold'} fontSize='2rem' pt="2rem">Team Settings</Text>
+        <VStack ref={teamSettingsRef} display={(!gameSettings?.teams || gameSettings.teams.length == 0) ? 'none' : 'flex'}>
+            <Text fontWeight={'bold'} pt="2rem">Team Settings</Text>
             {renderTeams()}
         </VStack>
     )
@@ -135,7 +154,7 @@ function TeamSettings(props) {
         <Box ref={teamRef} pt="2rem" pb="2rem" transition={'background 0.3s ease'} bgColor={active ? 'gray.600' : ''} _hover={{ bgColor: 'gray.700' }} borderTop={'1px solid'} borderTopColor={'gray.600'}>
             {/* <Grid templateColumns='80% 20%' bgColor={props.isOdd ? 'gray.900' : ''} w="100%" > */}
             <HStack spacing="2rem">
-                <VStack spacing="1rem" justifyContent={'center'} alignContent="center" w="4rem">
+                <VStack spacing="1rem" justifyContent={'center'} alignContent="center" w="4rem" pl="2rem">
                     <IconButton
                         color={isUpActive ? 'gray.300' : 'gray.600'}
                         _hover={{ color: isUpActive ? 'white' : 'gray.600' }}
@@ -170,7 +189,7 @@ function TeamSettings(props) {
                 </VStack>
 
 
-                <VStack spacing="0.5rem">
+                <VStack spacing="0.5rem" px="3rem">
                     <SettingTextInput id="team_name" title="Name" textWidth="6rem" team_order={props.team_order} />
                     <VStack w="100%" spacing="0">
 
@@ -401,7 +420,7 @@ export function ChooseScreenSettings(props) {
             return <></>
         return (
             <VStack w="100%">
-                <Text fontWeight={'bold'} fontSize='2rem'>Screen Settings</Text>
+                <Text fontWeight={'bold'} >Screen Settings</Text>
                 <VStack w="100%" bgColor="gray.900" py="3rem" alignItems={'flex-start'} px="2rem">
                     <Text as="label" display={'inline-block'} pr="0.5rem" fontWeight={'bold'} fontSize="xs" htmlFor="resolution">Screen Type</Text>
                     <Select

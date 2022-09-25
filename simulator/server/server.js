@@ -96,6 +96,11 @@ function onConnect(socket) {
     let fakePlayers = UserManager.getFakePlayersByParent(user.id);
     if (fakePlayers?.length > 0) {
         socket.emit('fakeplayer', encode({ type: 'created', payload: fakePlayers }))
+
+        for (const fakePlayer of fakePlayers) {
+            if (room.hasPlayer(fakePlayer.id))
+                onAction({ type: 'join', user: fakePlayer }, true);
+        }
     }
 
     //user is already in game, just rejoin them and send them full game state
@@ -187,8 +192,13 @@ const onJoinRequest = (action) => {
 
     let room = RoomManager.current();
     let client = UserManager.getUserByShortid(action.user.id);
-
-
+    if (!client) {
+        client = UserManager.getParentUser(action.user.clientid);;
+        if (!client) {
+            console.error("Invalid client found using: ", user);
+            return;
+        }
+    }
 
     if (room.hasPlayer(action.user.id)) {
         console.log('[ACOS] User already in game: ', action.user.id, action.user.name);
@@ -232,14 +242,15 @@ const sendUserGame = (client, room) => {
     client.socket.join('gameroom');
 
     let gamestate = room.copyGameState();
-    let hiddenState = delta.hidden(gamestate.state);
-    let hiddenPlayers = delta.hidden(gamestate.players);
-    io.to('gameroom').emit('join', encode(gamestate));
-    if (hiddenPlayers) {
-        if (client.shortid in hiddenPlayers) {
-            client.socket.emit('private', encode(hiddenPlayers[client.shortid]));
-        }
-    }
+    // let hiddenState = delta.hidden(gamestate.state);
+    // let hiddenPlayers = delta.hidden(gamestate.players);
+    io.emit('replayStats', encode(room.replayStats()));
+    io.emit('game', encode(gamestate));
+    // if (hiddenPlayers) {
+    //     if (client.shortid in hiddenPlayers) {
+    //         client.socket.emit('private', encode(hiddenPlayers[client.shortid]));
+    //     }
+    // }
 }
 
 const onLeaveRequest = (action) => {
@@ -269,7 +280,7 @@ const onLeaveRequest = (action) => {
     return true;
 }
 const onSkipRequest = (action) => {
-    return false;
+    return true;
 }
 const onGameStartRequest = (action) => {
     // gameHistory = [];
@@ -289,6 +300,7 @@ const onNewGameRequest = (action) => {
     let client = UserManager.getUserByShortid(action.user.id);
     // onAction(client.socket, { type: 'join', user: action.user }, true);
     let prevGamestate = room.copyGameState();
+    io.emit('replayStats', encode(room.replayStats()));
     io.to('gameroom').emit('newgame', encode(prevGamestate));
 
     return false;
@@ -489,7 +501,7 @@ function createWorker(index) {
     console.log("[ACOS] Worker current directory: ", process.cwd(), process.argv);
     const worker = new Worker(__dirname + '/worker.js', { workerData: { dir: process.argv[2] }, });
     worker.on("message", (gamestate) => {
-        console.time('[ACOS] [WorkerOnMessage]')
+        // console.time('[ACOS] [WorkerOnMessage]')
         if (!gamestate || !isObject(gamestate)) {
             return;
         }
@@ -500,8 +512,8 @@ function createWorker(index) {
         prevGamestate.events = {};
         let deltaGamestate = delta.delta(prevGamestate, cloneObj(gamestate), {});
 
-        console.log("[ACOS] Delta: ", stringify(deltaGamestate));
-        console.log("[ACOS] Merged Game: ", stringify(gamestate));
+        // console.log("[ACOS] Delta: ", stringify(deltaGamestate));
+        // console.log("[ACOS] Merged Game: ", stringify(gamestate));
 
         //remove private variables and send individually to palyers
         // let copy = JSON.parse(JSON.stringify(deltaGamestate));
@@ -539,8 +551,8 @@ function createWorker(index) {
         io.emit('replayStats', encode(room.replayStats()));
 
 
-        console.timeEnd('[ACOS] [WorkerOnMessage]')
-        console.timeEnd('[ACOS] [ActionLoop]')
+        // console.timeEnd('[ACOS] [WorkerOnMessage]')
+        // console.timeEnd('[ACOS] [ActionLoop]')
     });
     worker.on("online", (err) => {
 

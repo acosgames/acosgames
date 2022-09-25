@@ -1,5 +1,6 @@
 import fs from 'flatstore';
 import DELTA from '../actions/delta';
+import { playerReady } from '../actions/game';
 import GamePanelService from './GamePanelService';
 
 class GameStateService {
@@ -10,11 +11,11 @@ class GameStateService {
     }
 
     getGameState() {
-        return fs.get('gameState');
+        return fs.copy('gameState');
     }
 
     getPlayers() {
-        let gameState = fs.get('gameState');
+        let gameState = this.getGameState();
         let players = gameState?.players || {};
         return players;
     }
@@ -121,13 +122,11 @@ class GameStateService {
     updateState(newState, prevState) {
 
         let gameState = prevState || fs.get('gameState');
-        gameState = JSON.parse(JSON.stringify(gameState));
-
-        let delta = DELTA.delta(gameState, newState, {});
+        let copyGameState = JSON.parse(JSON.stringify(gameState));
+        let copyNewState = JSON.parse(JSON.stringify(newState));
+        let delta = DELTA.delta(copyGameState, copyNewState, {});
+        let hiddenState = DELTA.hidden(delta.state);
         let hiddenPlayers = DELTA.hidden(delta.players);
-
-        gameState = DELTA.merge(gameState || {}, delta);
-        if (!gameState.players) return;
 
         if ('$' in delta)
             delete delta['$'];
@@ -135,12 +134,12 @@ class GameStateService {
         if ('action' in delta)
             delete delta['action'];
 
-        gameState.delta = delta;
+        newState.delta = delta;
 
-        fs.set('gameState', gameState);
+        console.log('AFTER', newState.players);
+        fs.set('gameState', newState);
         fs.set('deltaState', delta);
         fs.set('hiddenPlayerState', hiddenPlayers);
-
 
         this.updateGamePanels();
     }
@@ -159,6 +158,10 @@ class GameStateService {
             if (pstate.private)
                 delete pstate.private;
 
+            if (pstate?.room && pstate?.room?.isreplay) {
+                delete pstate.room.isreplay;
+            }
+
             let hiddenPlayers = fs.set('hiddenPlayerState');
             if (hiddenPlayers && hiddenPlayers[id] && pstate?.players[id]) {
                 pstate.local = Object.assign({}, pstate.players[id], hiddenPlayers[id]);
@@ -170,6 +173,15 @@ class GameStateService {
             pstate.local.id = id;
 
             GamePanelService.sendFrameMessage(gamepanel, pstate);
+
+            if (pstate?.events?.join && Array.isArray(pstate.events.join)) {
+                if (pstate?.events?.join.includes(id)) {
+                    let user = GamePanelService.getUserById(id);
+
+                    if (gamepanel.ready && !gameState.room.isreplay)
+                        playerReady(user)
+                }
+            }
         }
         catch (e) {
             console.error(e);

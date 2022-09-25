@@ -52,16 +52,26 @@ function SidePanel(props) {
                 flexDirection='column !important'
                 mt="0"
             >
-                <Tabs h="100%" px="0">
-                    <TabList>
-                        <Tab>Players</Tab>
-                        <Tab>JSON</Tab>
-                        <Tab>Settings</Tab>
+                <Tabs h="100%" px="0" variant='base'>
+                    <TabList
+                        zIndex="20"
+                        display={'flex'}
+                        transition={'filter 0.3s ease-in'}
+                        width="100%"
+                        maxWidth="1200px"
+                        h={['3rem', '4rem', '5rem']}
+                        justifyContent={'center'}
+                        borderBottom="0"
+
+                    >
+                        <Tab _focus={{ outline: 'none' }}>Players</Tab>
+                        <Tab _focus={{ outline: 'none' }}>JSON</Tab>
+                        <Tab _focus={{ outline: 'none' }}>Settings</Tab>
                     </TabList>
 
-                    <TabPanels h="100%" p="0" >
+                    <TabPanels h="100%" p="0">
                         <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0" p="0">
-                            <Box pt="1rem" pb="5rem">
+                            <Box pb="5rem" pt="2rem">
 
                                 <GameActionsExpanded />
                                 <DisplayGamePlayers />
@@ -69,13 +79,13 @@ function SidePanel(props) {
                             </Box>
                         </TabPanel>
                         <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0" p="0">
-                            <Box pt="1rem" pb="5rem">
+                            <Box pb="5rem" pt="2rem">
                                 <StateViewer />
                             </Box>
                         </TabPanel>
                         <TabPanel h="100%" overflow="hidden" overflowY="scroll" px="0" p="0" padding={0}>
 
-                            <VStack justifyContent={'flex-start'} spacing='2rem' pt="1rem" pb={"4rem"} px="0">
+                            <VStack justifyContent={'flex-start'} spacing='2rem' pb={"4rem"} px="0" pt="2rem">
 
                                 <ChooseScreenSettings />
 

@@ -133,7 +133,7 @@ function CompactLayout(props) {
                 spacing="0"
                 w="100%"
                 h="100%"
-                pr="0.4rem"
+            // pr="0.4rem"
             >
                 {/* {panelCount > 1 && */}
 

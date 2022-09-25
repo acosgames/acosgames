@@ -1,6 +1,7 @@
 import { Box, Button, HStack, Text, Tooltip, VStack } from '@chakra-ui/react';
 import fs from 'flatstore';
-import { leaveGame, newGame, replayNext, replayPrev, startGame } from '../actions/game';
+import { leaveGame, newGame, replayNext, replayPrev, skip, startGame } from '../actions/game';
+import { ReplayControls } from './StateViewer';
 
 
 export function ActionPanel(props) {
@@ -50,13 +51,21 @@ function GameActionsCompact(props) {
                     Join Game
                 </Button>
             </HStack> */}
-            <ReplayControls />
             <HStack display={isInGame ? 'flex' : 'none'}>
                 <Button
                     fontSize={'xxs'}
                     bgColor={'blacks.600'}
                     onClick={newGame}>
                     {isGameRunning || isGameOver ? 'Reset Game' : 'New Game'}
+                </Button>
+
+            </HStack>
+            <HStack display={gameStatus == 'gamestart' ? 'flex' : 'none'}>
+                <Button
+                    fontSize={'xxs'}
+                    bgColor={'blacks.600'}
+                    onClick={skip}>
+                    Skip
                 </Button>
 
             </HStack>
@@ -70,6 +79,14 @@ function GameActionsCompact(props) {
 
 
             </HStack>
+            <Box w="2rem">
+
+            </Box>
+            <ReplayControls hideTitle={true} />
+
+            <Box w="2rem">
+
+            </Box>
             {/* <HStack display={isGameRunning ? 'flex' : 'none'}>
                 <Button
                     fontSize={'xxs'}
@@ -110,25 +127,36 @@ export function GameActionsExpanded(props) {
 
     return (
         <VStack height="100%" justifyItems={'center'} alignItems='center'>
+            <Text fontWeight='bold'>Game Actions</Text>
+            <HStack>
+                <HStack display={isInGame ? 'flex' : 'none'}>
+                    <Button
+                        fontSize={'xxs'}
+                        bgColor={'blacks.600'}
+                        onClick={newGame}>
+                        {isGameRunning || isGameOver ? 'Reset Game' : 'New Game'}
+                    </Button>
 
-            <HStack display={isInGame ? 'flex' : 'none'}>
-                <Button
-                    fontSize={'xxs'}
-                    bgColor={'blacks.600'}
-                    onClick={newGame}>
-                    {isGameRunning || isGameOver ? 'Reset Game' : 'New Game'}
-                </Button>
+                </HStack>
+                <HStack display={gameStatus == 'gamestart' ? 'flex' : 'none'}>
+                    <Button
+                        fontSize={'xxs'}
+                        bgColor={'blacks.600'}
+                        onClick={skip}>
+                        Skip
+                    </Button>
 
-            </HStack>
-            <HStack display={isPregame ? 'flex' : 'none'}>
-                <Button
-                    fontSize={'xxs'}
-                    bgColor={'green.500'}
-                    onClick={startGame}>
-                    {'Start Game'}
-                </Button>
+                </HStack>
+                <HStack display={isPregame ? 'flex' : 'none'}>
+                    <Button
+                        fontSize={'xxs'}
+                        bgColor={'green.500'}
+                        onClick={startGame}>
+                        {'Start Game'}
+                    </Button>
 
 
+                </HStack>
             </HStack>
             {/* <HStack display={isGameRunning ? 'flex' : 'none'}>
                 <Button
@@ -150,43 +178,3 @@ export function GameActionsExpanded(props) {
     )
 }
 
-
-export function ReplayControls(props) {
-
-    let [gameStatus] = fs.useWatch('gameStatus');
-    let [replayStats] = fs.useWatch('replayStats');
-    let hasGameReplay = gameStatus != 'none' && gameStatus != 'pregame';
-
-    if (!hasGameReplay)
-        return <></>
-
-    return (
-        <Box w="100%">
-            <HStack justifyContent={'center'}>
-                <Tooltip label={'Previous State'}>
-                    <Button
-                        fontSize={'xxs'}
-                        bgColor={'gray.500'}
-                        onClick={() => {
-                            replayPrev();
-                        }}>
-                        &lt;
-                    </Button>
-                </Tooltip>
-                <Text as="span">{replayStats.position}</Text>
-                <Text as="span">/</Text>
-                <Text as="span">{replayStats.total}</Text>
-                <Tooltip label={'Next State'}>
-                    <Button
-                        fontSize={'xxs'}
-                        bgColor={'gray.500'}
-                        onClick={() => {
-                            replayNext();
-                        }}>
-                        &gt;
-                    </Button>
-                </Tooltip>
-            </HStack>
-        </Box>
-    )
-}

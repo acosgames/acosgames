@@ -20,6 +20,7 @@ fs.set('latencyStart', 0);
 fs.set('latencyOffsetTime', 0);
 fs.set('wsStatus', 'disconnected');
 fs.set('gameStatus', 'none');
+fs.set('prevGameSettings', defaultGameSettings);
 fs.set('gameSettings', defaultGameSettings);
 fs.set('localGameSettings', defaultGameSettings);
 fs.set('replayStats', { position: 0, total: 0 });
@@ -90,6 +91,7 @@ export function wsSend(type, payload) {
 }
 
 export function updateGameSettings(newSettings) {
+    fs.set('prevGameSettings', fs.get('gameSettings'));
     fs.set('gameSettings', newSettings);
     let socket = fs.get('socket');
     wsSend('gameSettings', newSettings)
@@ -111,6 +113,7 @@ const onGameSettings = (message) => {
         message = decode(message);
 
         fs.set('localGameSettings', message.gameSettings);
+        fs.set('prevGameSettings', fs.get('gameSettings'));
         fs.set('gameSettings', message.gameSettings);
 
     }
@@ -137,6 +140,7 @@ const onConnected = (message) => {
         ping();
 
         fs.set('localGameSettings', gameSettings);
+        fs.set('prevGameSettings', fs.get('gameSettings'));
         fs.set('gameSettings', gameSettings);
 
         fs.set('socketUser', socketUser);

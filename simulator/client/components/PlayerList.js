@@ -4,7 +4,6 @@ import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, removeFakePlayer,
 import { IoAddSharp, FaChevronRight, AiFillCloseCircle, ImEnter, IoPlaySharp, GoEye } from '@react-icons';
 import GameStateService from '../services/GameStateService';
 import GamePanelService from '../services/GamePanelService';
-import { ReplayControls } from './ActionPanel';
 
 
 export function DisplayGamePlayers(props) {
@@ -33,14 +32,20 @@ export function DisplayGamePlayers(props) {
 
             elems.push(
 
-                <Tr key={'ingameplayers-' + player.id} pb="2rem" bgColor={isUserNext ? 'gray.600' : "gray.900"} >
+                <Tr key={'ingameplayers-' + player.id} pb="2rem" bgColor={"gray.900"} >
                     <Td >
                         <Text display={typeof player?.rank !== 'undefined' ? 'inline-block' : 'none'}>{player.rank}</Text>
                     </Td>
                     <Td>
                         <HStack>
-                            <Icon display={isUserNext ? 'inline-block' : 'none'} color="white" as={FaChevronRight} />
-                            <Tooltip label={player.id}>
+
+                            <Tooltip label={"Is Next"} placement="top">
+                                <Box>
+                                    <Icon display={isUserNext ? 'inline-block' : 'none'} width="1rem" height="1rem" color="white" as={FaChevronRight} />
+                                </Box>
+                            </Tooltip>
+
+                            <Tooltip label={player.id} placement="top">
                                 <Text>
 
                                     {player.name}
@@ -195,12 +200,12 @@ export function DisplayMyPlayers(props) {
 
                     <Td>
                         <HStack alignItems={'center'} justifyContent='flex-start'>
-                            <Tooltip label={isInGame ? 'In game' : 'Spectator'}>
+                            <Tooltip label={isInGame ? 'In game' : 'Spectator'} placement="top">
                                 <Text as='span' lineHeight="2.1rem" h="2.1rem">
                                     <Icon color={color} as={isInGame ? IoPlaySharp : GoEye} w="1.4rem" h="1.4rem" />
                                 </Text>
                             </Tooltip>
-                            <Tooltip label={p.id}>
+                            <Tooltip label={p.id} placement="top">
                                 <Text lineHeight="2.1rem" h="2.1rem" fontSize="1.5rem">{p.name}</Text>
                             </Tooltip>
                         </HStack>

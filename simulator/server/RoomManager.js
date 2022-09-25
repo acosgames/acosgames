@@ -4,16 +4,16 @@ const Room = require('./Room');
 class RoomManager {
     constructor() {
 
-        this.rooms = [];
+        this.room = new Room();
 
     }
 
     create() {
 
-        let room = new Room();
-        this.rooms.push(room);
+        this.room = new Room();
+        // this.rooms.push(room);
 
-        return room;
+        return this.room;
     }
 
 
@@ -44,9 +44,9 @@ class RoomManager {
 
     current() {
         let currentRoom = null;
-        if (this.rooms.length > 0) {
-            currentRoom = this.rooms[this.rooms.length - 1];
-        }
+        // if (this.rooms.length > 0) {
+        currentRoom = this.room;// this.rooms[this.rooms.length - 1];
+        // }
 
         if (currentRoom) {
             // if (currentRoom.isGameOver()) {

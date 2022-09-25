@@ -64,7 +64,7 @@ function MainPage(props) {
                                 style={{
                                     position: 'absolute',
                                     inset: '0px',
-                                    overflow: 'hidden scroll',
+                                    //overflow: 'hidden scroll',
                                     width: '100%'
                                     // marginRight: '-8px',
                                     // marginBottom: '-8px'
@@ -77,7 +77,7 @@ function MainPage(props) {
                         autoHideDuration={200}
                     >
                         <VStack
-                            px={['0.5rem', '1rem', '5rem']}
+                            //px={['0.5rem', '1rem', '5rem']}
                             // pt={'2.5rem'} 
                             spacing="0"
                             justifyContent={'center'}

@@ -289,12 +289,12 @@ function DisplayUserInfo(props) {
 
     return (
         <HStack spacing="1rem" px="3rem" width="100%" height="3rem" >
-            <Tooltip label={isInGame ? 'In game' : 'Spectator'}>
+            <Tooltip label={isInGame ? 'In game' : 'Spectator'} placement="top">
                 <Text as='span' h="2.1rem">
                     <Icon color={color} as={isInGame ? IoPlaySharp : GoEye} w="1.4rem" h="1.4rem" />
                 </Text>
             </Tooltip>
-            <Tooltip label={user.id}>
+            <Tooltip label={user.id} placement="top">
                 <Text
                     cursor={'pointer'}
                     color={color}

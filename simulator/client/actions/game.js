@@ -80,6 +80,10 @@ export function joinGame() {
     wsSend('action', { type: 'join', user });
 }
 
+export function playerReady(user) {
+    wsSend('action', { type: 'ready', user });
+}
+
 export function startGame(message) {
     let socketUser = fs.get('socketUser');
     let user = { id: socketUser.id, name: socketUser.name };
@@ -91,6 +95,13 @@ export function newGame(message) {
     let user = { id: socketUser.id, name: socketUser.name };
     wsSend('action', { type: 'newgame', user });
     fs.set('gameStatus', 'none');
+}
+
+export function skip(message) {
+    let socketUser = fs.get('socketUser');
+    let user = { id: socketUser.id, name: socketUser.name };
+    wsSend('action', { type: 'skip', user });
+    // fs.set('gameStatus', 'none');
 }
 
 export function spawnFakePlayers(message) {

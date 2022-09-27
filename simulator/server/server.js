@@ -601,12 +601,19 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, './public/index2.html'));
 });
 
+app.use('/assets/*', express.static(path.join(process.argv[2], './builds/client/assets')));
+
+
 app.get('/iframe.html', function (req, res) {
     res.sendFile(path.join(__dirname, './public/iframe-' + process.argv[3] + '.html'));
 });
 
 app.get('/favicon.ico', function (req, res) {
     res.sendFile(path.join(__dirname, './public/favicon.ico'));
+});
+
+app.get('/*', function (req, res) {
+    res.sendFile(path.join(__dirname, './public/iframe-' + process.argv[3] + '.html'));
 });
 
 server.listen(port, () => {

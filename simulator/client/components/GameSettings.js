@@ -216,8 +216,11 @@ const regexColorHex = /^#([0-9a-fA-F]{3}){1,2}$/i;
 
 function SettingColorInput(props) {
     let id = props.id;
-    let [gameSettings] = fs.useWatch('gameSettings');
+    //let [gameSettings] = fs.useWatch('gameSettings');
+    let gameSettings = fs.get('gameSettings');
+
     let currentValue = (id in gameSettings) ? gameSettings[id] : 0;
+    let [colorValue, setColorValue] = useState(currentValue);
 
     let isTeamId = 'team_order' in props;
     let team_order = -1;
@@ -228,7 +231,7 @@ function SettingColorInput(props) {
 
     if (!regexColorHex.test(currentValue))
         currentValue = '#f00';
-    let [colorValue, setColorValue] = useState(currentValue);
+
 
     useEffect(() => {
 
@@ -279,13 +282,20 @@ function SettingColorInput(props) {
                     <PopoverCloseButton />
                     <PopoverBody outline={'none'} _active={{ outline: 'none' }} bgColor={'transparent'}>
                         <SketchPicker
-                            color={currentValue || '#f00'}
+                            defaultValue={currentValue || '#f00'}
+                            color={colorValue}
                             onChange={(color) => {
 
                                 let value = color.hex;
 
                                 if (props.onChange)
                                     props.onChange(id, value);
+
+
+                                setColorValue(value);
+                            }}
+                            onChangeComplete={(color) => {
+                                let value = color.hex;
 
                                 let gameSettings = fs.get('gameSettings');
                                 if (!isTeamId && (id in gameSettings)) {
@@ -294,7 +304,6 @@ function SettingColorInput(props) {
                                     gameSettings.teams[team_order][id] = value;
                                 }
                                 updateGameSettings(gameSettings);
-                                setColorValue(value);
                             }}
                         />
                     </PopoverBody>
@@ -345,7 +354,7 @@ function SettingTextInput(props) {
                     updateGameSettings(gameSettings);
                     // e.target.focus();
                 }}
-                value={currentValue}
+                defaultValue={currentValue}
                 w={props.width || "100%"}
             />
         </HStack>
@@ -373,6 +382,8 @@ function SettingNumberInput(props) {
                 id={id}
                 fontSize="xs"
                 aria-describedby=""
+                readOnly={props.readOnly || false}
+                isDisabled={props.readOnly || false}
                 placeholder={props.placeholder}
                 onChange={(value) => {
                     // let value = e.target.value;
@@ -397,7 +408,7 @@ function SettingNumberInput(props) {
 
                     updateGameSettings(gameSettings);
                 }}
-                value={currentValue}
+                defaultValue={currentValue}
                 w={props.width || "100%"}
             >
                 <NumberInputField />
@@ -415,6 +426,7 @@ export function ChooseScreenSettings(props) {
 
     try {
         let [gameSettings] = fs.useWatch('gameSettings');
+        let [saved, setSaved] = useState(false);
 
         if (!gameSettings)
             return <></>
@@ -444,84 +456,26 @@ export function ChooseScreenSettings(props) {
                         <option value="3">(3) Scaled Resolution</option>
                     </Select>
                     <Box id="viewportResolution" display={gameSettings?.screentype == 1 ? 'none' : 'block'} pt="2rem">
-                        <Text as="label" display={'inline-block'} pr="0.5rem" fontWeight={'bold'} fontSize="xs" htmlFor="resolution">Resolution</Text>
-                        <Input
-                            type="text"
-                            className=""
-                            id="resolution"
-                            fontSize="xs"
-                            aria-describedby=""
-                            placeholder="4:3"
-                            onChange={(e) => {
-                                let parts = e.target.value.split(':');
-                                if (parts.length != 2) {
-                                    console.log("Invalid format for resolution, please use #:# format", e.target.value);
-                                    return;
-                                }
-
-                                try {
-                                    let resow = Number.parseInt(parts[0]) || 0;
-                                    let resoh = Number.parseInt(parts[1]) || 0;
-
-                                    if (!resow || !resoh) {
-                                        console.error("Invalid resolution values: ", resow + ':' + resoh);
-                                        return;
-                                    }
-
-                                    gameSettings.resow = resow;
-                                    gameSettings.resoh = resoh;
-                                    updateGameSettings(gameSettings);
-                                }
-                                catch (e) {
-
-                                }
-
-                            }}
-                            value={gameSettings?.resow && (gameSettings?.resow + ':' + gameSettings?.resoh)}
-                            w="6rem"
-                        />
+                        <HStack>
+                            <Text as="label" display={'inline-block'} pr="0.5rem" fontSize="xs">Resolution</Text>
+                            <SettingNumberInput id="resow" title="" placeholder="4" />
+                            <Text>:</Text>
+                            <SettingNumberInput id="resoh" title="" placeholder="3" />
+                        </HStack>
                     </Box>
                     <Box id="viewportSize" display={gameSettings?.screentype != 3 ? 'none' : 'block'}>
-                        <Text as="label" display={'inline-block'} pr="0.5rem" fontWeight={'bold'} fontSize="xs" htmlFor="maxwidth">Width (px)</Text>
-                        <Input
-                            type="text"
-                            className=""
-                            id="maxwidth"
-                            aria-describedby=""
-                            value={gameSettings?.screenwidth || '800'}
-                            onChange={(e) => {
-                                let val = Number.parseInt(e.target.value);
+                        <HStack>
+                            <Text as="label" display={'inline-block'} pr="0.5rem" fontSize="xs">Screen</Text>
+                            <SettingNumberInput id="screenwidth" title="Width (px)" placeholder="800" />
+                            <Text>:</Text>
+                            <SettingNumberInput id="screenheight" title="Height" placeholder="600" readOnly={true} />
+                        </HStack>
 
-                                if (!val) {
-                                    console.error("Invalid max width value: ", val);
-                                    return;
-                                }
-
-                                gameSettings.screenwidth = val;
-                                updateGameSettings(gameSettings);
-                            }}
-                            placeholder={gameSettings?.screenwidth || '800'}
-                            w="6rem"
-                            fontSize="xs"
-                        />
 
                     </Box>
-                    <Box display={gameSettings?.screentype != 3 ? 'none' : 'block'}>
-                        <Text as="label" display={'inline-block'} pr="0.5rem" fontWeight={'bold'} fontSize="xs" htmlFor="maxheight">Height (px)</Text>
-                        <Input
-                            type="text"
-                            className=""
-                            id="maxheight"
-                            readOnly
-                            aria-describedby=""
-                            color="gray.500"
-                            fontSize="xs"
-                            value={gameSettings?.screenwidth && (gameSettings?.screenwidth * (gameSettings.resoh / gameSettings.resow))}
-                            w="6rem"
-                        />
-                    </Box>
+
                 </VStack>
-            </VStack>
+            </VStack >
         )
     }
     catch (err) {

@@ -185,13 +185,13 @@ function runDeploy(isDev) {
     return new Promise((rs, rj) => {
 
         const cmd = `node --inspect ./simulator/server/deploy.js`;
-        console.log("[ACOS] Starting Deploy to ACOS.games");
+        // console.log("[ACOS] Starting Deploy to ACOS.games");
         let buildPath = path.join(cwd, '/builds');
         let gameSettings = path.join(cwd, '/game-settings.json');
         let args = process.argv.splice(3, process.argv.length - 2);
         // console.log(args, process.argv.length);
         let argsStr = args.join(' ') + ' --buildPath=' + buildPath + ' --settings=' + gameSettings;
-        console.log("Running Deploy: ", cmd + ' ' + argsStr);
+        // console.log("Running Deploy: ", cmd + ' ' + argsStr);
         runScript(cd, cmd + ' ' + argsStr, (err) => {
             if (err) {
                 console.error(err);

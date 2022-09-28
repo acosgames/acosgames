@@ -233,7 +233,7 @@ function GameIFrame(props) {
                             onResize();
                         }}
                         src={'//localhost:3300/g/test-game-4/client/iframe.html'}
-                        sandbox="allow-scripts"
+                        sandbox="allow-scripts  allow-same-origin"
                     />
                     <HStack position={'absolute'} top={'-3rem'} left="0" height="3rem" width="100%">
                         <DisplayUserInfo id={props.id} />

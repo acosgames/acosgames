@@ -232,7 +232,7 @@ function GameIFrame(props) {
                             gamepanel.iframe = iframeRef;
                             onResize();
                         }}
-                        src={'//localhost:3300/g/test-game-4/client/iframe.html'}
+                        src={'//localhost:3300/iframe.html'}
                         sandbox="allow-scripts  allow-same-origin"
                     />
                     <HStack position={'absolute'} top={'-3rem'} left="0" height="3rem" width="100%">

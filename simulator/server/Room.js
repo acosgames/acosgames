@@ -107,7 +107,7 @@ class Room {
             if (current?.timer?.end) {
                 let offset = current.timer.end - current.room.updated;
                 current.timer.end = now + offset;
-                this.setDeadline(current.timer.end);
+                this.setDeadline(0);
             }
             current.room.updated = now;
 

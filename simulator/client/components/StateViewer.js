@@ -18,6 +18,7 @@ export function StateViewer(props) {
         return <></>
 
     let playerList = GameStateService.getPlayersArray();
+    let deltaEncoded = fs.get('deltaEncoded');
 
     if (scope == 'server') {
 
@@ -42,7 +43,7 @@ export function StateViewer(props) {
     }
 
     return (
-        <Box>
+        <VStack width="100%">
             {/* <ReactJson
                 src={gameState}
                 theme="isotope"
@@ -50,10 +51,10 @@ export function StateViewer(props) {
                 displayDataTypes="false"
                 displayObjectSize="false"
             /> */}
-            <HStack>
+            <HStack py="3rem" width="100%">
                 <ReplayControls />
-                <VStack px="2rem" w="100%">
-                    <Text fontWeight={"bold"}>Scope</Text>
+                <VStack w="100%">
+                    <Text fontWeight={"bold"} fontSize="xs">Scope</Text>
                     <Select
                         w="100%"
                         defaultValue={'server'}
@@ -70,21 +71,25 @@ export function StateViewer(props) {
                     </Select>
                 </VStack>
             </HStack>
-            <Accordion allowMultiple={true} allowToggle={true} pt="2rem" defaultIndex={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}>
-                <ObjectViewer object={gameState?.action} title="action" bgColor="gray.500" />
-                <ObjectViewer object={gameState?.events} title="events" />
-                <ObjectViewer object={gameState?.state} title="state" />
-                <ObjectViewer object={gameState?.players} title="players" />
+            <HStack>
+                <Text fontSize="xs">Packet Size: </Text>
+                <Text fontWeight="bold">{deltaEncoded} bytes</Text>
+            </HStack>
+            <Accordion allowMultiple={true} allowToggle={true} pt="2rem" pl="1rem" defaultIndex={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} w="100%">
+                <ObjectViewer object={gameState?.action} title="action" bgColor="gray.700" />
+                <ObjectViewer object={gameState?.events} title="events" bgColor="gray.500" />
+                <ObjectViewer object={gameState?.state} title="state" bgColor="gray.500" />
+                <ObjectViewer object={gameState?.players} title="players" bgColor="gray.500" />
                 {(gameState?.teams &&
-                    <ObjectViewer object={gameState?.teams} title="teams" />
+                    <ObjectViewer object={gameState?.teams} title="teams" bgColor="gray.500" />
                 )}
 
 
-                <ObjectViewer object={gameState?.timer} title="timer" />
-                <ObjectViewer object={gameState?.next} title="next" />
-                <ObjectViewer object={gameState?.room} title="room" />
+                <ObjectViewer object={gameState?.timer} title="timer" bgColor="gray.500" />
+                <ObjectViewer object={gameState?.next} title="next" bgColor="gray.500" />
+                <ObjectViewer object={gameState?.room} title="room" bgColor="gray.500" />
             </Accordion>
-        </Box>
+        </VStack>
     )
 }
 
@@ -96,7 +101,7 @@ function ObjectViewer(props) {
     const { hasCopied, onCopy } = useClipboard(JSON.stringify(object, null, 4))
 
     return (
-        <AccordionItem defaultValue={true} bgColor={props.bgColor || "gray.900"}>
+        <AccordionItem defaultValue={true} bgColor={props.bgColor || "gray.900"} w="100%">
             <AccordionButton height="2rem" lineHeight={'2rem'} px="1rem">
                 <HStack flex='1' textAlign='left'>
                     <Text w="100%" fontSize="1.4rem" >{title}</Text>
@@ -155,8 +160,8 @@ export function ReplayControls(props) {
     //     return <></>
 
     return (
-        <VStack px="2rem" w="100%" h="100%" justifyContent={'center'} spacing="0">
-            <Text display={props.hideTitle ? 'none' : 'inline-block'} as="span" fontWeight={'bold'}>Replay Control</Text>
+        <VStack w="100%" h="100%" justifyContent={'center'} spacing="0">
+            <Text display={props.hideTitle ? 'none' : 'inline-block'} as="span" fontSize="xs" fontWeight={'bold'}>Replay Control</Text>
             <HStack justifyContent={'center'}>
                 <Tooltip label={'Previous State'}>
                     <Button

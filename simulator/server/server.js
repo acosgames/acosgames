@@ -570,20 +570,20 @@ function createWorker(index) {
     return worker;
 }
 
-app.get('/client-simulator.js', function (req, res) {
-    res.sendFile(path.join(__dirname, './public/client-simulator.js'));
-});
+// app.get('/client-simulator.js', function (req, res) {
+//     res.sendFile(path.join(__dirname, './public/client-simulator.js'));
+// });
 
-app.get('/delta.js', function (req, res) {
-    res.sendFile(path.join(__dirname, './delta.js'));
-});
+// app.get('/delta.js', function (req, res) {
+//     res.sendFile(path.join(__dirname, './delta.js'));
+// });
 
-app.get('/encoder.js', function (req, res) {
-    res.sendFile(path.join(__dirname, './encoder.js'));
-});
-app.get('/jsonViewer.js', function (req, res) {
-    res.sendFile(path.join(__dirname, './jsonViewer.js'));
-});
+// app.get('/encoder.js', function (req, res) {
+//     res.sendFile(path.join(__dirname, './encoder.js'));
+// });
+// app.get('/jsonViewer.js', function (req, res) {
+//     res.sendFile(path.join(__dirname, './jsonViewer.js'));
+// });
 
 app.get('/client.bundle.dev.js', function (req, res) {
     res.sendFile(path.join(process.argv[2], './builds/client/client.bundle.dev.js'));
@@ -593,15 +593,22 @@ app.get('/bundle.js', function (req, res) {
     res.sendFile(path.join(__dirname, './public/bundle.' + process.argv[3] + '.js'));
 })
 
-app.get('/index2.html', function (req, res) {
-    res.sendFile(path.join(__dirname, './public/index2.html'));
-});
+// app.get('/index2.html', function (req, res) {
+//     res.sendFile(path.join(__dirname, './public/index2.html'));
+// });
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, './public/index2.html'));
 });
 
-app.use('/assets/*', express.static(path.join(process.argv[2], './builds/client/assets')));
+let assetPath = path.join(process.argv[2], './builds/client/assets')
+app.use(
+    '/assets/',
+    (req, res, next) => {
+        res.sendFile(path.join(assetPath, req.path));
+        console.log(req.path);
+    }
+);
 
 
 app.get('/iframe.html', function (req, res) {
@@ -612,9 +619,9 @@ app.get('/favicon.ico', function (req, res) {
     res.sendFile(path.join(__dirname, './public/favicon.ico'));
 });
 
-app.get('/*', function (req, res) {
-    res.sendFile(path.join(__dirname, './public/iframe-' + process.argv[3] + '.html'));
-});
+// app.get('/', function (req, res) {
+//     res.sendFile(path.join(__dirname, './public/iframe-' + process.argv[3] + '.html'));
+// });
 
 server.listen(port, () => {
     console.log('[ACOS] Server started at http://localhost:' + port);

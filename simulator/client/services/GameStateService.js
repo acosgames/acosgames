@@ -2,6 +2,7 @@ import fs from 'flatstore';
 import DELTA from '../actions/delta';
 import { playerReady } from '../actions/game';
 import GamePanelService from './GamePanelService';
+import { encode } from '../actions/encoder';
 
 class GameStateService {
     constructor() {
@@ -127,6 +128,10 @@ class GameStateService {
         let delta = DELTA.delta(copyGameState, copyNewState, {});
         let hiddenState = DELTA.hidden(delta.state);
         let hiddenPlayers = DELTA.hidden(delta.players);
+
+
+        let encoded = encode(delta);
+        fs.set('deltaEncoded', encoded.byteLength);
 
         if ('$' in delta)
             delete delta['$'];

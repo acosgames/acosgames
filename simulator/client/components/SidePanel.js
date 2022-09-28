@@ -52,7 +52,7 @@ function SidePanel(props) {
                 flexDirection='column !important'
                 mt="0"
             >
-                <Tabs h="100%" px="0" variant='base'>
+                <Tabs h="100%" px="0" variant='base' defaultIndex={1}>
                     <TabList
                         zIndex="20"
                         display={'flex'}

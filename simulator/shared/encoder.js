@@ -484,7 +484,12 @@ var defaultOrder = [
     'lastUpdate',
     'starttime',
     'endtime',
-    'updated'
+    'updated',
+    'timeseq',
+    'isreplay',
+    'status',
+    'sequence',
+    'history'
 ]
 
 var defaultDict = null;

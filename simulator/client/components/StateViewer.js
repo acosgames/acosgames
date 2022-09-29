@@ -6,7 +6,7 @@ import { IoCopy } from '@react-icons';
 import { useState } from 'react';
 import { replayNext, replayPrev } from '../actions/game';
 import GameStateService from '../services/GameStateService';
-import DELTA from '../actions/delta';
+const DELTA = require('../../shared/delta');
 
 
 
@@ -27,6 +27,12 @@ export function StateViewer(props) {
         let hiddenState = DELTA.hidden(copy.state);
         let hiddenPlayers = DELTA.hidden(copy.players);
         gameState = copy;
+        if (gameState?.action?.user?.id)
+            gameState.action.user = gameState.action.user.id;
+    }
+    else if (scope == 'packet') {
+        let delta = fs.copy('deltaState');
+        gameState = delta;
     }
     else {
         let copy = GameStateService.getGameState();
@@ -40,6 +46,9 @@ export function StateViewer(props) {
         }
 
         gameState = copy;
+
+        if (gameState?.action?.user?.id)
+            gameState.action.user = gameState.action.user.id;
     }
 
     return (
@@ -51,10 +60,10 @@ export function StateViewer(props) {
                 displayDataTypes="false"
                 displayObjectSize="false"
             /> */}
-            <HStack py="3rem" width="100%">
+            <HStack py="0rem" width="100%">
                 <ReplayControls />
                 <VStack w="100%">
-                    <Text fontWeight={"bold"} fontSize="xs">Scope</Text>
+                    <Text fontWeight={"bold"} fontSize="xs">JSON Scope</Text>
                     <Select
                         w="100%"
                         defaultValue={'server'}
@@ -65,6 +74,7 @@ export function StateViewer(props) {
                     >
                         <option fontSize="1rem" value="server">Server</option>
                         <option fontSize="1rem" value="spectator">Spectator</option>
+                        <option fontSize="1rem" value="packet">Delta Packet</option>
                         {
                             playerList.map(p => (<option key={'scope-' + p.id} fontSize="1rem" value={p.id}>{p.name}</option>))
                         }
@@ -72,8 +82,9 @@ export function StateViewer(props) {
                 </VStack>
             </HStack>
             <HStack>
-                <Text fontSize="xs">Packet Size: </Text>
-                <Text fontWeight="bold">{deltaEncoded} bytes</Text>
+                <Text fontSize="xxs">Encoded Size: </Text>
+                <Text fontSize="xs" fontWeight="bold">{deltaEncoded} </Text>
+                <Text fontSize="xxs" fontWeight="bold">bytes</Text>
             </HStack>
             <Accordion allowMultiple={true} allowToggle={true} pt="2rem" pl="1rem" defaultIndex={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} w="100%">
                 <ObjectViewer object={gameState?.action} title="action" bgColor="gray.700" />
@@ -112,7 +123,7 @@ function ObjectViewer(props) {
 
             <AccordionPanel bgColor={"rgb(21, 21, 21)"} position="relative">
                 <HStack position="absolute" top="0" right="0" w="100%" justifyContent={'flex-end'} height="4rem">
-                    {hasCopied && (<Text as="span" fontSize="xxs">Copied!</Text>)}
+                    {hasCopied && (<Text position="relative" zIndex={100} as="span" fontSize="xxs">Copied!</Text>)}
                     <IconButton
                         fontSize={'1.6rem'}
                         color="gray.100"

@@ -1,16 +1,21 @@
 
 const Room = require('./Room');
+const GameSettingsManager = require('./GameSettingsManager');
 
 class RoomManager {
     constructor() {
 
         this.room = new Room();
+        this.settings = new GameSettingsManager();
+    }
 
+    setSettings(settings) {
+        this.settings = settings;
     }
 
     create() {
 
-        this.room = new Room();
+        this.room = new Room(this.settings);
         // this.rooms.push(room);
 
         return this.room;

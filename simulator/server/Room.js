@@ -5,11 +5,8 @@ const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
 
 
 
-
-
-
 class Room {
-    constructor() {
+    constructor(settings) {
 
         this.room_slug = nanoid(8);
         this.status = 'pregame';
@@ -20,13 +17,17 @@ class Room {
         this.history = [{}];
         this.gamestate = 0;
         this.gsm = new GameSettingsManager(); //game settings manager
+        if (settings)
+            this.gsm = settings;
 
         this.deadline = 0;
         this.skipCount = 0;
 
         this.teaminfo = [];
 
-
+        if (this.gsm.get()) {
+            this.createTeamsBySize();
+        }
 
     }
 
@@ -173,15 +174,15 @@ class Room {
         let maxTeamSize = 0;
         //free for all scenario
         if (!gameSettings.maxteams) {
-            for (let i = 0; i < gameSettings.maxplayers; i++) {
-                let teamid = i + 1;
-                teamsBySize.push({ team_slug: 'team_' + teamid, maxplayers: 1, minplayers: 1, vacancy: 1, players: [], captains: [] })
-            }
-            maxTeamSize = 1;
+            // for (let i = 0; i < gameSettings.maxplayers; i++) {
+            //     let teamid = i + 1;
+            //     teamsBySize.push({ team_slug: 'team_' + teamid, maxplayers: 1, minplayers: 1, vacancy: 1, players: [], captains: [] })
+            // }
+            // maxTeamSize = 1;
         }
         //battlegrounds scenario
         else if (gameSettings.maxteams == 1) {
-            let team = gameSettings.teamlist[0];
+            let team = gameSettings.teams[0];
             let maxteamcount = Math.floor(gameSettings.maxplayers / team.maxplayers)
             for (let i = 0; i < maxteamcount; i++) {
                 let teamid = i + 1;
@@ -191,7 +192,7 @@ class Room {
         }
         //traditional team scenario
         else {
-            for (const team of gameSettings.teamlist) {
+            for (const team of gameSettings.teams) {
                 if (team.maxplayers > maxTeamSize)
                     maxTeamSize = team.maxplayers;
                 teamsBySize.push({ team_slug: team.team_slug, maxplayers: team.maxplayers, minplayers: team.minplayers, vacancy: team.maxplayers, players: [], captains: [] });
@@ -202,8 +203,42 @@ class Room {
             b.vacancy - a.vacancy;
         })
 
+        if (this.history.length > 1)
+            return;
+
+        let gameState = this.history[0];
+        gameState.teams = {};
+
+        for (const team of teamsBySize) {
+            gameState.teams[team.team_slug] = { players: [] };
+        }
+
+        this.history[0] = gameState;
 
         this.teaminfo = teamsBySize;
+    }
+
+    attemptJoinTeam(team_slug) {
+        for (const team of this.teaminfo) {
+            if (team.team_slug == team_slug) {
+                if (team.vacancy > 0) {
+                    team.vacancy -= 1;
+                    return { team_slug: team.team_slug };
+                }
+            }
+        }
+
+        for (const team of this.teaminfo) {
+            if (team.vacancy > 0) {
+                team.vacancy -= 1;
+                return { team_slug: team.team_slug };
+            }
+        }
+        return { error: 'No teams available' }
+    }
+
+    getTeamInfo() {
+        return this.teaminfo;
     }
 
     setDeadline(deadline) {
@@ -235,9 +270,10 @@ class Room {
     }
 
     isFull() {
+        let gameSettings = this.gsm.get();
         let players = this.gamestate?.players || {};
         let playerList = Object.keys(players);
-        if (playerList.length >= this.gamesettings.maxplayers) {
+        if (playerList.length >= gameSettings.maxplayers) {
             return true;
         }
         return false;

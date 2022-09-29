@@ -41,12 +41,15 @@ const { isObject } = require('./rank');
 const { cloneObj } = require('./util');
 const settings = new GameSettingsManager(gameWorkingDirectory, onGameSettingsReloaded);
 
+RoomManager.setSettings(settings);
+
 
 function onGameSettingsReloaded() {
     // let user = UserManager.actionUser(newUser);
     io.emit('gameSettings', encode({
         gameSettings: settings.get()
     }));
+
 }
 
 setInterval(() => {
@@ -102,6 +105,8 @@ function onConnect(socket) {
                 onAction({ type: 'join', user: fakePlayer }, true);
         }
     }
+
+    io.emit('teaminfo', encode(room.getTeamInfo()));
 
     //user is already in game, just rejoin them and send them full game state
     // let room = RoomManager.current();
@@ -214,6 +219,20 @@ const onJoinRequest = (action) => {
         return false;
     }
 
+
+    //check if team is available
+    let teaminfo = room.getTeamInfo();
+    if (teaminfo.length > 1) {
+        let attempt = room.attemptJoinTeam(action.user.team_slug);
+        if (attempt.error) {
+            client.socket.emit('error', encode(attempt));
+            console.log('[ACOS] [Error] ' + attempt.error + ': ', action.user.team_slug, ', for user:', action.user.id, action.user.name);
+            return false;
+        }
+
+        action.user.team_slug = attempt.team_slug;
+    }
+
     console.log('[ACOS] Adding user to game: ', action.user.id, action.user.name);
     return true;
 }
@@ -302,6 +321,7 @@ const onNewGameRequest = (action) => {
     let prevGamestate = room.copyGameState();
     io.emit('replayStats', encode(room.replayStats()));
     io.to('gameroom').emit('newgame', encode(prevGamestate));
+    io.emit('teaminfo', encode(room.getTeamInfo()));
 
     return false;
 }
@@ -549,6 +569,7 @@ function createWorker(index) {
         room.updateGame(gamestate);
 
         io.emit('replayStats', encode(room.replayStats()));
+        io.emit('teaminfo', encode(room.getTeamInfo()));
 
 
         // console.timeEnd('[ACOS] [WorkerOnMessage]')

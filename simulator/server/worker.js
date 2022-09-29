@@ -211,6 +211,17 @@ class FSGWorker {
                     globalGame.players[shortid] = {}
                 globalGame.players[shortid].name = username;
 
+                if (globalGame.teams) {
+                    if (action?.user?.team_slug) {
+                        let team_slug = action.user.team_slug;
+                        if (!(team_slug in globalGame.teams)) {
+                            globalGame.teams[team_slug] = { players: [] };
+                        }
+                        globalGame.teams[team_slug].players.push(shortid);
+                    }
+                }
+
+
             }
             else if (action.type == 'reset') {
                 this.makeGame();

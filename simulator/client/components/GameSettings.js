@@ -6,7 +6,36 @@ import { FaArrowCircleUp, FaArrowCircleDown } from '@react-icons';
 import { useEffect, useRef, useState } from "react";
 import { SketchPicker } from "react-color";
 
+
+export function Settings(props) {
+
+    let [gameSettings] = fs.useWatch('gameSettings');
+
+    let [wsStatus] = fs.useWatch('wsStatus');
+    if (wsStatus != 'connected' && wsStatus != 'ingame') {
+        return <></>
+    }
+
+    if (!gameSettings || !('minplayers' in gameSettings)) {
+        return <></>
+    }
+
+    return (
+        <>
+            <ChooseScreenSettings />
+
+            <ChooseGameSettings />
+
+            <ChooseTeamSettings />
+        </>
+
+    )
+}
+
+
 export function ChooseGameSettings(props) {
+
+
 
 
     return (
@@ -69,6 +98,8 @@ export function ChooseTeamSettings(props) {
     // if (!gameSettings?.teams || gameSettings.teams.length == 0) {
     //     return <></>
     // }
+
+
 
     return (
         <VStack ref={teamSettingsRef} display={(!gameSettings?.teams || gameSettings.teams.length == 0) ? 'none' : 'flex'}>
@@ -365,7 +396,12 @@ function SettingNumberInput(props) {
 
     let id = props.id;
     let [gameSettings] = fs.useWatch('gameSettings');
+
+
+
     let currentValue = (id in gameSettings) ? Number.parseInt(gameSettings[id]) : 0;
+
+    let [numberValue, setNumberValue] = useState(currentValue);
 
     let isTeamId = 'team_order' in props;
     let team_order = -1;
@@ -373,6 +409,12 @@ function SettingNumberInput(props) {
         team_order = Number.parseInt(props.team_order || 0)
         currentValue = Number.parseInt(gameSettings.teams[team_order][id]);
     }
+
+    useEffect(() => {
+        if (currentValue != numberValue) {
+            setNumberValue(currentValue);
+        }
+    })
 
     return (
         <VStack key={'setting-' + id} id={'setting-' + id}>
@@ -398,6 +440,8 @@ function SettingNumberInput(props) {
                     if (props.onChange)
                         props.onChange(id, value);
 
+                    setNumberValue(value);
+
                     // fs.set(id, value);
                     let gameSettings = fs.get('gameSettings');
                     if (!isTeamId && (id in gameSettings)) {
@@ -409,6 +453,7 @@ function SettingNumberInput(props) {
                     updateGameSettings(gameSettings);
                 }}
                 defaultValue={currentValue}
+                value={numberValue}
                 w={props.width || "100%"}
             >
                 <NumberInputField />

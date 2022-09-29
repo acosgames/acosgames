@@ -11,6 +11,8 @@ const defaultGameSettings = { minplayers: 1, maxplayers: 1, minteams: 0, maxteam
 class GameSettingsManager {
     constructor(gameWorkingDirectory, callback) {
 
+        this.gameSettings = null;
+
         if (!gameWorkingDirectory)
             return;
         this.onGameSettingsReloaded = callback;
@@ -111,6 +113,8 @@ class GameSettingsManager {
             }
         }
 
+        let teamMaxPlayers = 0;
+
         if ('teams' in s) {
             if (s.teams.length > 0) {
                 for (let team of s.teams) {
@@ -134,10 +138,20 @@ class GameSettingsManager {
                         dirty = true;
                     }
 
+                    teamMaxPlayers += team.maxplayers;
+                }
 
+
+            }
+            if (s.teams.length > 1) {
+                if (s.maxplayers != teamMaxPlayers) {
+                    s.maxplayers = teamMaxPlayers;
+                    dirty = true;
                 }
             }
         }
+
+
 
         if (!('screentype' in s) || !Number.isInteger(s.screentype)) {
             s.screentype = 3;

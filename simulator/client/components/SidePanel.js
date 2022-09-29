@@ -1,16 +1,14 @@
 
-import { Box, HStack, VStack, Text, IconButton, Image, Flex, Button, Icon, Input, Select, Tabs, TabList, TabPanels, TabPanel, Tab } from '@chakra-ui/react';
+import { Box, HStack, VStack, Text, Button, Icon, Tabs, TabList, TabPanels, TabPanel, Tab } from '@chakra-ui/react';
 import fs from 'flatstore';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
-import { IoSend, IoAddSharp, BsChevronBarLeft, BsChevronBarUp, BsChevronBarDown, BsChatDotsFill, AiFillCloseCircle, ImEnter } from '@react-icons';
+import { BsChatDotsFill, AiFillCloseCircle, ImEnter } from '@react-icons';
 
-import { Link, useLocation } from 'react-router-dom';
-import { connect, saveGameSettings, updateGameSettings } from '../actions/websocket';
-import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, newGame, removeFakePlayer, spawnFakePlayers, startGame } from '../actions/game';
-import { ChooseGameSettings, ChooseScreenSettings, ChooseTeamSettings } from './GameSettings';
+import { saveGameSettings } from '../actions/websocket';
+import { Settings } from './GameSettings';
 import { DisplayMyPlayers, DisplayGamePlayers, DisplayGameActions } from './PlayerList';
-import { ActionPanel, GameActionsExpanded } from './ActionPanel';
+import { GameActionsExpanded } from './ActionPanel';
 import { StateViewer } from './StateViewer';
 
 fs.set('chat', []);
@@ -33,6 +31,7 @@ function SidePanel(props) {
         <HStack
             spacing='0' m="0" p='0'
             bgColor={'blacks.200'}
+            position={'relative'}
             flexGrow='1 !important'
             height={!isMobile ? "100%" : (toggle ? '20rem' : '0')}
             transition="width 0.3s ease, height 0.3s ease"
@@ -56,6 +55,7 @@ function SidePanel(props) {
                     <TabList
                         zIndex="20"
                         display={'flex'}
+                        bgColor={'blacks.300'}
                         transition={'filter 0.3s ease-in'}
                         width="100%"
                         maxWidth="1200px"
@@ -87,11 +87,7 @@ function SidePanel(props) {
 
                             <VStack justifyContent={'flex-start'} spacing='2rem' pb={"4rem"} px="0" pt="2rem">
 
-                                <ChooseScreenSettings />
-
-                                <ChooseGameSettings />
-
-                                <ChooseTeamSettings />
+                                <Settings />
                             </VStack>
                         </TabPanel>
                     </TabPanels>
@@ -100,6 +96,8 @@ function SidePanel(props) {
         </HStack>
     )
 }
+
+
 
 
 

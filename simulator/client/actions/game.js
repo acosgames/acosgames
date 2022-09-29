@@ -1,5 +1,5 @@
-import DELTA from './delta';
-const { decode, encode } = require('./encoder');
+import DELTA from '../../shared/delta';
+const { decode, encode } = require('../../shared/encoder');
 import fs from 'flatstore';
 
 import GamePanelService from '../services/GamePanelService';
@@ -74,9 +74,9 @@ export function replayJump(index) {
     wsSend('replay', { type: 'jump', payload: index });
 }
 
-export function joinGame() {
+export function joinGame(team_slug) {
     let socketUser = fs.get('socketUser');
-    let user = { id: socketUser.id, name: socketUser.name };
+    let user = { id: socketUser.id, name: socketUser.name, team_slug };
     wsSend('action', { type: 'join', user });
 }
 
@@ -110,8 +110,8 @@ export function spawnFakePlayers(message) {
     wsSend('fakeplayer', { type: 'create', user, payload: 1 });
 }
 
-export function joinFakePlayer(fakePlayer) {
-    let user = { id: fakePlayer.id, name: fakePlayer.name };
+export function joinFakePlayer(fakePlayer, team_slug) {
+    let user = { id: fakePlayer.id, name: fakePlayer.name, team_slug };
     wsSend('action', { type: 'join', user });
 }
 
@@ -169,6 +169,19 @@ export function onReplay(message) {
     }
 }
 
+export function onTeamInfo(message) {
+    try {
+        message = decode(message);
+        console.log('TEAMINFO UPDATE: ', message);
+        if (!message) return;
+
+        fs.set('teaminfo', message);
+    }
+    catch (e) {
+        console.error(e);
+    }
+}
+
 export function onGameUpdate(message) {
     try {
         message = decode(message);
@@ -204,6 +217,9 @@ export function onJoin(message) {
     }
 }
 
+export function onSpectate(message) {
+
+}
 
 export function onFakePlayer(message) {
     message = decode(message);

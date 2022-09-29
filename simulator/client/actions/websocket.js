@@ -1,9 +1,9 @@
 import fs from 'flatstore'
 
-import { decode, encode } from './encoder';
+const { decode, encode } = require('../../shared/encoder');
 import { io } from "socket.io-client";
 
-import { onFakePlayer, onJoin, onLeave, onSpectate, onGameUpdate, onReplay, onReplayStats } from './game';
+import { onFakePlayer, onJoin, onLeave, onSpectate, onGameUpdate, onReplay, onReplayStats, onTeamInfo } from './game';
 
 import GamePanelService from '../services/GamePanelService';
 import GameStateService from '../services/GameStateService';
@@ -12,7 +12,7 @@ import GameStateService from '../services/GameStateService';
 // var latency = 0;
 // var latencyStart = 0;
 // var offsetTime = 0;
-const defaultGameSettings = { minplayers: 1, maxplayers: 1, minteams: 0, maxteams: 0, teams: [], screentype: 3, resow: 4, resoh: 3, screenwidth: 800 };
+const defaultGameSettings = {};// { minplayers: 1, maxplayers: 1, minteams: 0, maxteams: 0, teams: [], screentype: 3, resow: 4, resoh: 3, screenwidth: 800 };
 
 fs.set('socket', null);
 fs.set('latency', 0);
@@ -76,6 +76,7 @@ export function connect(username) {
     socket.on('newgame', onNewGame);
     socket.on('spectator', onSpectate);
     socket.on('fakeplayer', onFakePlayer);
+    socket.on('teaminfo', onTeamInfo);
     // socket.on('private', onGamePrivateUpdate);
     socket.on('disconnect', onDisconnect);
 

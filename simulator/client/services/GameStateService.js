@@ -1,8 +1,8 @@
 import fs from 'flatstore';
-import DELTA from '../actions/delta';
+const DELTA = require('../../shared/delta');
 import { playerReady } from '../actions/game';
 import GamePanelService from './GamePanelService';
-import { encode } from '../actions/encoder';
+const { encode } = require('../../shared/encoder');
 
 class GameStateService {
     constructor() {
@@ -39,14 +39,47 @@ class GameStateService {
         return null;
     }
 
-    hasVacancy() {
+    hasTeams() {
+        let teaminfo = fs.get('teaminfo') || [];
+        return teaminfo.length > 0;
+    }
+
+    anyTeamHasVacancy() {
+        let teaminfo = fs.get('teaminfo') || [];
+        let vacancyCount = 0;
+
+        for (const team of teaminfo) {
+            vacancyCount += team.vacancy;
+        }
+
+        if (teaminfo.length == 0) {
+            return true;
+        }
+
+        return vacancyCount > 0;
+    }
+
+    hasVacancy(team_slug) {
         let gameSettings = fs.get('gameSettings');
+        let teaminfo = fs.get('teaminfo') || [];
 
         let gameState = fs.get('gameState');
         let players = gameState?.players || {};
         let playerList = Object.keys(players);
         if (playerList.length >= gameSettings.maxplayers)
             return false;
+
+        if (team_slug) {
+            if (!gameState?.teams)
+                return true;
+
+            let team = teaminfo.find(t => t.team_slug == team_slug);
+            if (!team)
+                return false;
+
+            if (team.vacancy <= 0)
+                return false;
+        }
 
         return true;
     }
@@ -120,6 +153,8 @@ class GameStateService {
         return false;
     }
 
+
+
     updateState(newState, prevState) {
 
         let gameState = prevState || fs.get('gameState');
@@ -130,21 +165,44 @@ class GameStateService {
         let hiddenPlayers = DELTA.hidden(delta.players);
 
 
-        let encoded = encode(delta);
-        fs.set('deltaEncoded', encoded.byteLength);
+
 
         if ('$' in delta)
             delete delta['$'];
 
-        if ('action' in delta)
-            delete delta['action'];
+        if (delta.events && '$' in delta.events)
+            delete delta.events['$'];
+
+        if (delta?.action?.user?.id)
+            delta.action.user = delta.action.user.id;
+
+
+        let encoded = encode(delta);
+        fs.set('deltaEncoded', encoded.byteLength);
+
 
         newState.delta = delta;
 
         console.log('AFTER', newState.players);
-        fs.set('gameState', newState);
         fs.set('deltaState', delta);
         fs.set('hiddenPlayerState', hiddenPlayers);
+
+
+        let playerTeams = {};
+        if (newState.teams) {
+            for (const team in newState.teams) {
+                let players = newState.teams[team].players;
+                for (const id of players) {
+                    playerTeams[id] = team;
+                }
+            }
+        }
+        fs.set('playerTeams', playerTeams);
+
+        fs.set('gameState', newState);
+
+
+
 
         this.updateGamePanels();
     }

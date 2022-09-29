@@ -36,7 +36,7 @@ function SidePanel(props) {
             height={!isMobile ? "100%" : (toggle ? '20rem' : '0')}
             transition="width 0.3s ease, height 0.3s ease"
             zIndex={30}
-            width={isMobile ? "100%" : (toggle ? ['34.0rem', '34rem', '38.0rem'] : '0')}
+            width={isMobile ? "100%" : (toggle ? ['44.0rem', '44rem', '48.0rem'] : '0')}
             filter='drop-shadow(0 0 5px rgba(25,25,25,.25))'>
 
             <VStack

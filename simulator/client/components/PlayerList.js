@@ -59,7 +59,7 @@ export function DisplayGamePlayers(props) {
                     borderLeft="5px solid"
                     borderLeftColor={player.teamColor}
                 >
-                    <Td px="0" py="1rem">
+                    <Td px="0" pl="1rem" py="1rem">
                         <Text display={typeof player?.rank !== 'undefined' ? 'inline-block' : 'none'}>{player.rank}</Text>
                     </Td>
                     <Td px="0" py="1rem">
@@ -67,7 +67,7 @@ export function DisplayGamePlayers(props) {
 
                             <Tooltip label={"Is Next"} placement="top">
                                 <Box>
-                                    <Icon display={isUserNext ? 'inline-block' : 'none'} width="1rem" height="1rem" color="white" as={FaChevronRight} />
+                                    <Icon display={isUserNext ? 'inline-block' : 'none'} width="0.8rem" height="0.8rem" mr="0.5rem" color="yellow.200" as={FaChevronRight} />
                                 </Box>
                             </Tooltip>
 
@@ -96,12 +96,12 @@ export function DisplayGamePlayers(props) {
         <VStack pt="4rem" pb="4rem" spacing="0" px="0">
             <Text fontWeight='bold'>In-Game Players</Text>
             <Table variant='simple' width="100%" p="0" m="0" spacing="0">
-                <Thead>
+                <Thead px="0">
                     <Tr>
-                        <Th px="0" py="1rem" color={'gray.100'} fontSize="xxs" lineHeight="3rem" height="3rem">Rank</Th>
-                        <Th px="0" py="1rem" color={'gray.100'} fontSize="xxs" lineHeight="3rem" height="3rem" >Player</Th>
-                        <Th px="0" py="1rem" color={'gray.100'} fontSize="xxs" lineHeight="3rem" height="3rem">Score</Th>
-                        <Th px="0" py="1rem" color={'gray.100'} fontSize="xxs" lineHeight="3rem" height="3rem">Actions</Th>
+                        <Th px="0" py="0.5rem" pl="1rem" color={'gray.100'} fontSize="xxs" lineHeight="2rem" height="2rem">Rank</Th>
+                        <Th px="0" py="0.5rem" color={'gray.100'} fontSize="xxs" lineHeight="2rem" height="2rem" >Player</Th>
+                        <Th px="0" py="0.5rem" color={'gray.100'} fontSize="xxs" lineHeight="2rem" height="2rem">Score</Th>
+                        <Th px="0" py="0.5rem" color={'gray.100'} fontSize="xxs" lineHeight="2rem" height="2rem"></Th>
                     </Tr>
                 </Thead>
                 <Tbody>

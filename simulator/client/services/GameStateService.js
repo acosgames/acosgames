@@ -176,6 +176,12 @@ class GameStateService {
         if (delta?.action?.user?.id)
             delta.action.user = delta.action.user.id;
 
+        if (delta?.action && 'timeseq' in delta.action)
+            delete delta.action.timeseq;
+
+        if (delta?.action && 'timeleft' in delta.action)
+            delete delta.action.timeleft;
+
 
         let encoded = encode(delta);
         fs.set('deltaEncoded', encoded.byteLength);
@@ -226,14 +232,17 @@ class GameStateService {
             }
 
             let hiddenPlayers = fs.set('hiddenPlayerState');
-            if (hiddenPlayers && hiddenPlayers[id] && pstate?.players[id]) {
+            if (hiddenPlayers && hiddenPlayers[id] && pstate?.players && pstate?.players[id]) {
                 pstate.local = Object.assign({}, pstate.players[id], hiddenPlayers[id]);
                 pstate.private = { players: { [id]: hiddenPlayers[id] } };
             }
-            else
-                pstate.local = { id };
 
-            pstate.local.id = id;
+            if (pstate?.players && pstate?.players[id]) {
+                pstate.local = JSON.parse(JSON.stringify(pstate.players[id]));
+                pstate.local.id = id;
+            }
+
+
 
             GamePanelService.sendFrameMessage(gamepanel, pstate);
 

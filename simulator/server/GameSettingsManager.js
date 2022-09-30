@@ -223,8 +223,9 @@ class GameSettingsManager {
     async reloadServerGameSettings(filepath) {
         profiler.Start('Reloaded Game Settings in');
         {
-            var data = fs.readFileSync(filepath, 'utf8');
+
             try {
+                var data = fs.readFileSync(filepath, 'utf8');
                 this.gameSettings = JSON.parse(data);
             }
             catch (e) {

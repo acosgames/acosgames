@@ -69,7 +69,7 @@ export function connect(username) {
     socket.on('gameSettings', onGameSettings);
     socket.on('connected', onConnected);
     socket.on('pong', onPong);
-    socket.on('lastAction', onLastAction)
+    // socket.on('lastAction', onLastAction)
     socket.on('join', onJoin)
     socket.on('leave', onLeave);
     socket.on('game', onGameUpdate);

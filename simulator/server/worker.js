@@ -154,7 +154,7 @@ class FSGWorker {
 
         let seconds = Math.min(3000000, Math.max(1, timer.set));
         // let seconds = Math.min(60, Math.max(10, timer.set));
-        let sequence = timer.seq || 0;
+        let sequence = timer.sequence || 0;
         let now = (new Date()).getTime();
         let deadline = now + (seconds * 1000);
         let timeleft = deadline - now;
@@ -162,7 +162,7 @@ class FSGWorker {
         timer.end = deadline;
         timer.seconds = seconds;
         // timer.data = [deadline, seconds];
-        timer.seq = sequence + 1;
+        timer.sequence = sequence + 1;
         delete timer.set;
     }
 
@@ -285,7 +285,7 @@ class FSGWorker {
                 if (action.type == 'join') {
                     let shortid = action.user.id;
 
-                    if (!globalResult?.events?.join) {
+                    if (!globalResult?.events?.join || !Array.isArray(globalResult.events.join)) {
                         if (!globalResult?.events)
                             globalResult.events = {};
                         globalResult.events.join = [];
@@ -319,6 +319,9 @@ class FSGWorker {
             room.sequence = room.sequence + 1;
             room.updated = Date.now();
             globalResult.room = room;
+
+
+
             globalResult.action = action;
 
 

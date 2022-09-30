@@ -511,7 +511,9 @@ var defaultOrder = [
     'team_13',
     'team_14',
     'team_15',
-    'team_16'
+    'team_16',
+    'correct',
+    'incorrect'
 ]
 
 var defaultDict = null;

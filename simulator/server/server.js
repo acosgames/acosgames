@@ -429,7 +429,7 @@ function onAction(action, skipDecode) {
     action.user = user;
 
     //add timing sequence
-    action.timeseq = gamestate?.timer?.seq || 0;
+    action.timeseq = gamestate?.timer?.sequence || 0;
     action.timeleft = timeleft;
 
     let actionFunc = actionTypes[action.type] || onGameActionRequest;
@@ -445,8 +445,8 @@ function onAction(action, skipDecode) {
         return;
     }
 
-    io.to('gameroom').emit('lastAction', encode({ action, gamestate }));
-    io.to('spectator').emit('lastAction', encode({ action, gamestate }));
+    // io.to('gameroom').emit('lastAction', encode({ action, gamestate }));
+    // io.to('spectator').emit('lastAction', encode({ action, gamestate }));
     worker.postMessage({ action, room: room.json(), gamestate });
 }
 

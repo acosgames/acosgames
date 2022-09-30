@@ -6,6 +6,7 @@ import { IoCopy } from '@react-icons';
 import { useState } from 'react';
 import { replayNext, replayPrev } from '../actions/game';
 import GameStateService from '../services/GameStateService';
+import { delta } from '../util/delta';
 const DELTA = require('../../shared/delta');
 
 
@@ -21,17 +22,33 @@ export function StateViewer(props) {
     let deltaEncoded = fs.get('deltaEncoded');
 
     if (scope == 'server') {
+        let copy = GameStateService.getGameState();
 
+        copy.private = {};
+        copy.local = {};
+        gameState = copy;
     } else if (scope == 'spectator') {
         let copy = GameStateService.getGameState();
         let hiddenState = DELTA.hidden(copy.state);
         let hiddenPlayers = DELTA.hidden(copy.players);
+        copy.private = {};
+        copy.local = {};
         gameState = copy;
         if (gameState?.action?.user?.id)
             gameState.action.user = gameState.action.user.id;
+
+
+
+        if (gameState?.action && 'timeseq' in gameState.action)
+            delete gameState.action.timeseq;
+
+        if (gameState?.action && 'timeleft' in gameState.action)
+            delete gameState.action.timeleft;
+
     }
     else if (scope == 'packet') {
         let delta = fs.copy('deltaState');
+        delta.local = {};
         gameState = delta;
     }
     else {
@@ -41,14 +58,22 @@ export function StateViewer(props) {
 
         if (hiddenPlayers && hiddenPlayers[scope] && copy?.players[scope]) {
             copy.players[scope] = Object.assign({}, copy.players[scope], hiddenPlayers[scope]);
-            copy.local = copy.players[scope];
+
             copy.private = { players: { [scope]: hiddenPlayers[scope] } };
         }
 
+        if (copy?.players[scope])
+            copy.local = copy.players[scope];
         gameState = copy;
 
         if (gameState?.action?.user?.id)
             gameState.action.user = gameState.action.user.id;
+
+        if (gameState?.action && 'timeseq' in gameState.action)
+            delete gameState.action.timeseq;
+
+        if (gameState?.action && 'timeleft' in gameState.action)
+            delete gameState.action.timeleft;
     }
 
     return (
@@ -99,6 +124,7 @@ export function StateViewer(props) {
                 <ObjectViewer object={gameState?.timer} title="timer" bgColor="gray.500" />
                 <ObjectViewer object={gameState?.next} title="next" bgColor="gray.500" />
                 <ObjectViewer object={gameState?.room} title="room" bgColor="gray.500" />
+                <ObjectViewer object={gameState?.local} title="local" bgColor="gray.500" />
             </Accordion>
         </VStack>
     )

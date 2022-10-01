@@ -141,7 +141,7 @@ function runBrowserSync(isDev) {
             let projectNodeModulePath = path.join(cwd, '/node_modules');
             let serverPublicFiles = "";
 
-            cmd = `npx wait-on http://localhost:3100/ && npx browser-sync start --no-open --no-ghost-mode --ws --ui-port 3002 --port 3300 --proxy localhost:3100 --files=${gameClientPath} --files=${buildsClientPath}  --ignore=${projectNodeModulePath}`;
+            cmd = `npx wait-on http://localhost:3100/ && npx browser-sync start --no-open --no-ghost-mode --ws  --port 3300 --proxy localhost:3100 --files=${gameClientPath} --files=${buildsClientPath}  --ignore=${projectNodeModulePath}`;
 
         }
 

@@ -273,7 +273,8 @@ class Room {
         let gameSettings = this.gsm.get();
         let players = this.gamestate?.players || {};
         let playerList = Object.keys(players);
-        if (playerList.length >= gameSettings.maxplayers) {
+        let maxplayers = gameSettings?.maxplayers || 0;
+        if (playerList.length >= maxplayers) {
             return true;
         }
         return false;

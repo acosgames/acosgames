@@ -2,7 +2,7 @@ import fs from 'flatstore';
 const DELTA = require('../../shared/delta');
 import { playerReady } from '../actions/game';
 import GamePanelService from './GamePanelService';
-const { encode } = require('../../shared/encoder');
+const { encode, decode } = require('../../shared/encoder');
 
 class GameStateService {
     constructor() {
@@ -161,6 +161,28 @@ class GameStateService {
         let copyGameState = JSON.parse(JSON.stringify(gameState));
         let copyNewState = JSON.parse(JSON.stringify(newState));
         let delta = DELTA.delta(copyGameState, copyNewState, {});
+        let copyDelta = JSON.parse(JSON.stringify(delta));
+
+        // let encoded2 = encode(copyDelta);
+
+        // let decoded = decode(encoded2);
+
+        // copyGameState = JSON.parse(JSON.stringify(gameState));
+        // let merged = DELTA.merge(copyGameState, decoded);
+
+        // let mergedStr = JSON.stringify(merged);
+        // let newStateStr = JSON.stringify(newState);
+
+        // let deltaError = DELTA.delta(newState, merged, {});
+
+        // // if (Object.keys(deltaError).length > 0) 
+        // {
+
+
+
+        //     console.error("MERGE ERROR: ", deltaError);
+        // }
+
         let hiddenState = DELTA.hidden(delta.state);
         let hiddenPlayers = DELTA.hidden(delta.players);
 

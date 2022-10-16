@@ -217,8 +217,8 @@ class Delta {
         //     return from;
         // }
         if (!Array.isArray(delta) && !this.isObject(delta)) {
-            if (delta != from)
-                return delta;
+            //if (delta != from)
+            return delta;
         }
 
         if (typeof from != typeof delta) {
@@ -245,6 +245,11 @@ class Delta {
                 continue;
             }
 
+            if (!from) {
+                from = {};
+                from[key] = delta[key];
+                continue;
+            }
 
             if (!(key in from)) {
                 from[key] = delta[key];

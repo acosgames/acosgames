@@ -126,7 +126,7 @@ export function JoinButton(props) {
         return <></>
     }
 
-    let hasTeams = GameStateService.hasTeams()
+    let hasTeams = gameSettings?.teams && gameSettings.teams.length > 0;// GameStateService.hasTeams()
     let anyTeamHasVacancy = GameStateService.anyTeamHasVacancy();
 
     if (!anyTeamHasVacancy) {
@@ -201,6 +201,7 @@ export function JoinButton(props) {
 export function DisplayUserActions(props) {
 
     let [gameState] = fs.useWatch('gameState');
+    let [gameSettings] = fs.useWatch('gameSettings');
 
     let user = GamePanelService.getUserById(props.id);
     let isFakePlayer = 'clientid' in user;

@@ -29,8 +29,9 @@ var globalGameSettings = {};
 
 var globals = {
     log: (args) => {
-        console.log.apply(console, args);
-        //console.log(msg) 
+        // var args = Array.from(arguments);
+        // console.log.apply(console, args);
+        console.log(args)
     },
     error: (args) => {
         console.error.apply(console, args);
@@ -109,12 +110,12 @@ class FSGWorker {
         globalGame = JSON.parse(JSON.stringify(globalResult));
     }
 
-    makeGame(clearPlayers) {
+    makeGame(gameSettings) {
         //if (!globalGame)
-        let players = {};
-        if (globalGame.players) {
-            players = globalGame.players;
-        }
+        // let players = {};
+        // if (globalGame.players) {
+        //     players = globalGame.players;
+        // }
 
         globalGame = {};
         if (globalGame.killGame) {
@@ -125,21 +126,31 @@ class FSGWorker {
         // globalGame.rules = {};
         globalGame.next = {};
         globalGame.teams = {};
-        globalGame.events = {};
-
-        if (clearPlayers) {
-            globalGame.players = {}
-        }
-        else {
-            let newPlayers = {};
-            for (var id in players) {
-                let player = players[id];
-                newPlayers[id] = {
-                    name: player.name
+        globalGame.players = {};
+        if (gameSettings) {
+            for (const team of gameSettings.teams) {
+                globalGame.teams[team.team_slug] = {
+                    name: team.team_name,
+                    color: team.color,
+                    order: team.team_order,
+                    players: [],
+                    rank: 0,
+                    score: 0
                 }
             }
-            globalGame.players = newPlayers;
         }
+        globalGame.events = {};
+
+
+        // let newPlayers = {};
+        // for (var id in players) {
+        //     let player = players[id];
+        //     newPlayers[id] = {
+        //         name: player.name
+        //     }
+        // }
+        // globalGame.players = newPlayers;
+
 
     }
 
@@ -168,7 +179,7 @@ class FSGWorker {
 
 
 
-    async onAction({ room, action, gamestate }) {
+    async onAction({ room, action, gamestate, gameSettings }) {
         try {
             // profiler.Start("[WorkerOnAction]")
             console.log("[ACOS] Executing Action: ", action);
@@ -177,7 +188,7 @@ class FSGWorker {
             //validate gamestate
             globalIgnore = false;
             if (!globalGame)
-                this.makeGame();
+                this.makeGame(gameSettings);
             else {
                 globalGame.events = {};
             }
@@ -218,13 +229,14 @@ class FSGWorker {
                             globalGame.teams[team_slug] = { players: [] };
                         }
                         globalGame.teams[team_slug].players.push(shortid);
+                        globalGame.players[shortid].teamid = team_slug;
                     }
                 }
 
 
             }
-            else if (action.type == 'reset') {
-                this.makeGame();
+            else if (action.type == 'reset' || action.type == 'newgame') {
+                this.makeGame(gameSettings);
             }
             else if (action.type == 'ready') {
                 if (room.status != 'pregame')

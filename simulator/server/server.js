@@ -46,6 +46,12 @@ RoomManager.setSettings(settings);
 
 function onGameSettingsReloaded() {
     // let user = UserManager.actionUser(newUser);
+
+    let room = RoomManager.create();
+    let gamestate = room.getGameState();
+    // onAction({ type: 'newgame' }, true);
+    worker.postMessage({ action: { type: 'newgame' }, room: room.json(), gamestate, gameSettings: settings.get() });
+    io.emit('teaminfo', encode(room.getTeamInfo()));
     io.emit('gameSettings', encode({
         gameSettings: settings.get()
     }));
@@ -68,7 +74,7 @@ setInterval(() => {
             RoomManager.create();
             return;
         }
-        worker.postMessage({ action: { type: 'skip' }, room: room.json(), gamestate });
+        worker.postMessage({ action: { type: 'skip' }, room: room.json(), gamestate, gameSettings: settings.get() });
         // worker.postMessage([]);
         room.setDeadline(0);
     }
@@ -323,7 +329,7 @@ const onNewGameRequest = (action) => {
     io.to('gameroom').emit('newgame', encode(prevGamestate));
     io.emit('teaminfo', encode(room.getTeamInfo()));
 
-    return false;
+    return true;
 }
 
 const calculateTimeleft = (gamestate) => {
@@ -421,21 +427,21 @@ function onAction(action, skipDecode) {
 
     if (!user) return;
 
+
     let room = RoomManager.current();
     let gamestate = room.getGameState();
-    let timeleft = calculateTimeleft(gamestate);
 
+    let status = room.status;
+    if (action.type == 'newgame') {
+        status = 'pregame';
+    }
     //set the action to this user
     action.user = user;
-
-    //add timing sequence
-    action.timeseq = gamestate?.timer?.sequence || 0;
-    action.timeleft = timeleft;
 
     let actionFunc = actionTypes[action.type] || onGameActionRequest;
 
     if (actionFunc == onGameActionRequest) {
-        if (!validateNextUser(room, gamestate, action.user.id)) {
+        if (!validateNextUser(status, gamestate, action.user.id)) {
             console.warn("[ACOS] User not allowed to run action:", action);
             return;
         }
@@ -445,17 +451,26 @@ function onAction(action, skipDecode) {
         return;
     }
 
+    room = RoomManager.current();
+    gamestate = room.getGameState();
+    let timeleft = calculateTimeleft(gamestate);
+
+    //add timing sequence
+    action.timeseq = gamestate?.timer?.sequence || 0;
+    action.timeleft = timeleft;
+
+
     // io.to('gameroom').emit('lastAction', encode({ action, gamestate }));
     // io.to('spectator').emit('lastAction', encode({ action, gamestate }));
-    worker.postMessage({ action, room: room.json(), gamestate });
+    worker.postMessage({ action, room: room.json(), gamestate, gameSettings: settings.get() });
 }
 
 
-function validateNextUser(room, gamestate, userid) {
+function validateNextUser(status, gamestate, userid) {
     let next = gamestate?.next;
     let nextid = next?.id;
 
-    if (room.status == 'pregame')
+    if (status == 'pregame')
         return true;
 
     if (!next || !nextid)

@@ -271,7 +271,8 @@ class Room {
 
     isFull() {
         let gameSettings = this.gsm.get();
-        let players = this.gamestate?.players || {};
+        let gamestate = this.getGameState();
+        let players = gamestate?.players || {};
         let playerList = Object.keys(players);
         let maxplayers = gameSettings?.maxplayers || 0;
         if (playerList.length >= maxplayers) {

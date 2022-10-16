@@ -132,7 +132,7 @@ function runBrowserSync(isDev) {
             // let projectNodeModulePath = path.join(cwd, '/node_modules');
             let serverPublicFiles = "--files=" + path.join(__dirname, './simulator/server/public');
 
-            cmd = `npx wait-on http://localhost:3100/ && npx browser-sync start --no-ghost-mode --ws --port 3200 --proxy localhost:3100  ${serverPublicFiles}`;
+            cmd = `npx wait-on http://localhost:3100/ && npx browser-sync start --no-ghost-mode --ws --port 3200 --ui-port 3201 --proxy localhost:3100  ${serverPublicFiles}`;
 
         }
         else {
@@ -141,7 +141,7 @@ function runBrowserSync(isDev) {
             let projectNodeModulePath = path.join(cwd, '/node_modules');
             let serverPublicFiles = "";
 
-            cmd = `npx wait-on http://localhost:3100/ && npx browser-sync start --no-open --no-ghost-mode --ws  --port 3300 --proxy localhost:3100 --files=${gameClientPath} --files=${buildsClientPath}  --ignore=${projectNodeModulePath}`;
+            cmd = `npx wait-on http://localhost:3100/ && npx browser-sync start --no-open --no-ghost-mode --ws  --port 3300 --ui-port 3301 --proxy localhost:3100 --files=${gameClientPath} --files=${buildsClientPath}  --ignore=${projectNodeModulePath}`;
 
         }
 

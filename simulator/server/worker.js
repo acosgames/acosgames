@@ -235,6 +235,10 @@ class FSGWorker {
 
 
             }
+            else if (action.type == 'leave') {
+                let shortid = action.user.id;
+                globalGame.players[shortid].ingame = false;
+            }
             else if (action.type == 'reset' || action.type == 'newgame') {
                 this.makeGame(gameSettings);
             }

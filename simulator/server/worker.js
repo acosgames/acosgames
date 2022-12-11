@@ -307,6 +307,7 @@ class FSGWorker {
                         globalResult.events.join = [];
                     }
                     globalResult.events.join.push(shortid);
+
                 }
                 if (action.type == 'leave') {
                     let shortid = action.user.id;
@@ -317,6 +318,8 @@ class FSGWorker {
                         globalResult.events.leave = [];
                     }
                     globalResult.events.leave.push(shortid);
+
+                    globalResults.players[shortid].ingame = false;
                 }
                 else if (action.type == 'reset') {
                     room.status = 'pregame';

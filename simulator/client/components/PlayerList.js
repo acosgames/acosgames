@@ -83,7 +83,7 @@ export function DisplayGamePlayers(props) {
                         <Text display={typeof player?.score !== 'undefined' ? 'inline-block' : 'none'}>{player.score}</Text>
                     </Td>
                     <Td px="0" py="1rem">
-                        <DisplayUserActions id={player.id} />
+                        <DisplayUserActions id={player.id} from={'playerlist'} />
                     </Td>
                 </Tr>
             )
@@ -174,7 +174,7 @@ export function JoinButton(props) {
                                 <MenuItem
                                     borderLeft={'5px solid'}
                                     borderLeftColor={t.color}
-                                    key={props.id + '-team-' + t.team_slug}
+                                    key={props.id + '-' + props.from + 'team-' + t.team_slug}
                                     value={t.team_slug}
                                     onClick={(e) => {
                                         if (props.isFakePlayer) {
@@ -223,7 +223,7 @@ export function DisplayUserActions(props) {
 
     return (
         <HStack spacing="0.25rem">
-            <JoinButton id={props.id} isFakePlayer={isFakePlayer} isJoinAllowed={isJoinAllowed} />
+            <JoinButton from={props.from} id={props.id} isFakePlayer={isFakePlayer} isJoinAllowed={isJoinAllowed} />
             <Button
                 display={isLeaveAllowed ? 'block' : 'none'}
                 fontSize={'xxs'}

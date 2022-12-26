@@ -217,7 +217,7 @@ class Delta {
         //     return from;
         // }
         if (!Array.isArray(delta) && !this.isObject(delta)) {
-            //if (delta != from)
+
             return delta;
         }
 
@@ -253,6 +253,12 @@ class Delta {
 
             if (!(key in from)) {
                 from[key] = delta[key];
+
+                if (this.isObject(delta[key])) {
+                    from[key] = this.merge(from[key], delta[key])
+                    continue;
+                }
+
                 continue;
             }
 
@@ -369,11 +375,11 @@ function test2() {
         events: []
     }
 
-    console.log('[ACOS] ' + defaultGame);
+    console.log(defaultGame);
     let hiddenOnly = d.hidden(defaultGame);
 
-    console.log('[ACOS] ' + hiddenOnly);
-    console.log('[ACOS] ' + defaultGame);
+    console.log(hiddenOnly);
+    console.log(defaultGame);
 }
 // test2();
 
@@ -416,16 +422,16 @@ function test() {
     for (var i = 0; i < 1; i++)
         diff = d.delta(defaultGame, changed, {});
     console.timeEnd('delta');
-    console.log('[ACOS] ' + "Diffed: ", diff);
+    console.log("Diffed: ", diff);
     let merged = d.merge(defaultGame, diff);
-    console.log('[ACOS] ' + "Merged: ", merged);
+    console.log("Merged: ", merged);
 
     changed = JSON.parse(JSON.stringify(merged));
     delete changed.players.joe.type;
     diff = d.delta(merged, changed, {});
-    console.log('[ACOS] ' + "Diffed2: ", diff);
+    console.log("Diffed2: ", diff);
     merged = d.merge(merged, diff);
-    console.log('[ACOS] ' + "Merged2: ", merged);
+    console.log("Merged2: ", merged);
 }
 
 // test();

@@ -56,6 +56,11 @@ export function StateViewer(props) {
         let hiddenState = DELTA.hidden(copy.state);
         let hiddenPlayers = DELTA.hidden(copy.players);
 
+        if (!copy.players || !copy.players[scope]) {
+            setScope('server');
+            return <></>
+        }
+
         if (hiddenPlayers && hiddenPlayers[scope] && copy?.players[scope]) {
             copy.players[scope] = Object.assign({}, copy.players[scope], hiddenPlayers[scope]);
 

@@ -2,7 +2,7 @@ import { Box, Button, Center, Fade, Flex, Heading, HStack, Icon, IconButton, Ima
 
 import { useEffect, useRef, useState } from 'react';
 import fs from 'flatstore';
-import { BsArrowsFullscreen, ImEnter, AiFillCloseCircle, IoPlaySharp, GoEye, CgMinimizeAlt } from '@react-icons';
+import { BsArrowsFullscreen, ImEnter, MdPerson, IoPlaySharp, GoEye, CgMinimizeAlt } from '@react-icons';
 import { withRouter } from 'react-router-dom';
 import GamePanelService from '../services/GamePanelService';
 import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame } from '../actions/game';
@@ -183,6 +183,10 @@ function GameIFrame(props) {
     let lastMessage = fs.get('gameState');
     let players = lastMessage?.players || {};
 
+    let fakePlayers = fs.get('fakePlayers') || {};
+
+    let fakePlayerList = Object.keys(fakePlayers);
+
     let isSpectator = !(props.id in players);
 
     return (
@@ -237,7 +241,10 @@ function GameIFrame(props) {
                     />
                     <HStack position={'absolute'} top={'-3rem'} left="0" height="3rem" width="100%">
                         <DisplayUserInfo id={props.id} />
-                        <DisplayUserActions id={props.id} />
+                        <Box display={fakePlayerList.length < 8 ? 'block' : 'none'}>
+
+                            <DisplayUserActions id={props.id} />
+                        </Box>
                     </HStack>
                 </Box>
 
@@ -291,7 +298,7 @@ function DisplayUserInfo(props) {
         <HStack spacing="1rem" px="3rem" width="100%" height="3rem" >
             <Tooltip label={isInGame ? 'In game' : 'Spectator'} placement="top">
                 <Text as='span' h="2.1rem">
-                    <Icon color={color} as={isInGame ? IoPlaySharp : GoEye} w="1.4rem" h="1.4rem" />
+                    <Icon color={color} as={isInGame ? MdPerson : GoEye} w="1.4rem" h="1.4rem" />
                 </Text>
             </Tooltip>
             <Tooltip label={user.id} placement="top">

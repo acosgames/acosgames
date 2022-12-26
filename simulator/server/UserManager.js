@@ -7,6 +7,7 @@ class UserManager {
         this.allFakePlayers = {};
         this.fakePlayerNames = {};
         this.users = {};
+        this.fakePlayerCounter = 0;
     }
 
     register(socket, name, parentid) {
@@ -42,7 +43,7 @@ class UserManager {
     createFakePlayers = (clientid, count) => {
 
         let fakeplayers = [];
-        let offset = Object.keys(this.allFakePlayers).length;
+        // let offset = Object.keys(this.allFakePlayers).length;
 
         for (let i = 1; i <= count; i++) {
             let id = nanoid(6);
@@ -50,11 +51,13 @@ class UserManager {
             while (id in this.allFakePlayers) {
                 id = nanoid(6);
             }
-            let fakeplayer = { id, name: 'Player_' + (offset + i), clientid };
+            let fakeplayer = { id, name: 'Player_' + (this.fakePlayerCounter + i), clientid };
             this.allFakePlayers[id] = fakeplayer;
             this.fakePlayerNames[fakeplayer.name] = fakeplayer;
 
             fakeplayers.push(fakeplayer);
+
+            this.fakePlayerCounter++;
         }
         return fakeplayers;
     }

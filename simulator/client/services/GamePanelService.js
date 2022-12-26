@@ -21,7 +21,7 @@ class GamePanelService {
     }
 
     sendFrameMessage(gamepanel, msg) {
-        // let iframe = fs.get('iframe');
+        // let iframe = fs.get('iframe'); 
 
         if (gamepanel?.iframe?.current && gamepanel.ready)
             gamepanel.iframe.current.contentWindow.postMessage(msg, '*');
@@ -91,6 +91,8 @@ class GamePanelService {
                 for (const waitMessage of gamepanel.waitMessages) {
                     this.sendFrameMessage(gamepanel, waitMessage);
                 }
+            } else {
+                GameStateService.updateGamePanel(gamepanel.id);
             }
             return;
         }

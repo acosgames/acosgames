@@ -1,7 +1,7 @@
 import { Box, Button, Divider, HStack, Icon, IconButton, Menu, MenuButton, MenuItem, MenuList, Table, Tbody, Td, Text, Th, Thead, Tooltip, Tr, VStack } from '@chakra-ui/react';
 import fs from 'flatstore';
 import { joinFakePlayer, joinGame, leaveFakePlayer, leaveGame, removeFakePlayer, spawnFakePlayers } from '../actions/game';
-import { IoAddSharp, FaChevronRight, AiFillCloseCircle, ImEnter, IoPlaySharp, GoEye } from '@react-icons';
+import { IoAddSharp, FaChevronRight, AiFillCloseCircle, MdPerson, IoPlaySharp, GoEye } from '@react-icons';
 import GameStateService from '../services/GameStateService';
 import GamePanelService from '../services/GamePanelService';
 
@@ -133,33 +133,36 @@ export function JoinButton(props) {
         return <></>
     }
     return (
-        <HStack spacing="0">
-            <Button
-                display={'block'}
-                fontSize={'xxs'}
-                bgColor={'green.800'}
-                height={'1.4rem'}
-                lineHeight='1.4rem'
-                onClick={() => {
-                    if (props.isFakePlayer) {
-                        let fakePlayer = GamePanelService.getUserById(props.id);
-                        joinFakePlayer(fakePlayer);
-                        return;
-                    }
-                    joinGame();
-                }}
-            >
-                Join
-            </Button>
-            {hasTeams && (<Box>
+        <HStack height={'2.4rem'}
+            lineHeight='2.4rem' spacing="0.5rem" justifyContent={'center'} alignItems='center'>
+            <Box >
+                <Button
+                    display={'block'}
+                    fontSize={'xxs'}
+                    bgColor={'green.800'}
+                    height={'2.2rem'}
+                    lineHeight='2.2rem'
+                    onClick={() => {
+                        if (props.isFakePlayer) {
+                            let fakePlayer = GamePanelService.getUserById(props.id);
+                            joinFakePlayer(fakePlayer);
+                            return;
+                        }
+                        joinGame();
+                    }}
+                >
+                    Join
+                </Button>
+            </Box>
+            {hasTeams && (
                 <Menu >
                     <MenuButton
                         as={Button}
 
                         fontSize={'xxs'}
                         bgColor={'green.800'}
-                        height={'1.4rem'}
-                        lineHeight='1.4rem' >
+                        height={'2.2rem'}
+                        lineHeight='2.2rem' >
                         Team
                     </MenuButton>
                     <MenuList>
@@ -190,7 +193,7 @@ export function JoinButton(props) {
                         )}
                     </MenuList>
                 </Menu>
-            </Box>)}
+            )}
         </HStack>
     )
 
@@ -219,7 +222,7 @@ export function DisplayUserActions(props) {
         return <></>
 
     return (
-        <HStack>
+        <HStack spacing="0.25rem">
             <JoinButton id={props.id} isFakePlayer={isFakePlayer} isJoinAllowed={isJoinAllowed} />
             <Button
                 display={isLeaveAllowed ? 'block' : 'none'}
@@ -301,7 +304,7 @@ export function DisplayMyPlayers(props) {
 
             let color = 'white';
             if (!isInGame || !isUserNext)
-                color = 'gray.400'
+                color = '#aaa'
 
             elems.push(
                 <Tr bgColor="gray.900" key={'myplayers-' + p.id}>
@@ -310,16 +313,16 @@ export function DisplayMyPlayers(props) {
                         <HStack alignItems={'center'} justifyContent='flex-start'>
                             <Tooltip label={isInGame ? 'In game' : 'Spectator'} placement="top">
                                 <Text as='span' lineHeight="2.1rem" h="2.1rem">
-                                    <Icon color={color} as={isInGame ? IoPlaySharp : GoEye} w="1.4rem" h="1.4rem" />
+                                    <Icon color={color} as={isInGame ? MdPerson : GoEye} w="1.4rem" h="1.4rem" />
                                 </Text>
                             </Tooltip>
                             <Tooltip label={p.id} placement="top">
-                                <Text lineHeight="2.1rem" h="2.1rem" fontSize="1.5rem">{p.name}</Text>
+                                <Text color={color} lineHeight="2.1rem" h="2.1rem" fontSize="1.5rem">{p.name}</Text>
                             </Tooltip>
                         </HStack>
                     </Td>
                     <Td>
-                        <HStack justifyContent={'flex-end'}>
+                        <HStack justifyContent={'center'} alignItems='center'>
 
                             <DisplayUserActions id={p.id} />
 
@@ -333,19 +336,22 @@ export function DisplayMyPlayers(props) {
                     >
                         Join Game
                     </IconButton> */}
-                            <IconButton
-                                display={p.clientid ? 'block' : 'none'}
-                                fontSize={'2rem'}
-                                colorScheme={'clear'}
-                                icon={<AiFillCloseCircle color="gray.300" />}
-                                onClick={() => {
-                                    if (p.clientid)
-                                        removeFakePlayer(p);
-                                }}
-                            >
-                                Remove Fake Player
-                            </IconButton>
+
                         </HStack>
+                    </Td>
+                    <Td w="3rem">
+                        <IconButton
+                            display={p.clientid ? 'block' : 'none'}
+                            fontSize={'2rem'}
+                            colorScheme={'clear'}
+                            icon={<AiFillCloseCircle color="gray.300" />}
+                            onClick={() => {
+                                if (p.clientid)
+                                    removeFakePlayer(p);
+                            }}
+                        >
+                            Remove Fake Player
+                        </IconButton>
                     </Td>
                 </Tr>
             )
@@ -356,9 +362,22 @@ export function DisplayMyPlayers(props) {
 
     return (
         <VStack pt="4rem">
-            <Text fontWeight='bold'>My Players</Text>
+            <HStack w="100%" justifyContent={'flex-start'} alignItems='center'>
+                <Text fontWeight='bold' as="span" flex="1">My Players</Text>
+                <Box>
+                    <Button
+                        leftIcon={<IoAddSharp color="white" />}
+                        fontSize={'xxs'}
+                        bgColor={'teal.700'}
+                        onClick={() => {
+                            spawnFakePlayers();
+                        }}>
+                        Add Fake Player
+                    </Button>
+                </Box>
+            </HStack>
 
-            <Table variant='simple' width="100%">
+            <Table style={{ borderCollapse: "separate", borderSpacing: "0rem" }} size="small" variant='simple' width="100%">
                 {/* <Thead>
                     <Tr>
                         <Th color={'gray.100'} fontSize="xxs" lineHeight="3rem" height="3rem" >Player</Th>
@@ -372,17 +391,7 @@ export function DisplayMyPlayers(props) {
 
 
 
-            <Box pt="2rem">
-                <Button
-                    leftIcon={<IoAddSharp color="white" />}
-                    fontSize={'xxs'}
-                    bgColor={'teal.700'}
-                    onClick={() => {
-                        spawnFakePlayers();
-                    }}>
-                    Add Fake Player
-                </Button>
-            </Box>
+
         </VStack>
     )
 }

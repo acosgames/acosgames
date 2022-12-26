@@ -221,6 +221,7 @@ class FSGWorker {
                 if (!(shortid in globalGame.players))
                     globalGame.players[shortid] = {}
                 globalGame.players[shortid].name = username;
+                globalGame.players[shortid].id = shortid;
 
                 if (globalGame.teams) {
                     if (action?.user?.team_slug) {
@@ -319,7 +320,7 @@ class FSGWorker {
                     }
                     globalResult.events.leave.push(shortid);
 
-                    globalResults.players[shortid].ingame = false;
+                    globalResult.players[shortid].ingame = false;
                 }
                 else if (action.type == 'reset') {
                     room.status = 'pregame';
@@ -497,7 +498,7 @@ class FSGWorker {
     }
 
     convertStack(stackTrace) {
-        let regex = /server\.dev\.bundle\.js:([0-9]+):([0-9]+)/ig
+        let regex = /server\.bundle\.dev\.js:([0-9]+):([0-9]+)/ig
         let matches = [...stackTrace.matchAll(regex)]
 
 

@@ -14,6 +14,7 @@ import { Link, withRouter } from 'react-router-dom';
 // import config from '../config'
 import { CgChevronDoubleRightR, CgChevronDoubleDownR, CgChevronDoubleUpR, CgChevronDoubleLeftR, IoTimeOutline } from '@react-icons';
 import { ActionPanel } from './ActionPanel';
+import Timeleft from './Timeleft';
 // import GameActions from './games/GameDisplay/GameActions';
 
 
@@ -84,31 +85,31 @@ function ACOSHeader(props) {
     );
 }
 
-function Timeleft(props) {
+// function Timeleft(props) {
 
-    let [timeleftUpdated] = fs.useWatch('timeleftUpdated');
-
-
-    let timeleft = fs.get('timeleft') || 0;
-
-    try {
-        timeleft = Number.parseInt(timeleft) / 1000;
-
-        if (timeleft > 10)
-            timeleft = Math.floor(timeleft);
-    }
-    catch (e) {
-        timeleft = 0;
-    }
+//     let [timeleftUpdated] = fs.useWatch('timeleftUpdated');
 
 
-    return (
-        <HStack width="100%" height={'100%'} alignContent='center' justifyContent={'center'}>
-            <Icon as={IoTimeOutline} fontSize='md' fontWeight="bold" color={'gray.100'}></Icon>
-            <Text w="20rem" color={'white'} fontSize='xl'>{timeleft}</Text>
-        </HStack>
-    )
-}
+//     let timeleft = fs.get('timeleft') || 0;
+
+//     try {
+//         timeleft = Number.parseInt(timeleft) / 1000;
+
+//         if (timeleft > 10)
+//             timeleft = Math.floor(timeleft);
+//     }
+//     catch (e) {
+//         timeleft = 0;
+//     }
+
+
+//     return (
+//         <HStack width="100%" height={'100%'} alignContent='center' justifyContent={'center'}>
+//             <Icon as={IoTimeOutline} fontSize='md' fontWeight="bold" color={'gray.100'}></Icon>
+//             <Text w="20rem" color={'white'} fontSize='xl'>{timeleft}</Text>
+//         </HStack>
+//     )
+// }
 
 
 export default fs.connect(['actionToggle', 'isMobile'])(withRouter(ACOSHeader));

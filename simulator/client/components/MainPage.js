@@ -52,7 +52,7 @@ function MainPage(props) {
                     justifyContent={'center'}
                     // overflow="hidden"
                     px={['0.5rem', '1rem', '5rem']}
-                    bg={'blacks.300'}>
+                    bg={'gray.800'}>
                     <MainMenuChakra />
                 </HStack>
 

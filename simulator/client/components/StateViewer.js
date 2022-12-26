@@ -66,14 +66,17 @@ export function StateViewer(props) {
             copy.local = copy.players[scope];
         gameState = copy;
 
-        if (gameState?.action?.user?.id)
-            gameState.action.user = gameState.action.user.id;
+        gameState.action = {};
+        // delete gameState.action;
 
-        if (gameState?.action && 'timeseq' in gameState.action)
-            delete gameState.action.timeseq;
+        // if (gameState?.action?.user?.id)
+        //     gameState.action.user = gameState.action.user.id;
 
-        if (gameState?.action && 'timeleft' in gameState.action)
-            delete gameState.action.timeleft;
+        // if (gameState?.action && 'timeseq' in gameState.action)
+        //     delete gameState.action.timeseq;
+
+        // if (gameState?.action && 'timeleft' in gameState.action)
+        //     delete gameState.action.timeleft;
     }
 
     return (

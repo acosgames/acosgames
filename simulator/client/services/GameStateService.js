@@ -92,6 +92,44 @@ class GameStateService {
         this.updateGamePanels();
     }
 
+    validateNextTeam(teams, teamid) {
+
+        let gamestate = this.getGameState();
+        let next = gamestate?.next;
+        let nextid = next?.id;
+
+        if (typeof nextid === 'string') {
+            //anyone can send actions
+            if (nextid == '*')
+                return true;
+
+
+            //validate team has players
+            if (!teams || !teams[teamid] || !teams[teamid].players)
+                return false;
+
+            //allow players on specified team to send actions
+            if (nextid == teamid && Array.isArray(teams[teamid].players)) {
+                return true;
+            }
+        }
+        else if (Array.isArray(nextid)) {
+
+            //multiple users can send actions if in the array
+            // if (nextid.includes(userid))
+            //     return false;
+
+            //validate teams exist
+            if (!teams)
+                return false;
+
+            if (nextid.includes(teamid))
+                return true;
+
+        }
+
+        return false;
+    }
 
 
     validateNextUser(userid) {

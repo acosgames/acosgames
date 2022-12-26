@@ -21,6 +21,8 @@ function GameActionsCompact(props) {
     let [wsStatus] = fs.useWatch('wsStatus');
     let [gameStatus] = fs.useWatch('gameStatus');
     let [gamePanelLayout] = fs.useWatch('gamePanelLayout');
+    let [gameState] = fs.useWatch('gameState');
+    let [gameSettings] = fs.useWatch('gameSettings');
 
     // gamePanelLayout = gamePanelLayout || 'compact';
 
@@ -32,6 +34,10 @@ function GameActionsCompact(props) {
     let isPregame = gameStatus == 'pregame';
     let isInGame = true;// gameStatus != 'gamestart';
     let isGameOver = gameStatus == 'gameover';
+
+
+    let playerList = Object.keys(gameState.players || {});
+
 
     return (
         <HStack height="100%" justifyItems={'center'} alignItems='center'>
@@ -54,7 +60,7 @@ function GameActionsCompact(props) {
             <HStack display={isInGame ? 'flex' : 'none'}>
                 <Button
                     fontSize={'xxs'}
-                    bgColor={'blacks.600'}
+                    bgColor={'red.800'}
                     onClick={newGame}>
                     {isGameRunning || isGameOver ? 'Reset Game' : 'New Game'}
                 </Button>
@@ -63,22 +69,26 @@ function GameActionsCompact(props) {
             <HStack display={gameStatus == 'gamestart' ? 'flex' : 'none'}>
                 <Button
                     fontSize={'xxs'}
-                    bgColor={'blacks.600'}
+                    bgColor={'yellow.600'}
                     onClick={skip}>
                     Skip
                 </Button>
 
             </HStack>
-            <HStack display={isPregame ? 'flex' : 'none'}>
-                <Button
-                    fontSize={'xxs'}
-                    bgColor={'green.500'}
-                    onClick={startGame}>
-                    {'Start Game'}
-                </Button>
+            <Tooltip title={playerList.length < gameSettings.minplayers ? 'Not enough players' : ''}>
+                <HStack display={isPregame ? 'flex' : 'none'}>
+
+                    <Button
+                        disabled={playerList.length < gameSettings.minplayers}
+                        fontSize={'xxs'}
+                        bgColor={'green.500'}
+                        onClick={startGame}>
+                        {'Start Game'}
+                    </Button>
 
 
-            </HStack>
+                </HStack>
+            </Tooltip>
             <Box w="2rem">
 
             </Box>
@@ -103,7 +113,7 @@ function GameActionsCompact(props) {
 
             </HStack> */}
 
-        </HStack>
+        </HStack >
     )
 }
 
@@ -132,7 +142,7 @@ export function GameActionsExpanded(props) {
                 <HStack display={isInGame ? 'flex' : 'none'}>
                     <Button
                         fontSize={'xxs'}
-                        bgColor={'blacks.600'}
+                        bgColor={'red.800'}
                         onClick={newGame}>
                         {isGameRunning || isGameOver ? 'Reset Game' : 'New Game'}
                     </Button>
@@ -141,7 +151,7 @@ export function GameActionsExpanded(props) {
                 <HStack display={gameStatus == 'gamestart' ? 'flex' : 'none'}>
                     <Button
                         fontSize={'xxs'}
-                        bgColor={'blacks.600'}
+                        bgColor={'yellow.600'}
                         onClick={skip}>
                         Skip
                     </Button>

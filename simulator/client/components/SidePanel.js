@@ -10,6 +10,7 @@ import { Settings } from './GameSettings';
 import { DisplayMyPlayers, DisplayGamePlayers, DisplayGameActions } from './PlayerList';
 import { GameActionsExpanded } from './ActionPanel';
 import { StateViewer } from './StateViewer';
+import Scoreboard from './Scoreboard';
 
 fs.set('chat', []);
 fs.set('chatMessage', '');
@@ -30,7 +31,7 @@ function SidePanel(props) {
     return (
         <HStack
             spacing='0' m="0" p='0'
-            bgColor={'blacks.200'}
+            bgColor={'gray.1200'}
             position={'relative'}
             flexGrow='1 !important'
             height={!isMobile ? "100%" : (toggle ? '20rem' : '0')}
@@ -51,11 +52,11 @@ function SidePanel(props) {
                 flexDirection='column !important'
                 mt="0"
             >
-                <Tabs h="100%" px="0" variant='base' defaultIndex={1}>
+                <Tabs h="100%" px="0" variant='base' defaultIndex={0}>
                     <TabList
                         zIndex="20"
                         display={'flex'}
-                        bgColor={'blacks.300'}
+                        bgColor={'gray.900'}
                         transition={'filter 0.3s ease-in'}
                         width="100%"
                         maxWidth="1200px"
@@ -74,7 +75,8 @@ function SidePanel(props) {
                             <Box pb="5rem" pt="2rem">
 
                                 <GameActionsExpanded />
-                                <DisplayGamePlayers />
+                                {/* <DisplayGamePlayers /> */}
+                                <Scoreboard />
                                 <DisplayMyPlayers />
                             </Box>
                         </TabPanel>

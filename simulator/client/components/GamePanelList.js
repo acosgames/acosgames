@@ -1,6 +1,6 @@
 import { Box, chakra, HStack, Icon, Text, Tooltip, VStack, Wrap, WrapItem } from "@chakra-ui/react";
 import fs from 'flatstore';
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Connection from "./Connection";
 import GamePanel from "./GamePanel";
 
@@ -15,21 +15,25 @@ function GamePanelList(props) {
 
     let [fakePlayers] = fs.useWatch('fakePlayers');
     let [primaryGamePanel] = fs.useWatch('primaryGamePanel');
-    let gamepanels = fs.get('gamepanels');
+    let [layout] = fs.useWatch('gamePanelLayout');
+    let [gamepanels] = fs.useWatch('gamepanels');
     // let primaryGamePanel = fs.get('primaryGamePanel');
     const gamePanelListRef = useRef();
 
-    useEffect(() => {
-        let fakePlayerList = Object.keys(fakePlayers || {}) || [];
-        if (primaryGamePanel == null && fakePlayerList && fakePlayerList.length >= 7) {
-            let socketUser = fs.get('socketUser');
-            if (primaryGamePanel == gamepanels[socketUser.id])
-                return;
-            fs.set('primaryGamePanel', gamepanels[socketUser.id]);
-            fs.set('gamePanelLayout', 'expanded');
 
-        }
-    }, [])
+    let [width, setWidth] = useState(200);
+    let [height, setHeight] = useState(200);
+
+
+    useEffect(() => {
+        if (!gamePanelListRef?.current)
+            return;
+
+        let w = gamePanelListRef.current.offsetWidth;
+        let h = gamePanelListRef.current.offsetHeight;
+        setWidth(w);
+        setHeight(h);
+    },)
 
 
 
@@ -37,13 +41,13 @@ function GamePanelList(props) {
         let elems = [];
         let cnt = -1;
 
-        if (!gamePanelListRef?.current)
-            return;
+        // if (!gamePanelListRef?.current)
+        //     return;
 
-        let layout = fs.get('gamePanelLayout');
+        // let layout = fs.get('gamePanelLayout');
 
-        let width = gamePanelListRef.current.offsetWidth;
-        let height = gamePanelListRef.current.offsetHeight;
+        // let width = gamePanelListRef.current.offsetWidth;
+        // let height = gamePanelListRef.current.offsetHeight;
         let panelWidth = width;
         let panelHeight = height;
 
@@ -112,6 +116,10 @@ function GamePanelList(props) {
         }
 
         return elems;
+    }
+
+    if (!gamepanels || Object.keys(gamepanels).length == 0) {
+        return <></>
     }
 
     const ChakraSimpleBar = chakra(SimpleBar)

@@ -9,13 +9,14 @@ import GameStateService from '../services/GameStateService';
 
 export default function ScoreboardSolo(props) {
 
-    let players = props.players;
+    let players = props.players || {};
     let player = null;
     for (const id in players) {
         player = players[id];
     }
 
-
+    if (!player)
+        return <></>
     let isNext = GameStateService.validateNextUser(player.id);
 
     // let gamepanel = getPrimaryGamePanel();

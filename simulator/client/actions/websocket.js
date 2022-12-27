@@ -148,6 +148,16 @@ const onConnected = (message) => {
         fs.set('wsStatus', 'connected');
 
         GamePanelService.createGamePanel(socketUser.id);
+
+        // let fakePlayerList = Object.keys(fakePlayers || {}) || [];
+        // if (primaryGamePanel == null && fakePlayerList && fakePlayerList.length >= 7) {
+        //     let socketUser = fs.get('socketUser');
+        //     if (primaryGamePanel == gamepanels[socketUser.id])
+        //         return;
+        //     fs.set('primaryGamePanel', gamepanels[socketUser.id]);
+        //     fs.set('gamePanelLayout', 'expanded');
+
+        // }
     }
     catch (e) {
         console.error(e);

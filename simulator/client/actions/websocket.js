@@ -1,6 +1,6 @@
 import fs from 'flatstore'
-
-const { decode, encode } = require('../../shared/encoder');
+import ENCODER from '../util/encoder';
+// import { decode, encode } from '../util/encoder';
 import { io } from "socket.io-client";
 
 import { onFakePlayer, onJoin, onLeave, onSpectate, onGameUpdate, onReplay, onReplayStats, onTeamInfo } from './game';
@@ -88,7 +88,7 @@ export function connect(username) {
 
 export function wsSend(type, payload) {
     let socket = fs.get('socket');
-    socket.emit(type, encode(payload));
+    socket.emit(type, ENCODER.encode(payload));
 }
 
 export function updateGameSettings(newSettings) {
@@ -111,7 +111,7 @@ const onNewGame = (message) => {
 const onGameSettings = (message) => {
     try {
         //message should have { id, name }
-        message = decode(message);
+        message = ENCODER.decode(message);
 
         fs.set('localGameSettings', message.gameSettings);
         fs.set('prevGameSettings', fs.get('gameSettings'));
@@ -134,7 +134,7 @@ const onConnect = (evt) => {
 const onConnected = (message) => {
     try {
         //message should have { id, name }
-        message = decode(message);
+        message = ENCODER.decode(message);
 
         let socketUser = message.user;
         let gameSettings = message.gameSettings;
@@ -169,7 +169,7 @@ const ping = () => {
 
 const onPong = (message) => {
     try {
-        message = decode(message);
+        message = ENCODER.decode(message);
         let latencyStart = fs.get('latencyStart');
         let serverOffset = message.payload.offset;
         let serverTime = message.payload.serverTime;
@@ -192,7 +192,7 @@ const onPong = (message) => {
 
 const onLastAction = (message) => {
     try {
-        message = decode(message);
+        message = ENCODER.decode(message);
         console.log('Last Action: ', message);
     }
     catch (e) {

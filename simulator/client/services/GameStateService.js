@@ -2,7 +2,7 @@ import fs from 'flatstore';
 const DELTA = require('../../shared/delta');
 import { playerReady } from '../actions/game';
 import GamePanelService from './GamePanelService';
-const { encode, decode } = require('../../shared/encoder');
+import ENCODER from '../util/encoder';
 
 class GameStateService {
     constructor() {
@@ -243,7 +243,7 @@ class GameStateService {
             delete delta.action.timeleft;
 
 
-        let encoded = encode(delta);
+        let encoded = ENCODER.encode(delta);
         fs.set('deltaEncoded', encoded.byteLength);
 
 

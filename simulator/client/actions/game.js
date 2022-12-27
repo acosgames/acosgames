@@ -1,5 +1,5 @@
 import DELTA from '../../shared/delta';
-const { decode, encode } = require('../../shared/encoder');
+import ENCODER from '../util/encoder';
 import fs from 'flatstore';
 
 import GamePanelService from '../services/GamePanelService';
@@ -139,7 +139,7 @@ export function onLeave(message) {
 
 export function onReplayStats(message) {
     try {
-        message = decode(message);
+        message = ENCODER.decode(message);
         console.log('REPLAY STATS: ', message);
         if (!message) return;
 
@@ -152,7 +152,7 @@ export function onReplayStats(message) {
 
 export function onReplay(message) {
     try {
-        message = decode(message);
+        message = ENCODER.decode(message);
         console.log('REPLAY: ', message);
         if (!message) return;
 
@@ -171,7 +171,7 @@ export function onReplay(message) {
 
 export function onTeamInfo(message) {
     try {
-        message = decode(message);
+        message = ENCODER.decode(message);
         console.log('TEAMINFO UPDATE: ', message);
         if (!message) return;
 
@@ -184,7 +184,7 @@ export function onTeamInfo(message) {
 
 export function onGameUpdate(message) {
     try {
-        message = decode(message);
+        message = ENCODER.decode(message);
         console.log('GAME UPDATE: ', message);
         if (!message) return;
 
@@ -200,7 +200,7 @@ export function onGameUpdate(message) {
 
 export function onJoin(message) {
     try {
-        message = decode(message);
+        message = ENCODER.decode(message);
         console.log('JOINED: ', message);
         if (!message) return;
 
@@ -222,7 +222,7 @@ export function onSpectate(message) {
 }
 
 export function onFakePlayer(message) {
-    message = decode(message);
+    message = ENCODER.decode(message);
     console.log('FAKEPLAYER: ', message);
     if (!message || typeof message.type === 'undefined') return;
 

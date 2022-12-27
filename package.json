@@ -29,14 +29,8 @@
     "openskill": "^1.4.1",
     "seedrandom": "^3.0.5",
     "shelljs": "^0.8.5",
-<<<<<<< HEAD
-    "socket-io": "^1.0.0",
-    "socket.io": "^4.4.1",
-    "source-map-support": "^0.5.21",
-=======
     "socket.io": "^4.5.3",
     "vlq": "^2.0.4",
->>>>>>> react
     "vm2": "^3.9.11",
     "yargs": "^17.0.1"
   },

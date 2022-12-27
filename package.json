@@ -1,11 +1,12 @@
 {
   "name": "acosgames",
-  "version": "1.0.30",
+  "version": "1.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "proxy": "http://localhost:3100",
   "bin": {
     "acos": "./cli.js"
   },
@@ -18,13 +19,24 @@
   "dependencies": {
     "axios": "^0.26.0",
     "chokidar": "^3.5.3",
+    "core-js": "^3.25.3",
     "express": "^4.17.3",
     "form-data": "^4.0.0",
+    "form-data-encoder": "^2.1.2",
+    "formdata-node": "^5.0.0",
+    "got": "^12.5.1",
+    "nanoid": "^3.3.4",
     "openskill": "^1.4.1",
+    "seedrandom": "^3.0.5",
     "shelljs": "^0.8.5",
+<<<<<<< HEAD
     "socket-io": "^1.0.0",
     "socket.io": "^4.4.1",
     "source-map-support": "^0.5.21",
+=======
+    "socket.io": "^4.5.3",
+    "vlq": "^2.0.4",
+>>>>>>> react
     "vm2": "^3.9.11",
     "yargs": "^17.0.1"
   },

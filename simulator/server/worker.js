@@ -280,7 +280,7 @@ class FSGWorker {
             globalGame.room = room;
 
             let seedStr = room.room_slug + room.starttime + room.sequence;
-            DiscreteRandom.seed(seedStr, room.sequence);
+            DiscreteRandom.seed(seedStr);
             //------------------------------------
             //RUN GAME SERVER SCRIPT 
             await this.run();

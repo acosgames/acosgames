@@ -6,15 +6,15 @@ class DiscreteRandom {
         this.randomFunc = null;
     }
 
-    seed(seedString, sequence) {
-        this.sequence = sequence;
+    seed(seedString) {
+        // this.sequence = sequence;
         //if (!this.randomFunc) {
 
         // let seedStr = this.nextGame.room.room_slug + this.nextGame.room.starttime + this.sequence;
         // let seed = this.generateRandomSeed(seedString);
         // this.log("seedStr:", seedStr, ", seed", seed);
 
-        this.randomFunc = seedrandom(seedString + sequence);
+        this.randomFunc = seedrandom(seedString);
 
         // this.randomFunc = this.mulberry32(seed[0]);
         //}

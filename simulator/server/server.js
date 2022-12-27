@@ -49,7 +49,7 @@ function onGameSettingsReloaded() {
 
     let room = RoomManager.create();
     let gamestate = room.getGameState();
-    // onAction({ type: 'newgame' }, true);
+    // onAction({ type: 'newgame' }, true); 
     worker.postMessage({ action: { type: 'newgame' }, room: room.json(), gamestate, gameSettings: settings.get() });
     io.emit('teaminfo', encode(room.getTeamInfo()));
     io.emit('gameSettings', encode({
@@ -112,7 +112,12 @@ function onConnect(socket) {
         }
     }
 
+
     io.emit('teaminfo', encode(room.getTeamInfo()));
+
+    socket.join('gameroom');
+
+    socket.emit('game', encode(room.copyGameState()));
 
     //user is already in game, just rejoin them and send them full game state
     // let room = RoomManager.current();

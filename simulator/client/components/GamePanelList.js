@@ -1,21 +1,34 @@
-import { Box, HStack, Icon, Text, Tooltip, VStack, Wrap, WrapItem } from "@chakra-ui/react";
+import { Box, chakra, HStack, Icon, Text, Tooltip, VStack, Wrap, WrapItem } from "@chakra-ui/react";
 import fs from 'flatstore';
 import { useEffect, useRef } from "react";
 import Connection from "./Connection";
 import GamePanel from "./GamePanel";
 
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
+
+fs.set('gamePanelLayout', 'compact');
 
 import { GoEye, IoPlaySharp } from '@react-icons';
+import GameStateService from "../services/GameStateService";
 function GamePanelList(props) {
 
     let [fakePlayers] = fs.useWatch('fakePlayers');
     let [primaryGamePanel] = fs.useWatch('primaryGamePanel');
     let gamepanels = fs.get('gamepanels');
-
+    // let primaryGamePanel = fs.get('primaryGamePanel');
     const gamePanelListRef = useRef();
 
     useEffect(() => {
+        let fakePlayerList = Object.keys(fakePlayers || {}) || [];
+        if (primaryGamePanel == null && fakePlayerList && fakePlayerList.length >= 7) {
+            let socketUser = fs.get('socketUser');
+            if (primaryGamePanel == gamepanels[socketUser.id])
+                return;
+            fs.set('primaryGamePanel', gamepanels[socketUser.id]);
+            fs.set('gamePanelLayout', 'expanded');
 
+        }
     }, [])
 
 
@@ -87,7 +100,7 @@ function GamePanelList(props) {
 
             if (layout == 'expanded') {
                 elems.push(
-                    <ExpandedLayout key={'gamepanel-' + id} id={id} name={user.name} isPrimary={isPrimary} isInGame={isInGame} />
+                    <ExpandedLayout key={'gamepanel-' + id} id={id} name={user.name} isPrimary={isPrimary} isInGame={isInGame} cnt={cnt} />
                 )
             }
             else if (layout == 'compact') {
@@ -101,9 +114,24 @@ function GamePanelList(props) {
         return elems;
     }
 
+    const ChakraSimpleBar = chakra(SimpleBar)
+
     return (
-        <Box w="100%" h="100%" position="relative" ref={gamePanelListRef}>
+        <Box w="100%" h="100%" position="relative" ref={gamePanelListRef} flex="1" overflow="hidden">
+            {/* <ChakraSimpleBar
+                boxSizing='border-box'
+                className="main-scrollbars"
+                style={{
+                    width: '100%',
+                    position: 'absolute',
+                    inset: '0px',
+
+                    // height: '100%', 
+                    // flex: '1',
+                    overflow: 'hidden scroll', boxSizing: 'border-box',
+                }}> */}
             {renderGamePanels()}
+            {/* </ChakraSimpleBar> */}
             <Connection />
         </Box>
     )
@@ -128,7 +156,7 @@ function CompactLayout(props) {
 
             display={'inline-block'} >
             <VStack
-                onClick={(e) => { onClickOverlay(e, props.id) }}
+                //onClick={(e) => { onClickOverlay(e, props.id) }}
 
                 spacing="0"
                 w="100%"
@@ -150,35 +178,19 @@ function CompactLayout(props) {
 
 function ExpandedLayout(props) {
 
+
+
     return (
         <VStack
-            onClick={(e) => { onClickOverlay(e, props.id) }}
-
+            // onClick={(e) => { onClickOverlay(e, props.id) }}
+            display={!props.isPrimary ? 'none' : 'flex'}
             spacing="0"
-            w={props.isPrimary ? 'calc(100% - 30rem)' : "20rem"}
-            h={isPrimary ? 'calc(100vh - 5rem)' : "20rem"}
+            w={'100%'}
+            h={'calc(100% - 3rem)'}
             position={"absolute"}
-            right={isPrimary ? 'auto' : '0'}
-            left={isPrimary ? '0' : 'auto'}
-            top={isPrimary ? '0' : (cnt * 20) + 'rem'}
+            left={'0'}
+            top={'3rem'}
         >
-            <Box>
-                <Text
-                    cursor={'pointer'}
-                    display="inline-block"
-                    fontSize="xxs"
-                    fontWeight="light">
-                    {props.name}
-                </Text>
-                <Text
-                    cursor={'pointer'}
-                    display="inline-block"
-                    fontSize="xxs"
-                    color="gray.500"
-                    fontWeight="light">
-                    [{props.id}]
-                </Text>
-            </Box>
             < GamePanel id={props.id} />
         </VStack>
     )

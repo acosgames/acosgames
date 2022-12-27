@@ -1,6 +1,7 @@
 
 import { HStack, Text, VStack } from '@chakra-ui/react';
 import fs from 'flatstore';
+import GameStateService from '../services/GameStateService';
 
 // import ratingtext from 'shared/util/ratingtext';
 // import { getPrimaryGamePanel, isUserNext } from '../../actions/room';

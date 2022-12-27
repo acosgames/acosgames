@@ -249,7 +249,7 @@ export function DisplayMyPlayers(props) {
 
     let [fakePlayers] = fs.useWatch('fakePlayers');
     let [gameStatus] = fs.useWatch('gameStatus');
-
+    let [primaryGP] = fs.useWatch('primaryGamePanel');
     let [wsStatus] = fs.useWatch('wsStatus');
     if (wsStatus == 'disconnected') {
         return <></>
@@ -258,14 +258,20 @@ export function DisplayMyPlayers(props) {
     fakePlayers = fakePlayers || {};
     let fakePlayerIds = Object.keys(fakePlayers);
 
+
+
     const renderMyPlayers = () => {
 
         let players = GameStateService.getPlayers();
         let elems = [];
 
+        let gamepanels = fs.get('gamepanels');
+        let primaryGamePanel = fs.get('primaryGamePanel');
         let gameSettings = fs.get('gameSettings');
         let playerList = GameStateService.getPlayersArray();
         let playerTeams = fs.get('playerTeams');
+        let fakePlayers = fs.get('fakePlayers');
+
         // if (fakePlayerIds.length == 0)
         //     return elems;
 
@@ -299,17 +305,34 @@ export function DisplayMyPlayers(props) {
             //     continue;
 
 
-
+            gamepanels = fs.get('gamepanels');
+            let gamepanel = gamepanels[p.id];
             let isUserNext = GameStateService.validateNextUser(p.id);
-
+            primaryGamePanel = fs.get('primaryGamePanel');
             let color = 'white';
             if (!isInGame || !isUserNext)
                 color = '#aaa'
 
             elems.push(
-                <Tr bgColor="gray.900" key={'myplayers-' + p.id}>
+                <Tr bgColor={gamepanel == primaryGamePanel ? 'gray.800' : "gray.900"} key={'myplayers-' + p.id}>
 
-                    <Td>
+                    <Td onClick={() => {
+                        let gps = fs.get('gamepanels');
+                        let gp = gps[p.id];
+                        if (gp) {
+                            primaryGamePanel = fs.get('primaryGamePanel');
+
+                            //go back to compact if selecting again
+                            if (gp == primaryGamePanel && myplayers.length <= 8) {
+                                fs.set('primaryGamePanel', null);
+                                fs.set('gamePanelLayout', 'compact');
+                                return;
+                            }
+
+                            fs.set('primaryGamePanel', gp);
+                        }
+                        fs.set('gamePanelLayout', 'expanded');
+                    }}>
                         <HStack alignItems={'center'} justifyContent='flex-start'>
                             <Tooltip label={isInGame ? 'In game' : 'Spectator'} placement="top">
                                 <Text as='span' lineHeight="2.1rem" h="2.1rem">

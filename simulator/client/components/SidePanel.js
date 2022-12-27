@@ -16,7 +16,7 @@ fs.set('chat', []);
 fs.set('chatMessage', '');
 fs.set('chatMode', 'all');
 fs.set('actionToggle', true);
-fs.set('gamePanelLayout', 'compact');
+
 
 function SidePanel(props) {
 

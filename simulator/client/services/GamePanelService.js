@@ -127,9 +127,9 @@ class GamePanelService {
         gps[id] = gp;
         fs.set('gamepanels', gps);
 
-        let primary = fs.get('primaryGamePanel');
-        if (!primary)
-            fs.set('primaryGamePanel', gp);
+        // let primary = fs.get('primaryGamePanel');
+        // if (!primary)
+        //     fs.set('primaryGamePanel', gp);
 
         return gp;
     }

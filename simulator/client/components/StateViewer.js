@@ -121,16 +121,15 @@ export function StateViewer(props) {
             </HStack>
             <Accordion allowMultiple={true} allowToggle={true} pt="2rem" pl="1rem" defaultIndex={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} w="100%">
                 <ObjectViewer object={gameState?.action} title="action" bgColor="gray.700" />
-                <ObjectViewer object={gameState?.events} title="events" bgColor="gray.500" />
+
                 <ObjectViewer object={gameState?.state} title="state" bgColor="gray.500" />
                 <ObjectViewer object={gameState?.players} title="players" bgColor="gray.500" />
                 {(gameState?.teams &&
                     <ObjectViewer object={gameState?.teams} title="teams" bgColor="gray.500" />
                 )}
-
-
-                <ObjectViewer object={gameState?.timer} title="timer" bgColor="gray.500" />
                 <ObjectViewer object={gameState?.next} title="next" bgColor="gray.500" />
+                <ObjectViewer object={gameState?.events} title="events" bgColor="gray.500" />
+                <ObjectViewer object={gameState?.timer} title="timer" bgColor="gray.500" />
                 <ObjectViewer object={gameState?.room} title="room" bgColor="gray.500" />
                 <ObjectViewer object={gameState?.local} title="local" bgColor="gray.500" />
             </Accordion>

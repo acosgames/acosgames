@@ -137,7 +137,7 @@ function GameIFrame(props) {
 
     const myObserver = new ResizeObserver(entries => {
         onResize();
-        fs.set('primaryGamePanel', fs.get('primaryGamePanel'));
+        //fs.set('primaryGamePanel', fs.get('primaryGamePanel'));
     });
 
     const onFullScreenChange = (evt) => {
@@ -179,6 +179,8 @@ function GameIFrame(props) {
 
 
     });
+
+
 
     let lastMessage = fs.get('gameState');
     let players = lastMessage?.players || {};
@@ -235,6 +237,11 @@ function GameIFrame(props) {
 
                             gamepanel.iframe = iframeRef;
                             onResize();
+
+                            // setTimeout(() => {
+
+                            GameStateService.updateGamePanel(props.id);
+                            // }, 100)
                         }}
                         src={'//localhost:3300/iframe.html'}
                         sandbox="allow-scripts  allow-same-origin"
@@ -243,7 +250,7 @@ function GameIFrame(props) {
                         <DisplayUserInfo id={props.id} />
                         <Box display={fakePlayerList.length < 8 ? 'block' : 'none'}>
 
-                            <DisplayUserActions id={props.id} />
+                            <DisplayUserActions id={props.id} from={'gamepanel'} />
                         </Box>
                     </HStack>
                 </Box>
@@ -295,7 +302,26 @@ function DisplayUserInfo(props) {
         color = 'gray.400'
 
     return (
-        <HStack spacing="1rem" px="3rem" width="100%" height="3rem" >
+        <HStack spacing="1rem" px="3rem" width="100%" height="3rem"
+            onClick={() => {
+                let fakePlayers = fs.get('fakePlayers');
+                let fakePlayerList = Object.keys(fakePlayers || {}) || []
+                let gamepanels = fs.get('gamepanels');
+                let gamepanel = gamepanels[props.id];
+                if (gamepanel) {
+                    let primaryGamePanel = fs.get('primaryGamePanel');
+
+                    //go back to compact if selecting again
+                    if (gamepanel == primaryGamePanel && fakePlayerList.length < 7) {
+                        fs.set('primaryGamePanel', null);
+                        fs.set('gamePanelLayout', 'compact');
+                        return;
+                    }
+
+                    fs.set('primaryGamePanel', gamepanel);
+                }
+                fs.set('gamePanelLayout', 'expanded');
+            }}>
             <Tooltip label={isInGame ? 'In game' : 'Spectator'} placement="top">
                 <Text as='span' h="2.1rem">
                     <Icon color={color} as={isInGame ? MdPerson : GoEye} w="1.4rem" h="1.4rem" />

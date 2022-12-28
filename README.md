@@ -5,6 +5,8 @@
 
 [View Documentation](https://docs.acos.games)
 
+https://user-images.githubusercontent.com/1610876/209870446-b16eb536-cd8f-4cd4-a99d-c30ab8a97659.mp4
+
 This package must be run from your game project.   
 
 The builds directory structure is required in your project:

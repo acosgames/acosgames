@@ -5,11 +5,13 @@
 
 [View Documentation](https://docs.acos.games)
 
+https://user-images.githubusercontent.com/1610876/209871930-1e88e11c-c54a-41bf-a5a5-ce5c6f9e3903.mp4
+
 This package must be run from your game project.   
 
 The builds directory structure is required in your project:
 
-![image](https://user-images.githubusercontent.com/1610876/148656053-72246d14-9b51-4ebf-acb9-ab560b3fa64c.png)
+![image](https://user-images.githubusercontent.com/1610876/209872419-44028f68-e644-45f1-ac4c-faf6c096680a.png)
 
 Your code for both client and server must each be bundled into a single js file.
 

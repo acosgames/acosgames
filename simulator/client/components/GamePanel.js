@@ -238,10 +238,10 @@ function GameIFrame(props) {
                             gamepanel.iframe = iframeRef;
                             onResize();
 
-                            // setTimeout(() => {
+                            setTimeout(() => {
 
-                            GameStateService.updateGamePanel(props.id);
-                            // }, 100)
+                                GameStateService.updateGamePanel(props.id);
+                            }, 100)
                         }}
                         src={'//localhost:3300/iframe.html'}
                         sandbox="allow-scripts  allow-same-origin"

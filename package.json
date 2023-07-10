@@ -1,6 +1,6 @@
 {
   "name": "acosgames",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "shelljs": "^0.8.5",
     "socket.io": "^4.5.3",
     "vlq": "^2.0.4",
-    "vm2": "^3.9.11",
+    "vm2": "^3.9.19",
     "yargs": "^17.0.1"
   },
   "devDependencies": {

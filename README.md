@@ -3,7 +3,7 @@
 
 <a href="https://acos.games/"><img src="https://cdn.acos.games/file/acospub/acos-logo-combined.png"></a>
 
-[View Documentation](https://docs.acos.games)
+[View Documentation](https://sdk.acos.games)
 
 https://user-images.githubusercontent.com/1610876/209871930-1e88e11c-c54a-41bf-a5a5-ce5c6f9e3903.mp4
 

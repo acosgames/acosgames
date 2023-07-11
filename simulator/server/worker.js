@@ -24,6 +24,8 @@ var globalResult = {};
 var globalDone = null;
 var globalIgnore = false;
 
+var globalSkipCount = 0;
+
 var globalGameSettings = {};
 
 
@@ -258,9 +260,10 @@ class FSGWorker {
             }
             else if (action.type == 'skip') {
 
+                globalSkipCount++;
                 //on repeated 2nd skip kill the game
                 // developer should have handled it, too bad so sad
-                if (globalGame.action && globalGame.action.type == 'skip') {
+                if (globalGame.action && globalGame.action.type == 'skip' && globalSkipCount > 5) {
                     room.status = 'gameover';
                     room.sequence = room.sequence + 1;
                     room.updated = Date.now();
@@ -272,6 +275,11 @@ class FSGWorker {
                     return;
                 }
 
+            }
+
+
+            if (action.type != 'skip') {
+                globalSkipCount = 0;
             }
 
             globalActions = cloneObj([action]);

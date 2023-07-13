@@ -1451,7 +1451,7 @@ function encode(json, storedDict) {
         // console.time('serialize');
         let encoded = serialize(json, dict);
         // console.timeEnd('serialize');
-        console.log('Encoded Size: ', encoded.byteLength, json)
+        // console.log('Encoded Size: ', encoded.byteLength, json)
         // let jsonStr = JSON.stringify(json);
         // let buffer = encoder.encode(jsonStr);
         // let deflated = pako.deflate(encoded);

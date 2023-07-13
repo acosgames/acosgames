@@ -1,6 +1,6 @@
 const { workerData, parentPort } = require("worker_threads")
 const fs = require('fs');
-const { VM, VMScript, NodeVM } = require('vm2');
+// const { VM, VMScript, NodeVM } = require('vm2');
 const path = require('path');
 const profiler = require('./profiler');
 const chokidar = require('chokidar');
@@ -13,6 +13,13 @@ const NANOID = require('nanoid');
 const { isObject } = require("./util");
 const DiscreteRandom = require("./DiscreteRandom");
 const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
+
+const ivm = require('isolated-vm');
+const isolate = new ivm.Isolate({ memoryLimit: 128, inspector: true });
+// Create a new context within this isolate. Each context has its own copy of all the builtin
+// Objects. So for instance if one context does Object.prototype.foo = 1 this would not affect any
+// other contexts.
+
 
 var globalRatings = {};
 
@@ -28,56 +35,131 @@ var globalSkipCount = 0;
 
 var globalGameSettings = {};
 
+// let globals = Object.create(null);
 
-var globals = {
-    log: (args) => {
+const globals = {
+    log: new ivm.Callback((args) => {
         // var args = Array.from(arguments);
         // console.log.apply(console, args);
         console.log(args)
-    },
-    error: (args) => {
-        console.error.apply(console, args);
+    }),
+    error: new ivm.Callback((...args) => {
+        console.error.apply(console, ...args);
         // console.error(msg) 
-    },
-    finish: (newGame) => {
+    }),
+    finish: new ivm.Callback((newGame) => {
         try {
             globalResult = cloneObj(newGame);
         }
         catch (e) {
             console.error(e);
         }
-    },
-    random: () => {
+    }),
+    random: new ivm.Callback(() => {
         try {
             return DiscreteRandom.random();
         }
         catch (e) {
             console.error(e);
         }
-    },
-    game: () => cloneObj(globalGame),
-    actions: () => {
+    }),
+    game: new ivm.Callback(() => cloneObj(globalGame)),
+    actions: new ivm.Callback(() => {
         return cloneObj(globalActions)
-    },
-    killGame: () => {
+    }),
+    killGame: new ivm.Callback(() => {
         globalDone = true;
-    },
-    database: () => {
+    }),
+    database: new ivm.Callback(() => {
         return globalDatabase;
-    },
-    ignore: () => {
+    }),
+    ignore: new ivm.Callback(() => {
         globalIgnore = true;
-    }
+    })
 };
 
-const vm = new VM({
-    console: false,
-    wasm: false,
-    eval: true,
-    fixAsync: false,
-    //timeout: 100,
-    sandbox: { globals },
-});
+let globalsReference = new ivm.Reference(globals);
+
+// vmContext.global.setSync('global', vmContext.global.derefInto());
+
+
+
+// globalsReference.setSync('log', new ivm.Callback((...args) => {
+//     // var args = Array.from(arguments);
+//     // console.log.apply(console, args);
+//     console.log(...args)
+// }));
+// globalsReference.setSync('error', new ivm.Callback((...args) => {
+//     console.error(...args);
+//     // console.error(msg) 
+// }));
+// globalsReference.setSync('finish', new ivm.Callback((newGame) => {
+//     try {
+//         globalResult = cloneObj(newGame);
+//     }
+//     catch (e) {
+//         console.error(e);
+//     }
+// }));
+// globalsReference.setSync('random', new ivm.Callback(() => {
+//     try {
+//         return DiscreteRandom.random();
+//     }
+//     catch (e) {
+//         console.error(e);
+//     }
+// }));
+// globalsReference.setSync('game', new ivm.Callback(() => cloneObj(globalGame)));
+
+// globalsReference.setSync('actions', new ivm.Callback(() => {
+//     return cloneObj(globalActions)
+// }));
+// globalsReference.setSync('killGame', new ivm.Callback(() => {
+//     globalDone = true;
+// }));
+// globalsReference.setSync('database', new ivm.Callback(() => {
+//     return globalDatabase;
+// }));
+// globalsReference.setSync('ignore', new ivm.Callback(() => {
+//     globalIgnore = true;
+// }));
+
+const vmContext = isolate.createContextSync();
+vmContext.global.setSync('global', vmContext.global.derefInto());
+vmContext.global.setSync('log', globals.log);
+vmContext.global.setSync('error', globals.error);
+vmContext.global.setSync('finish', globals.finish);
+vmContext.global.setSync('random', globals.random);
+vmContext.global.setSync('game', globals.game);
+vmContext.global.setSync('actions', globals.actions);
+vmContext.global.setSync('killGame', globals.killGame);
+vmContext.global.setSync('database', globals.database);
+vmContext.global.setSync('ignore', globals.ignore);
+
+// vmContext.global.setSync('globals', globalsReference);
+// log: 
+// error: 
+// finish: 
+// random: 
+// game: 
+// actions:
+// killGame: 
+// database:
+// ignore: 
+
+
+
+// vmContext.global.setSync('global', vmContext.global.derefInto());
+
+
+// const vm = new VM({
+//     console: false,
+//     wasm: false,
+//     eval: true,
+//     fixAsync: false,
+//     //timeout: 100,
+//     sandbox: { globals },
+// });
 
 function cloneObj(obj) {
     if (typeof obj === 'object')
@@ -439,7 +521,9 @@ class FSGWorker {
         {
             filepath = filepath || this.bundleFilePath;
             var data = await fs.promises.readFile(filepath, 'utf8');
-            this.gameScript = new VMScript(data, this.bundleFilePath).compile();
+            this.gameScript = isolate.compileScriptSync(data, { filename: this.bundleFilePath });
+
+            // this.gameScript = new VMScript(data, this.bundleFilePath).compile();
         }
         profiler.End('Reloaded Server Bundle in');
 
@@ -490,7 +574,22 @@ class FSGWorker {
             try {
                 profiler.Start('Game Logic');
                 {
-                    vm.run(this.gameScript);
+
+
+
+
+
+                    this.gameScript.runSync(vmContext, { timeout: 200 })
+                    // .catch(err => {
+                    //     if (!err) {
+                    //         rs(true);
+                    //         return;
+                    //     }
+
+
+                    //     console.error(err);
+                    // });
+                    //vm.run(this.gameScript);
                 }
                 profiler.End('Game Logic', 100);
                 rs(true);

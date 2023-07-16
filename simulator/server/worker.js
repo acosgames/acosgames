@@ -122,84 +122,84 @@ const globals = Object.freeze({
 });
 
 
-let vmContext = null;
-isolate = new ivm.Isolate({ memoryLimit: 128, inspector: true, });
-function onVM() {
-    // if (isolate) {
-    //     worker.release();
-    //     isolate = null;
-    // }
-    // isolate = new ivm.Isolate({ memoryLimit: 128, inspector: true, });
-    vmContext = isolate.createContextSync({ inspector: true, });
-    vmContext.global.setSync('global', vmContext.global.derefInto());
-    vmContext.global.setSync('log', globals.log);
-    vmContext.global.setSync('error', globals.error);
-    vmContext.global.setSync('finish', globals.finish);
-    vmContext.global.setSync('random', globals.random);
-    vmContext.global.setSync('game', globals.game);
-    vmContext.global.setSync('actions', globals.actions);
-    vmContext.global.setSync('killGame', globals.killGame);
-    vmContext.global.setSync('database', globals.database);
-    vmContext.global.setSync('ignore', globals.ignore);
-}
+// let vmContext = null;
+// isolate = new ivm.Isolate({ memoryLimit: 128, inspector: true, });
+// function onVM() {
+//     // if (isolate) {
+//     //     worker.release();
+//     //     isolate = null;
+//     // }
+//     // isolate = new ivm.Isolate({ memoryLimit: 128, inspector: true, });
+//     vmContext = isolate.createContextSync({ inspector: true, });
+//     vmContext.global.setSync('global', vmContext.global.derefInto());
+//     vmContext.global.setSync('log', globals.log);
+//     vmContext.global.setSync('error', globals.error);
+//     vmContext.global.setSync('finish', globals.finish);
+//     vmContext.global.setSync('random', globals.random);
+//     vmContext.global.setSync('game', globals.game);
+//     vmContext.global.setSync('actions', globals.actions);
+//     vmContext.global.setSync('killGame', globals.killGame);
+//     vmContext.global.setSync('database', globals.database);
+//     vmContext.global.setSync('ignore', globals.ignore);
+// }
 
 // onVM();
 
-let WebSocket = require('ws');
-// Create an inspector channel on port 10000
-let wss = null;
-let channel = null;
+// let WebSocket = require('ws');
+// // Create an inspector channel on port 10000
+// let wss = null;
+// let channel = null;
 
-function onWebsocket() {
+// function onWebsocket() {
 
-    if (!wss) {
-        wss = new WebSocket.Server({ port: 10000 })
-    } else {
-        return;
-    }
+//     if (!wss) {
+//         wss = new WebSocket.Server({ port: 10000 })
+//     } else {
+//         return;
+//     }
 
-    wss.on('connection', function (ws) {
-        // Dispose inspector session on websocket disconnect
-        channel = isolate.createInspectorSession();
-        console.log("CREATED DEBUG CONNECTION!");
-        function dispose(e, e2) {
-            try {
-                //console.error(e, Buffer.from(e2).toString());
-                channel.dispose();
-            } catch (err) { console.error(err) }
-        }
-        ws.on('error', dispose);
-        ws.on('close', dispose);
+//     wss.on('connection', function (ws) {
+//         // Dispose inspector session on websocket disconnect
+//         channel = isolate.createInspectorSession();
+//         console.log("CREATED DEBUG CONNECTION!");
+//         function dispose(e, e2) {
+//             try {
+//                 //console.error(e, Buffer.from(e2).toString());
+//                 channel.dispose();
+//             } catch (err) { console.error(err) }
+//         }
+//         ws.on('error', dispose);
+//         ws.on('close', dispose);
 
-        // Relay messages from frontend to backend
-        ws.on('message', function (message) {
-            try {
-                // console.log('on message:', JSON.stringify(message.toString(), null, 2));
-                // console.log('--------------------------------------------------------------');
-                channel.dispatchProtocolMessage(message.toString());
-            } catch (err) {
-                console.error(err);
-                // This happens if inspector session was closed unexpectedly
-                ws.close();
-            }
-        });
+//         // Relay messages from frontend to backend
+//         ws.on('message', function (message) {
+//             try {
+//                 // console.log('on message:', JSON.stringify(message.toString(), null, 2));
+//                 // console.log('--------------------------------------------------------------');
+//                 channel.dispatchProtocolMessage(message.toString());
+//             } catch (err) {
+//                 console.error(err);
+//                 // This happens if inspector session was closed unexpectedly
+//                 ws.close();
+//             }
+//         });
 
-        // Relay messages from backend to frontend
-        function send(message) {
-            try {
-                // console.log('send message:', JSON.stringify(message.toString(), null, 2));
-                // console.log('--------------------------------------------------------------');
-                ws.send(message.toString());
-            } catch (err) {
-                console.error(err);
-                dispose();
-            }
-        }
-        channel.onResponse = (callId, message) => send(message);
-        channel.onNotification = send;
-    });
-    console.log('Inspector: devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:10000');
-}
+//         // Relay messages from backend to frontend
+//         function send(message) {
+//             try {
+//                 // console.log('send message:', JSON.stringify(message.toString(), null, 2));
+//                 // console.log('--------------------------------------------------------------');
+//                 ws.send(message.toString());
+//             } catch (err) {
+//                 console.error(err);
+//                 dispose();
+//             }
+//         }
+//         channel.onResponse = (callId, message) => send(message);
+//         channel.onNotification = send;
+//     });
+//     console.log('Inspector: devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:10000');
+// }
 
 
 
@@ -258,11 +258,11 @@ class FSGWorker {
     }
 
     release() {
-        if (channel)
-            channel.dispose();
-        // wss.close();
-        this.gameScript.release();
-        vmContext.release();
+        // if (channel)
+        //     channel.dispose();
+        // // wss.close();
+        // this.gameScript.release();
+        // vmContext.release();
         // isolate.dispose();
     }
 
@@ -792,8 +792,8 @@ class FSGWorker {
 }
 
 process.on('SIGINT', () => {
-    wss.close();
-    worker.release();
+    // wss.close();
+    // worker.release();
     process.exit()
 });
 

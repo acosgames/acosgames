@@ -16,8 +16,8 @@ const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
 
 const vm = require('vm');
 
-const ivm = require('isolated-vm');
-let isolate = null;
+// const ivm = require('isolated-vm');
+// let isolate = null;
 // Create a new context within this isolate. Each context has its own copy of all the builtin
 // Objects. So for instance if one context does Object.prototype.foo = 1 this would not affect any
 // other contexts.

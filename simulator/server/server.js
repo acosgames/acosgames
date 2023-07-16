@@ -629,6 +629,12 @@ function createWorker(index) {
 app.get('/client.bundle.dev.js', function (req, res) {
     res.sendFile(path.join(process.argv[2], './builds/client/client.bundle.dev.js'));
 });
+app.get('/server.bundle.dev.js', function (req, res) {
+    res.sendFile(path.join(process.argv[2], './builds/server/server.bundle.dev.js'));
+});
+app.get('/server.bundle.dev.js.map', function (req, res) {
+    res.sendFile(path.join(process.argv[2], './builds/server/server.bundle.dev.js.map'));
+});
 
 app.get('/bundle.js', function (req, res) {
     res.sendFile(path.join(__dirname, './public/bundle.' + process.argv[3] + '.js'));
@@ -638,6 +644,10 @@ app.get('/bundle.js', function (req, res) {
 //     res.sendFile(path.join(__dirname, './public/index2.html'));
 // });
 
+
+app.get('/devtools', (req, res) => {
+    res.redirect('devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:10000');
+})
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, './public/index2.html'));
 });

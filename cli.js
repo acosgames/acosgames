@@ -159,7 +159,7 @@ function runBrowserSync(isDev) {
     })
 }
 
-
+//doesn't work properly
 function runBrowserOpen() {
     return new Promise((rs, rj) => {
 
@@ -180,6 +180,30 @@ function runBrowserOpen() {
     })
 }
 
+//doesn't work properly
+function runBrowserOpenDevTools() {
+    return new Promise((rs, rj) => {
+
+        // let url = 'devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:10000';
+        // let url = "http://localhost:3100/devtools";
+        let url = "chrome://inspect";
+        console.log("[ACOS] Opening browser to devtools: ", url);
+        let cmd = `start ${url}`;
+
+        // require('child_process').exec(cmd);
+
+        // console.log("Running BrowserSync: ", cmd);
+        runScript(cd, cmd, (err) => {
+            if (err) {
+                console.error(err);
+                rj(err);
+                return;
+            }
+            // console.log("Finished loading BrowserSync.");
+            rs(true);
+        })
+    })
+}
 
 function runDeploy(isDev) {
     return new Promise((rs, rj) => {
@@ -218,12 +242,15 @@ async function processCommand() {
         // runClient();
         runBrowserSync(false);
         runBrowserOpen();
+
     }
     else if (command == 'dev') {
+
         await runServer(true);
         runClient();
         runBrowserSync(true);
         runBrowserSync(false);
+        // runBrowserOpenDevTools();
     }
     else if (command == 'deploy') {
         runDeploy();

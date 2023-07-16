@@ -14,8 +14,10 @@ const { isObject } = require("./util");
 const DiscreteRandom = require("./DiscreteRandom");
 const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
 
+const vm = require('vm');
+
 const ivm = require('isolated-vm');
-const isolate = new ivm.Isolate({ memoryLimit: 128, inspector: true });
+let isolate = null;
 // Create a new context within this isolate. Each context has its own copy of all the builtin
 // Objects. So for instance if one context does Object.prototype.foo = 1 this would not affect any
 // other contexts.
@@ -37,104 +39,170 @@ var globalGameSettings = {};
 
 // let globals = Object.create(null);
 
-const globals = {
-    log: new ivm.Callback((args) => {
+// const globals = {
+//     log: new ivm.Callback((args) => {
+//         // var args = Array.from(arguments);
+//         // console.log.apply(console, args);
+//         console.log(args)
+//     }),
+//     error: new ivm.Callback((...args) => {
+//         console.error.apply(console, ...args);
+//         // console.error(msg) 
+//     }),
+//     finish: new ivm.Callback((newGame) => {
+//         try {
+//             globalResult = cloneObj(newGame);
+//         }
+//         catch (e) {
+//             console.error(e);
+//         }
+//     }),
+//     random: new ivm.Callback(() => {
+//         try {
+//             return DiscreteRandom.random();
+//         }
+//         catch (e) {
+//             console.error(e);
+//         }
+//     }),
+//     game: new ivm.Callback(() => cloneObj(globalGame)),
+//     actions: new ivm.Callback(() => {
+//         return cloneObj(globalActions)
+//     }),
+//     killGame: new ivm.Callback(() => {
+//         globalDone = true;
+//     }),
+//     database: new ivm.Callback(() => {
+//         return globalDatabase;
+//     }),
+//     ignore: new ivm.Callback(() => {
+//         globalIgnore = true;
+//     })
+// };
+
+const globals = Object.freeze({
+    log: (args) => {
         // var args = Array.from(arguments);
         // console.log.apply(console, args);
         console.log(args)
-    }),
-    error: new ivm.Callback((...args) => {
+    },
+    error: (...args) => {
         console.error.apply(console, ...args);
         // console.error(msg) 
-    }),
-    finish: new ivm.Callback((newGame) => {
+    },
+    finish: (newGame) => {
         try {
             globalResult = cloneObj(newGame);
         }
         catch (e) {
             console.error(e);
         }
-    }),
-    random: new ivm.Callback(() => {
+    },
+    random: () => {
         try {
             return DiscreteRandom.random();
         }
         catch (e) {
             console.error(e);
         }
-    }),
-    game: new ivm.Callback(() => cloneObj(globalGame)),
-    actions: new ivm.Callback(() => {
+    },
+    game: () => cloneObj(globalGame),
+    actions: () => {
         return cloneObj(globalActions)
-    }),
-    killGame: new ivm.Callback(() => {
+    },
+    killGame: () => {
         globalDone = true;
-    }),
-    database: new ivm.Callback(() => {
+    },
+    database: () => {
         return globalDatabase;
-    }),
-    ignore: new ivm.Callback(() => {
+    },
+    ignore: () => {
         globalIgnore = true;
-    })
-};
-
-let globalsReference = new ivm.Reference(globals);
-
-// vmContext.global.setSync('global', vmContext.global.derefInto());
+    }
+});
 
 
+let vmContext = null;
+isolate = new ivm.Isolate({ memoryLimit: 128, inspector: true, });
+function onVM() {
+    // if (isolate) {
+    //     worker.release();
+    //     isolate = null;
+    // }
+    // isolate = new ivm.Isolate({ memoryLimit: 128, inspector: true, });
+    vmContext = isolate.createContextSync({ inspector: true, });
+    vmContext.global.setSync('global', vmContext.global.derefInto());
+    vmContext.global.setSync('log', globals.log);
+    vmContext.global.setSync('error', globals.error);
+    vmContext.global.setSync('finish', globals.finish);
+    vmContext.global.setSync('random', globals.random);
+    vmContext.global.setSync('game', globals.game);
+    vmContext.global.setSync('actions', globals.actions);
+    vmContext.global.setSync('killGame', globals.killGame);
+    vmContext.global.setSync('database', globals.database);
+    vmContext.global.setSync('ignore', globals.ignore);
+}
 
-// globalsReference.setSync('log', new ivm.Callback((...args) => {
-//     // var args = Array.from(arguments);
-//     // console.log.apply(console, args);
-//     console.log(...args)
-// }));
-// globalsReference.setSync('error', new ivm.Callback((...args) => {
-//     console.error(...args);
-//     // console.error(msg) 
-// }));
-// globalsReference.setSync('finish', new ivm.Callback((newGame) => {
-//     try {
-//         globalResult = cloneObj(newGame);
-//     }
-//     catch (e) {
-//         console.error(e);
-//     }
-// }));
-// globalsReference.setSync('random', new ivm.Callback(() => {
-//     try {
-//         return DiscreteRandom.random();
-//     }
-//     catch (e) {
-//         console.error(e);
-//     }
-// }));
-// globalsReference.setSync('game', new ivm.Callback(() => cloneObj(globalGame)));
+// onVM();
 
-// globalsReference.setSync('actions', new ivm.Callback(() => {
-//     return cloneObj(globalActions)
-// }));
-// globalsReference.setSync('killGame', new ivm.Callback(() => {
-//     globalDone = true;
-// }));
-// globalsReference.setSync('database', new ivm.Callback(() => {
-//     return globalDatabase;
-// }));
-// globalsReference.setSync('ignore', new ivm.Callback(() => {
-//     globalIgnore = true;
-// }));
+let WebSocket = require('ws');
+// Create an inspector channel on port 10000
+let wss = null;
+let channel = null;
 
-const vmContext = isolate.createContextSync();
-vmContext.global.setSync('global', vmContext.global.derefInto());
-vmContext.global.setSync('log', globals.log);
-vmContext.global.setSync('error', globals.error);
-vmContext.global.setSync('finish', globals.finish);
-vmContext.global.setSync('random', globals.random);
-vmContext.global.setSync('game', globals.game);
-vmContext.global.setSync('actions', globals.actions);
-vmContext.global.setSync('killGame', globals.killGame);
-vmContext.global.setSync('database', globals.database);
-vmContext.global.setSync('ignore', globals.ignore);
+function onWebsocket() {
+
+    if (!wss) {
+        wss = new WebSocket.Server({ port: 10000 })
+    } else {
+        return;
+    }
+
+    wss.on('connection', function (ws) {
+        // Dispose inspector session on websocket disconnect
+        channel = isolate.createInspectorSession();
+        console.log("CREATED DEBUG CONNECTION!");
+        function dispose(e, e2) {
+            try {
+                //console.error(e, Buffer.from(e2).toString());
+                channel.dispose();
+            } catch (err) { console.error(err) }
+        }
+        ws.on('error', dispose);
+        ws.on('close', dispose);
+
+        // Relay messages from frontend to backend
+        ws.on('message', function (message) {
+            try {
+                // console.log('on message:', JSON.stringify(message.toString(), null, 2));
+                // console.log('--------------------------------------------------------------');
+                channel.dispatchProtocolMessage(message.toString());
+            } catch (err) {
+                console.error(err);
+                // This happens if inspector session was closed unexpectedly
+                ws.close();
+            }
+        });
+
+        // Relay messages from backend to frontend
+        function send(message) {
+            try {
+                // console.log('send message:', JSON.stringify(message.toString(), null, 2));
+                // console.log('--------------------------------------------------------------');
+                ws.send(message.toString());
+            } catch (err) {
+                console.error(err);
+                dispose();
+            }
+        }
+        channel.onResponse = (callId, message) => send(message);
+        channel.onNotification = send;
+    });
+    console.log('Inspector: devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:10000');
+}
+
+
+
 
 // vmContext.global.setSync('globals', globalsReference);
 // log: 
@@ -176,15 +244,26 @@ class FSGWorker {
         this.gameHistory = [];
         this.bundlePath = path.join(workerData.dir, './builds/server/');
         this.bundleFilename = 'server.bundle.dev.js';
-        this.bundleFilePath = path.join(this.bundlePath, 'server.bundle.dev.js');
+        this.bundleFilePath = path.resolve(this.bundlePath, 'server.bundle.dev.js');
         this.entryFilePath = path.join(workerData.dir, './game-server/index.js');
         this.settingsPath = path.join(workerData.dir, './game-settings.json');
         this.dbPath = path.join(workerData.dir, './game-server/database.json');
+
+        this.nodeContext = vm
         if (!fs.existsSync(this.dbPath))
             this.dbPath = null;
 
         this.gameScript = null;
         this.start();
+    }
+
+    release() {
+        if (channel)
+            channel.dispose();
+        // wss.close();
+        this.gameScript.release();
+        vmContext.release();
+        // isolate.dispose();
     }
 
     storeGame(game) {
@@ -519,9 +598,27 @@ class FSGWorker {
     async reloadServerBundle(filepath) {
         profiler.Start('Reloaded Server Bundle in');
         {
+            let options = {
+                // filename: "*"
+                filename: 'file:///' + this.bundleFilePath.replace(/\\/ig, '/')
+                // filename: 'http://localhost:3100/server.bundle.dev.js'
+                // filename: 'server.bundle.dev.js'
+            };
+            console.log("reloadServerBundle: ", options)
             filepath = filepath || this.bundleFilePath;
             var data = await fs.promises.readFile(filepath, 'utf8');
-            this.gameScript = isolate.compileScriptSync(data, { filename: this.bundleFilePath });
+            // if (this.gameScript) {
+            // onVM();
+            // onWebsocket();
+            // }
+
+            this.gameScript = new vm.Script(data, {
+                filename: options.filename,
+            });
+
+            this.nodeContext = vm.createContext(globals);
+
+            // this.gameScript = isolate.compileScriptSync(data, options);
 
             // this.gameScript = new VMScript(data, this.bundleFilePath).compile();
         }
@@ -570,7 +667,7 @@ class FSGWorker {
             return;
         }
 
-        return new Promise((rs, rj) => {
+        return new Promise(async (rs, rj) => {
             try {
                 profiler.Start('Game Logic');
                 {
@@ -579,7 +676,10 @@ class FSGWorker {
 
 
 
-                    this.gameScript.runSync(vmContext, { timeout: 200 })
+                    // await this.gameScript.run(vmContext, { timeout: 200 })
+
+                    this.gameScript.runInNewContext(this.nodeContext);
+                    // onWebsocket();
                     // .catch(err => {
                     //     if (!err) {
                     //         rs(true);
@@ -595,7 +695,9 @@ class FSGWorker {
                 rs(true);
             }
             catch (e) {
-                console.error(this.bundleFilePath);
+                // console.error(this.bundleFilePath);
+                // console.error(e);
+                // console.error("stack:", e.stack);
                 let fixed = this.convertStack(e.stack);
                 console.error(e.message, fixed);
                 rs(false);
@@ -611,7 +713,7 @@ class FSGWorker {
 
         let sourcemap = this.decodeSourceMap();
 
-
+        let sourcePath = 'file:///' + this.bundleFilePath.replace(/\\/ig, '/');
         for (const match of matches) {
             let lineNumber = Number.parseInt(match[1]) - 1;
             if (lineNumber >= sourcemap.decoded.length) {
@@ -619,7 +721,8 @@ class FSGWorker {
             }
             let lineInfo = this.findLineInfo(sourcemap, lineNumber);
             let newLineTrace = lineInfo[0] + ':' + lineInfo[1] + ':' + match[2];
-            stackTrace = stackTrace.replace(this.bundleFilePath + ':' + match[1] + ':' + match[2], newLineTrace);
+            stackTrace = stackTrace.replace(sourcePath + ':' + match[1] + ':' + match[2], newLineTrace);
+            stackTrace = stackTrace.replace(sourcePath + ':' + match[1], newLineTrace);
         }
 
         return stackTrace;
@@ -689,6 +792,8 @@ class FSGWorker {
 }
 
 process.on('SIGINT', () => {
+    wss.close();
+    worker.release();
     process.exit()
 });
 

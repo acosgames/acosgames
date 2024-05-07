@@ -58,10 +58,10 @@ function runScript(dirPath, command, callback, options) {
     options = (options && Object.assign({ async: true }, options)) || {
         async: true,
     };
-    console.log("DirPath:", dirPath);
-    console.log("Command:", command);
-    console.log("Options:", options);
-    console.log("-------------");
+    // console.log("DirPath:", dirPath);
+    // console.log("Command:", command);
+    // console.log("Options:", options);
+    // console.log("-------------");
     shelljs.cd(dirPath);
     const child = shelljs.exec(command, options);
 
@@ -149,34 +149,50 @@ function runServer(isDev) {
         // })
 
         // rs(serverApp);
-        runScript(cd, cmd, async (err, sigint) => {
-            if (err) {
-                console.error(err);
-                rj(err);
-                return;
-            }
-            // console.log("Finished loading ACOS Simulator.");
+        runScript(
+            cd,
+            cmd,
+            async (err, sigint) => {
+                if (err) {
+                    console.error(err);
+                    rj(err);
+                    return;
+                }
+                // console.log("Finished loading ACOS Simulator.");
 
-            rs(true);
-        });
+                rs(true);
+            },
+            { silent: !isDev }
+        );
 
         let buildPath = path.join(cwd, "/builds");
         let gameSettings = path.join(cwd, "/game-settings.json");
         console.log(
-            "------------------------------------------------------------------------------"
+            "\x1b[92m------------------------------------------------------------------------------\x1b[0m"
         );
-        console.log("-");
-        console.log(`-\tACOS Simulator Started\t\t`);
-        console.log("-");
-        console.log("-\tClient Type:\t" + acosClientType);
-        console.log("-\tProject:\t" + cwd);
-        console.log("-\tBuild:\t\t" + buildPath);
-        console.log("-\tSettings:\t" + gameSettings);
-        console.log("-");
-        console.log("-\tOpen browser:\thttp://localhost:3100/");
-        console.log("-");
+        console.log("\x1b[92m-\x1b[0m");
         console.log(
-            "------------------------------------------------------------------------------"
+            `\x1b[92m-\x1b[0m\t\x1b[93mACOS Simulator Started\x1b[0m\t\t`
+        );
+        console.log("\x1b[92m-\x1b[0m");
+        if (isDev) {
+            console.log("\x1b[92m-\x1b[0m\t\x1b[94mMode:\x1b[0m\tdevelopment");
+        }
+        console.log(
+            "\x1b[92m-\x1b[0m\t\x1b[94mClient Type:\x1b[0m\t" + acosClientType
+        );
+        console.log("\x1b[92m-\x1b[0m\t\x1b[94mProject:\x1b[0m\t" + cwd);
+        console.log("\x1b[92m-\x1b[0m\t\x1b[94mBuild:\x1b[0m\t\t" + buildPath);
+        console.log(
+            "\x1b[92m-\x1b[0m\t\x1b[94mSettings:\x1b[0m\t" + gameSettings
+        );
+        console.log("\x1b[92m-\x1b[0m");
+        console.log(
+            "\x1b[92m-\x1b[0m\t\x1b[93mOpen browser:\x1b[0m\t\x1b[96mhttp://localhost:3100/\x1b[0m"
+        );
+        console.log("\x1b[92m-\x1b[0m");
+        console.log(
+            "\x1b[92m------------------------------------------------------------------------------\x1b[0m"
         );
     });
 }
@@ -227,17 +243,18 @@ function runBrowserSync(isDev) {
             );
         }
 
-        if (isDev) {
-            let serverPublicFiles =
-                "--files=" + path.join(__dirname, "./simulator/server/public");
-            cmd = `${waitOnPath} http://localhost:3100/ && ${browserSyncPath} start --no-ghost-mode --ws --port 3300 --ui-port 3201 --proxy localhost:3100  ${serverPublicFiles}`;
-            // cmd = `${waitOnPath} http://localhost:3100/`;
-        } else {
-            let gameClientPath = path.join(cwd, "/game-client/**");
-            let buildsClientPath = path.join(cwd, "/builds/client/**");
-            let projectNodeModulePath = path.join(cwd, "/node_modules");
-            cmd = `${waitOnPath} http://localhost:3100/ && ${browserSyncPath} start --no-ghost-mode --ws  --port 3300 --ui-port 3301 --proxy localhost:3100 --no-open --files=${gameClientPath} --files=${buildsClientPath}  --ignore=${projectNodeModulePath}`;
-        }
+        // if (isDev) {
+        //     let serverPublicFiles =
+        //         "--files=" + path.join(__dirname, "./simulator/server/public");
+        //     cmd = `${waitOnPath} http://localhost:3100/ && ${browserSyncPath} start --no-ghost-mode --ws --port 3300 --ui-port 3201 --proxy localhost:3100  ${serverPublicFiles}`;
+        //     // cmd = `${waitOnPath} http://localhost:3100/`;
+        // }
+        // else {
+        let gameClientPath = path.join(cwd, "/game-client/**");
+        let buildsClientPath = path.join(cwd, "/builds/client/**");
+        let projectNodeModulePath = path.join(cwd, "/node_modules");
+        cmd = `${waitOnPath} http://localhost:3100/ && ${browserSyncPath} start --no-ghost-mode --ws  --port 3300 --ui-port 3301 --proxy localhost:3100 --no-open --files=${gameClientPath} --files=${buildsClientPath}  --ignore=${projectNodeModulePath}`;
+        // }
 
         // console.log("Running command: ", cmd);
         // console.log("Running BrowserSync: ", cmd);
@@ -332,12 +349,8 @@ function runDeploy(isDev) {
 // console.log("[ACOS] RUNNING COMMAND!!!: ", command);
 
 function processACOSCommand() {
-    if (acosCommand == "") {
-        runServer(false);
-        // runClient();
-        if (acosClientType == "webpack") runBrowserSync(false);
-        // runBrowserOpen();
-    } else if (acosCommand == "dev") {
+    // console.log("[ACOS] Command: ", argv);
+    if (acosCommand == "dev") {
         runServer(true);
         runClient(true);
         // runBrowserSync(true);
@@ -345,6 +358,11 @@ function processACOSCommand() {
         // runBrowserOpenDevTools();
     } else if (acosCommand == "deploy") {
         runDeploy();
+    } else {
+        runServer(false);
+        // runClient();
+        if (acosClientType == "webpack") runBrowserSync(false);
+        // runBrowserOpen();
     }
 }
 

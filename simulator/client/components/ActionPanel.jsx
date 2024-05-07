@@ -1,4 +1,14 @@
-import { Box, Button, HStack, Text, Tooltip, VStack } from "@chakra-ui/react";
+import {
+    Box,
+    Button,
+    HStack,
+    Text,
+    Tooltip,
+    VStack,
+    Card,
+    CardHeader,
+    CardBody,
+} from "@chakra-ui/react";
 import fs from "flatstore";
 import {
     leaveGame,
@@ -126,40 +136,52 @@ export function GameActionsExpanded(props) {
     let isGameOver = gameStatus == "gameover";
 
     return (
-        <VStack height="100%" justifyItems={"center"} alignItems="center">
-            <Text fontWeight="bold">Game Actions</Text>
-            <HStack>
-                <HStack display={isInGame ? "flex" : "none"}>
-                    <Button
-                        fontSize={"xxs"}
-                        bgColor={"red.800"}
-                        onClick={newGame}
-                    >
-                        {isGameRunning || isGameOver
-                            ? "Reset Game"
-                            : "New Game"}
-                    </Button>
-                </HStack>
-                <HStack display={gameStatus == "gamestart" ? "flex" : "none"}>
-                    <Button
-                        fontSize={"xxs"}
-                        bgColor={"yellow.600"}
-                        onClick={skip}
-                    >
-                        Skip
-                    </Button>
-                </HStack>
-                <HStack display={isPregame ? "flex" : "none"}>
-                    <Button
-                        fontSize={"xxs"}
-                        bgColor={"green.500"}
-                        onClick={startGame}
-                    >
-                        {"Start Game"}
-                    </Button>
-                </HStack>
-            </HStack>
-            {/* <HStack display={isGameRunning ? 'flex' : 'none'}>
+        <Card>
+            <CardHeader>
+                <Text fontWeight="500">Game Actions</Text>
+            </CardHeader>
+            <CardBody pt="0">
+                <VStack
+                    height="100%"
+                    justifyItems={"center"}
+                    alignItems="center"
+                >
+                    <HStack>
+                        <HStack display={isInGame ? "flex" : "none"}>
+                            <Button
+                                fontSize={"xxs"}
+                                bgColor={"red.800"}
+                                onClick={newGame}
+                            >
+                                {isGameRunning || isGameOver
+                                    ? "Reset Game"
+                                    : "New Game"}
+                            </Button>
+                        </HStack>
+                        <HStack
+                            display={
+                                gameStatus == "gamestart" ? "flex" : "none"
+                            }
+                        >
+                            <Button
+                                fontSize={"xxs"}
+                                bgColor={"yellow.600"}
+                                onClick={skip}
+                            >
+                                Skip
+                            </Button>
+                        </HStack>
+                        <HStack display={isPregame ? "flex" : "none"}>
+                            <Button
+                                fontSize={"xxs"}
+                                bgColor={"green.500"}
+                                onClick={startGame}
+                            >
+                                {"Start Game"}
+                            </Button>
+                        </HStack>
+                    </HStack>
+                    {/* <HStack display={isGameRunning ? 'flex' : 'none'}>
                 <Button
                     fontSize={'xxs'}
                     bgColor={'green.800'}
@@ -174,6 +196,8 @@ export function GameActionsExpanded(props) {
                 </Button>
 
             </HStack> */}
-        </VStack>
+                </VStack>
+            </CardBody>
+        </Card>
     );
 }

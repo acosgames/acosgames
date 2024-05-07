@@ -1,6 +1,9 @@
 import {
     Box,
     Button,
+    Card,
+    CardBody,
+    CardHeader,
     Divider,
     HStack,
     Icon,
@@ -411,6 +414,7 @@ export function DisplayMyPlayers(props) {
                     key={"myplayers-" + p.id}
                 >
                     <Td
+                        borderBottomColor="gray.975"
                         onClick={() => {
                             let gps = fs.get("gamepanels");
                             let gp = gps[p.id];
@@ -435,34 +439,28 @@ export function DisplayMyPlayers(props) {
                         <HStack
                             alignItems={"center"}
                             justifyContent="flex-start"
+                            py="0.5rem"
                         >
                             <Tooltip
                                 label={isInGame ? "In game" : "Spectator"}
                                 placement="top"
                             >
-                                <Text as="span" lineHeight="2.1rem" h="2.1rem">
-                                    <Icon
-                                        color={color}
-                                        as={isInGame ? MdPerson : GoEye}
-                                        w="1.4rem"
-                                        h="1.4rem"
-                                    />
-                                </Text>
+                                <Icon
+                                    color={color}
+                                    as={isInGame ? MdPerson : GoEye}
+                                    w="1.6rem"
+                                    h="1.6rem"
+                                />
                             </Tooltip>
                             <Tooltip label={p.id} placement="top">
-                                <Text
-                                    color={color}
-                                    lineHeight="2.1rem"
-                                    h="2.1rem"
-                                    fontSize="1.5rem"
-                                >
+                                <Text color={color} fontSize="1.4rem">
                                     {p.name}
                                 </Text>
                             </Tooltip>
                         </HStack>
                     </Td>
-                    <Td>
-                        <HStack justifyContent={"center"} alignItems="center">
+                    <Td borderBottomColor="gray.975">
+                        <HStack justifyContent={"flex-end"} alignItems="right">
                             <DisplayUserActions id={p.id} />
 
                             {/* <IconButton
@@ -475,20 +473,22 @@ export function DisplayMyPlayers(props) {
                     >
                         Join Game
                     </IconButton> */}
+                            <Box
+                                display={p.clientid ? "none" : "block"}
+                                width="2.5rem"
+                            ></Box>
+                            <IconButton
+                                display={p.clientid ? "block" : "none"}
+                                fontSize={"2rem"}
+                                colorScheme={"clear"}
+                                icon={<AiFillCloseCircle color="gray.300" />}
+                                onClick={() => {
+                                    if (p.clientid) removeFakePlayer(p);
+                                }}
+                            >
+                                Remove Fake Player
+                            </IconButton>
                         </HStack>
-                    </Td>
-                    <Td w="3rem">
-                        <IconButton
-                            display={p.clientid ? "block" : "none"}
-                            fontSize={"2rem"}
-                            colorScheme={"clear"}
-                            icon={<AiFillCloseCircle color="gray.300" />}
-                            onClick={() => {
-                                if (p.clientid) removeFakePlayer(p);
-                            }}
-                        >
-                            Remove Fake Player
-                        </IconButton>
                     </Td>
                 </Tr>
             );
@@ -498,39 +498,51 @@ export function DisplayMyPlayers(props) {
     };
 
     return (
-        <VStack pt="4rem">
-            <HStack w="100%" justifyContent={"flex-start"} alignItems="center">
-                <Text fontWeight="bold" as="span" flex="1">
-                    My Players
-                </Text>
-                <Box>
-                    <Button
-                        leftIcon={<IoAddSharp color="white" />}
-                        fontSize={"xxs"}
-                        bgColor={"teal.700"}
-                        onClick={() => {
-                            spawnFakePlayers();
+        <Card mt="1rem">
+            <CardHeader>
+                <HStack
+                    w="100%"
+                    justifyContent={"flex-start"}
+                    alignItems="center"
+                >
+                    <Text fontWeight="500" as="span" flex="1">
+                        My Players
+                    </Text>
+                    <Box>
+                        <Button
+                            leftIcon={<IoAddSharp color="white" />}
+                            fontSize={"xxs"}
+                            bgColor={"teal.700"}
+                            onClick={() => {
+                                spawnFakePlayers();
+                            }}
+                        >
+                            Add Fake Player
+                        </Button>
+                    </Box>
+                </HStack>
+            </CardHeader>
+            <CardBody pt="0" pb="2rem">
+                <VStack>
+                    <Table
+                        style={{
+                            borderCollapse: "separate",
+                            borderSpacing: "0rem",
                         }}
+                        size="small"
+                        variant="simple"
+                        width="100%"
                     >
-                        Add Fake Player
-                    </Button>
-                </Box>
-            </HStack>
-
-            <Table
-                style={{ borderCollapse: "separate", borderSpacing: "0rem" }}
-                size="small"
-                variant="simple"
-                width="100%"
-            >
-                {/* <Thead>
+                        {/* <Thead>
                     <Tr>
                         <Th color={'gray.100'} fontSize="xxs" lineHeight="3rem" height="3rem" >Player</Th>
                         <Th color={'gray.100'} fontSize="xxs" lineHeight="3rem" height="3rem">Actions</Th>
                     </Tr>
                 </Thead> */}
-                <Tbody>{renderMyPlayers()}</Tbody>
-            </Table>
-        </VStack>
+                        <Tbody>{renderMyPlayers()}</Tbody>
+                    </Table>
+                </VStack>
+            </CardBody>
+        </Card>
     );
 }

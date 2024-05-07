@@ -1,4 +1,14 @@
-import { Box, chakra, HStack, Image, Text, VStack } from "@chakra-ui/react";
+import {
+    Box,
+    Card,
+    CardBody,
+    CardHeader,
+    chakra,
+    HStack,
+    Image,
+    Text,
+    VStack,
+} from "@chakra-ui/react";
 import fs from "flatstore";
 import { useRef } from "react";
 
@@ -22,40 +32,47 @@ export default function Scoreboard(props) {
     // let mode = Number.isInteger(room.mode) ? getGameModeName(room.mode) : room.mode;
 
     return (
-        <VStack
-            w="100%"
-            spacing="0"
-            justifyContent={"center"}
-            alignItems="center"
-            boxSizing="border-box"
-            key="scoreboard-body"
-            p="1rem"
-        >
-            <VStack
-                className="scoreboard-panel"
-                // bgColor="gray.700"
-                // borderRadius="2rem"
-                bgColor="gray.1200"
-                borderRadius="2rem"
-                //border="2px solid"
-                borderColor={"gray.175"}
-                height="100%"
-                width="100%"
-                spacing={"1rem"}
-                py="0.5rem"
-                justifyContent={"flex-end"}
-                key={"scoreboard-body-vstack"}
-            >
+        <Card mt="1rem">
+            <CardHeader>
+                <Text fontWeight="bold">Scoreboard</Text>
+            </CardHeader>
+            <CardBody pt="0">
                 <VStack
-                    // bgColor="gray.1000"
-                    // borderRadius={"2rem"}
-                    spacing="0"
                     w="100%"
+                    spacing="0"
+                    justifyContent={"center"}
+                    alignItems="center"
+                    boxSizing="border-box"
+                    key="scoreboard-body"
+                    // p="1rem"
                 >
-                    <ScoreboardPlayers key={"scoreboard-player-list"} />
+                    <VStack
+                        className="scoreboard-panel"
+                        // bgColor="gray.700"
+                        // borderRadius="2rem"
+                        bgColor="gray.1200"
+                        borderRadius="2rem"
+                        //border="2px solid"
+                        borderColor={"gray.175"}
+                        height="100%"
+                        width="100%"
+                        spacing={"1rem"}
+                        py="0.5rem"
+                        justifyContent={"flex-end"}
+                        key={"scoreboard-body-vstack"}
+                    >
+                        <VStack
+                            // bgColor="gray.1000"
+                            // borderRadius={"2rem"}
+                            spacing="0"
+                            w="100%"
+                        >
+                            <ScoreboardPlayers key={"scoreboard-player-list"} />
+                        </VStack>
+                    </VStack>
                 </VStack>
-            </VStack>
-        </VStack>
+            </CardBody>
+        </Card>
     );
 }
 

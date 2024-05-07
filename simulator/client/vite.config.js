@@ -1,5 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
+
 // import { splitVendorChunkPlugin } from "vite";
 // import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
@@ -9,8 +11,15 @@ import * as r from "react";
 export default defineConfig({
     plugins: [
         react(),
+        cssInjectedByJsPlugin(),
         // visualizer()
     ],
+    esbulid: {
+        target: "esbuild",
+    },
+    injectManifest: {
+        rollupFormat: "iife",
+    },
     server: {
         port: 3250,
         origin: "http://localhost:3100",
@@ -25,11 +34,18 @@ export default defineConfig({
                 : "inline",
         rollupOptions: {
             input: "./main.jsx",
+            output: {
+                entryFileNames: "bundle.production.js",
+                // assetFileNames: `[name].[ext]`,
+                // manualChunks: undefined,
+            },
         },
 
-        outDir: "../api/public",
+        outDir: "../server/public",
     },
-
+    optimizeDeps: {
+        include: ["acos-json-encoder", "acos-json-delta"],
+    },
     resolve: {
         alias: {
             shared: path.resolve(__dirname, "../shared"),

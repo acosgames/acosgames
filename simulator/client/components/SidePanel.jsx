@@ -14,6 +14,12 @@ import {
 import fs from "flatstore";
 import { useState } from "react";
 
+import {
+    CgChevronDoubleRightR,
+    CgChevronDoubleDownR,
+    CgChevronDoubleUpR,
+    CgChevronDoubleLeftR,
+} from "react-icons/cg";
 import { BsChatDotsFill } from "react-icons/bs";
 import { AiFillCloseCircle } from "react-icons/ai";
 // import { ImEnter } from 'react-icons/bs';
@@ -27,7 +33,8 @@ import {
 } from "./PlayerList.jsx";
 import { GameActionsExpanded } from "./ActionPanel.jsx";
 import { StateViewer } from "./StateViewer.jsx";
-import Scoreboard from "./Scoreboard.jsx";
+import Scoreboard from "./Scoreboard/Scoreboard";
+// import Scoreboard from "./Scoreboard.jsx";
 
 fs.set("chat", []);
 fs.set("chatMessage", "");
@@ -76,7 +83,7 @@ function SidePanel(props) {
             spacing="0"
             m="0"
             p="0"
-            bgColor={"gray.1200"}
+            bgColor={"gray.925"}
             position={"relative"}
             flexGrow="1 !important"
             height={!isMobile ? "100%" : toggle ? "20rem" : "0"}
@@ -89,8 +96,42 @@ function SidePanel(props) {
                     ? ["44.0rem", "44rem", "48.0rem"]
                     : "0"
             }
-            filter="drop-shadow(0 0 5px rgba(25,25,25,.25))"
+            borderLeft="1px solid var(--chakra-colors-gray-900)"
+            // filter="drop-shadow(0 0 5px rgba(25,25,25,.25))"
         >
+            <Box
+                p="0"
+                m="0"
+                height="3rem"
+                width="3rem"
+                position="absolute"
+                left="-3rem"
+                top="1rem"
+                zIndex="100"
+            >
+                <Button
+                    onClick={() => {
+                        fs.set("actionToggle", !actionToggle);
+                    }}
+                    height="100%"
+                >
+                    <Icon
+                        as={
+                            isMobile
+                                ? actionToggle
+                                    ? CgChevronDoubleDownR
+                                    : CgChevronDoubleUpR
+                                : actionToggle
+                                ? CgChevronDoubleRightR
+                                : CgChevronDoubleLeftR
+                        }
+                        filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
+                        fontSize="2rem"
+                        color={"gray.100"}
+                    />
+                </Button>
+            </Box>
+
             <VStack
                 transition="width 0.3s ease, height 0.3s ease"
                 width={isMobile ? "100%" : ["24.0rem", "24rem", "28.0rem"]}
@@ -103,11 +144,11 @@ function SidePanel(props) {
                 flexDirection="column !important"
                 mt="0"
             >
-                <Tabs h="100%" px="0" variant="base" defaultIndex={0}>
+                <Tabs h="100%" px="0" variant="subtabs" defaultIndex={0}>
                     <TabList
                         zIndex="20"
                         display={"flex"}
-                        bgColor={"gray.900"}
+                        bgColor={"gray.975"}
                         transition={"filter 0.3s ease-in"}
                         width="100%"
                         maxWidth="1200px"
@@ -120,15 +161,16 @@ function SidePanel(props) {
                         <Tab _focus={{ outline: "none" }}>Settings</Tab>
                     </TabList>
 
-                    <TabPanels h="100%" p="0">
+                    <TabPanels h="100%" p="0" pl="0.5rem">
                         <TabPanel
                             h="100%"
                             overflow="hidden"
                             overflowY="scroll"
                             px="0"
                             p="0"
+                            pr="0.5rem"
                         >
-                            <Box pb="5rem" pt="2rem">
+                            <Box pb="5rem" pt="1rem">
                                 <GameActionsExpanded />
                                 {/* <DisplayGamePlayers /> */}
                                 <Scoreboard />
@@ -141,8 +183,9 @@ function SidePanel(props) {
                             overflowY="scroll"
                             px="0"
                             p="0"
+                            pr="0.5rem"
                         >
-                            <Box pb="5rem" pt="2rem">
+                            <Box pb="5rem" pt="1rem">
                                 <StateViewer />
                             </Box>
                         </TabPanel>
@@ -152,7 +195,7 @@ function SidePanel(props) {
                             overflowY="scroll"
                             px="0"
                             p="0"
-                            padding={0}
+                            pr="0.5rem"
                         >
                             <VStack
                                 justifyContent={"flex-start"}

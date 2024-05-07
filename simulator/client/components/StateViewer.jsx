@@ -6,6 +6,10 @@ import {
     AccordionPanel,
     Box,
     Button,
+    Card,
+    CardBody,
+    CardHeader,
+    Heading,
     HStack,
     IconButton,
     Select,
@@ -30,7 +34,15 @@ export function StateViewer(props) {
     if (!gameState) return <></>;
 
     let playerList = GameStateService.getPlayersArray();
-    let deltaEncoded = fs.get("deltaEncoded");
+    let deltaEncoded = fs.get("deltaEncoded") || 0;
+
+    deltaEncoded = 200;
+    let deltaEncodedColor = "brand.50";
+    if (deltaEncoded >= 500) {
+        deltaEncodedColor = "red.500";
+    } else if (deltaEncoded >= 250) {
+        deltaEncodedColor = "brand.900";
+    }
 
     if (scope == "server") {
         let copy = GameStateService.getGameState();
@@ -102,55 +114,71 @@ export function StateViewer(props) {
                 displayDataTypes="false"
                 displayObjectSize="false"
             /> */}
-            <HStack py="0rem" width="100%">
-                <ReplayControls />
-                <VStack w="100%">
-                    <Text fontWeight={"bold"} fontSize="xs">
-                        JSON Scope
-                    </Text>
-                    <Select
-                        w="100%"
-                        defaultValue={"server"}
-                        onChange={(e) => {
-                            setScope(e.target.value);
-                        }}
-                        fontSize="1.2rem"
-                    >
-                        <option fontSize="1rem" value="server">
-                            Server
-                        </option>
-                        <option fontSize="1rem" value="spectator">
-                            Spectator
-                        </option>
-                        <option fontSize="1rem" value="packet">
-                            Delta Packet
-                        </option>
-                        {playerList.map((p) => (
-                            <option
-                                key={"scope-" + p.id}
-                                fontSize="1rem"
-                                value={p.id}
-                            >
-                                {p.name}
-                            </option>
-                        ))}
-                    </Select>
-                </VStack>
-            </HStack>
+            <Card mb="0.5rem">
+                {/* <CardHeader></CardHeader> */}
+                <CardBody>
+                    <VStack>
+                        <HStack py="0rem" width="100%">
+                            <ReplayControls />
+                            <VStack w="100%">
+                                <Text fontWeight={"500"}>JSON Scope</Text>
+                                <Select
+                                    w="100%"
+                                    bgColor="gray.975"
+                                    color="gray.10"
+                                    defaultValue={"server"}
+                                    onChange={(e) => {
+                                        setScope(e.target.value);
+                                    }}
+                                    fontSize="1.2rem"
+                                >
+                                    <option fontSize="1rem" value="server">
+                                        Server
+                                    </option>
+                                    <option fontSize="1rem" value="spectator">
+                                        Spectator
+                                    </option>
+                                    <option fontSize="1rem" value="packet">
+                                        Delta Packet
+                                    </option>
+                                    {playerList.map((p) => (
+                                        <option
+                                            key={"scope-" + p.id}
+                                            fontSize="1rem"
+                                            value={p.id}
+                                        >
+                                            {p.name}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </VStack>
+                        </HStack>
+                    </VStack>
+                </CardBody>
+            </Card>
             <HStack>
-                <Text fontSize="xxs">Encoded Size: </Text>
-                <Text fontSize="xs" fontWeight="bold">
+                <Text fontSize="1.2rem" fontWeight="400">
+                    Encoded Size:{" "}
+                </Text>
+                <Text
+                    fontSize="1.6rem"
+                    color={deltaEncodedColor}
+                    fontWeight="500"
+                >
                     {deltaEncoded}{" "}
                 </Text>
-                <Text fontSize="xxs" fontWeight="bold">
+                <Text
+                    fontSize="1.2rem"
+                    color={deltaEncodedColor}
+                    fontWeight="400"
+                >
                     bytes
                 </Text>
             </HStack>
             <Accordion
                 allowMultiple={true}
                 allowToggle={true}
-                pt="2rem"
-                pl="1rem"
+                pt="1rem"
                 defaultIndex={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
                 w="100%"
             >
@@ -228,7 +256,7 @@ function ObjectViewer(props) {
                 <AccordionIcon />
             </AccordionButton>
 
-            <AccordionPanel bgColor={"rgb(21, 21, 21)"} position="relative">
+            <AccordionPanel bgColor={"#2b303a"} position="relative">
                 <HStack
                     position="absolute"
                     top="0"
@@ -263,7 +291,7 @@ function ObjectViewer(props) {
                     <Box px="1rem">
                         <ReactJson
                             src={object}
-                            theme="chalk"
+                            theme="ocean"
                             name={false}
                             enableClipboard={false}
                             displayDataTypes={false}
@@ -290,8 +318,7 @@ export function ReplayControls(props) {
             <Text
                 display={props.hideTitle ? "none" : "inline-block"}
                 as="span"
-                fontSize="xs"
-                fontWeight={"bold"}
+                fontWeight={"500"}
             >
                 Replay Control
             </Text>

@@ -553,11 +553,11 @@ function stringify(obj) {
 }
 
 function createWorker(index) {
-    console.log(
-        "[ACOS] Worker current directory: ",
-        process.cwd(),
-        process.argv
-    );
+    // console.log(
+    //     "[ACOS] Worker current directory: ",
+    //     process.cwd(),
+    //     process.argv
+    // );
     const worker = new Worker(__dirname + "/worker.js", {
         workerData: { dir: process.argv[2] },
     });
@@ -664,8 +664,22 @@ app.get("/server.bundle.dev.js.map", function (req, res) {
 });
 
 app.get("/bundle.js", function (req, res) {
+    console.log(
+        "Using bundle: ",
+        path.join(__dirname, "./public/bundle." + process.argv[3] + ".js")
+    );
     res.sendFile(
         path.join(__dirname, "./public/bundle." + process.argv[3] + ".js")
+    );
+});
+
+app.get("/bundle.css", function (req, res) {
+    console.log(
+        "Using bundle: ",
+        path.join(__dirname, "./public/bundle." + process.argv[3] + ".css")
+    );
+    res.sendFile(
+        path.join(__dirname, "./public/bundle." + process.argv[3] + ".css")
     );
 });
 
@@ -683,7 +697,9 @@ app.get("/devtools", (req, res) => {
     );
 });
 app.get("/", function (req, res) {
-    res.sendFile(path.join(__dirname, "./public/index2.html"));
+    res.sendFile(
+        path.join(__dirname, "./public/index-" + process.argv[3] + ".html")
+    );
 });
 
 let assetPath = path.join(process.argv[2], "./builds/client/assets");
@@ -735,7 +751,7 @@ app.get("/favicon.ico", function (req, res) {
 // });
 
 server.listen(port, () => {
-    console.log("[ACOS] Server started at http://localhost:" + port);
+    // console.log("[ACOS] Server started at http://localhost:" + port);
 });
 
 process.on("SIGINT", () => {

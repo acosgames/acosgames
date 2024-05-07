@@ -186,9 +186,10 @@ const components = {
     },
     Tooltip: {
         baseStyle: {
-            bgColor: "gray.700",
-            color: "gray.100",
-            top: "1rem",
+            bgColor: "gray.1200",
+            color: "gray.0",
+            fontSize: "1.2rem",
+            // top: "1rem",
             p: "1rem",
         },
         defaultProps: {

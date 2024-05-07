@@ -1,6 +1,9 @@
 import {
     Box,
     Button,
+    Card,
+    CardBody,
+    CardHeader,
     Grid,
     HStack,
     IconButton,
@@ -53,51 +56,63 @@ export function Settings(props) {
 
 export function ChooseGameSettings(props) {
     return (
-        <VStack pt="2rem" pb="2rem">
-            <Text fontWeight={"bold"}>Game Settings</Text>
-            <VStack bgColor="gray.900" py="3rem" px="2rem">
-                <HStack spacing="1rem" alignItems={"flex-end"}>
-                    <Text w="6rem">Players</Text>
-                    <SettingNumberInput
-                        id="minplayers"
-                        title="Min"
-                        placeholder="0"
-                    />
-                    <SettingNumberInput
-                        id="maxplayers"
-                        title="Max"
-                        placeholder="0"
-                    />
-                </HStack>
-                <HStack spacing="1rem" alignItems={"flex-end"}>
-                    <Text w="6rem">Teams</Text>
-                    <SettingNumberInput
-                        id="minteams"
-                        title="Min"
-                        placeholder="0"
-                    />
-                    <SettingNumberInput
-                        id="maxteams"
-                        title="Max"
-                        placeholder="0"
-                        onChange={(id, value) => {
-                            let teamSettingsRef = fs.get("teamSettingsRef");
-                            let gameSettings = fs.get("prevGameSettings");
-                            if (
-                                teamSettingsRef &&
-                                gameSettings.maxteams == 0 &&
-                                value == 1
-                            ) {
-                                setTimeout(() => {
-                                    teamSettingsRef.current.parentNode.parentNode.scrollTop =
-                                        teamSettingsRef.current.parentNode.scrollHeight; //({ behavior: 'smooth', block: "nearest", inline: "nearest" });
-                                }, 100);
-                            }
-                        }}
-                    />
-                </HStack>
-            </VStack>
-        </VStack>
+        <Card>
+            <CardHeader>
+                <Text fontWeight={"500"}>Game Settings</Text>
+            </CardHeader>
+            <CardBody pt="0">
+                <VStack>
+                    <VStack bgColor="gray.900" px="2rem">
+                        <HStack spacing="1rem" alignItems={"flex-end"}>
+                            <Text w="6rem" color="gray.20" fontWeight={"600"}>
+                                Players
+                            </Text>
+                            <SettingNumberInput
+                                id="minplayers"
+                                title="Min"
+                                placeholder="0"
+                            />
+                            <SettingNumberInput
+                                id="maxplayers"
+                                title="Max"
+                                placeholder="0"
+                            />
+                        </HStack>
+                        <HStack spacing="1rem" alignItems={"flex-end"}>
+                            <Text w="6rem" color="gray.20" fontWeight={"600"}>
+                                Teams
+                            </Text>
+                            <SettingNumberInput
+                                id="minteams"
+                                title="Min"
+                                placeholder="0"
+                            />
+                            <SettingNumberInput
+                                id="maxteams"
+                                title="Max"
+                                placeholder="0"
+                                onChange={(id, value) => {
+                                    let teamSettingsRef =
+                                        fs.get("teamSettingsRef");
+                                    let gameSettings =
+                                        fs.get("prevGameSettings");
+                                    if (
+                                        teamSettingsRef &&
+                                        gameSettings.maxteams == 0 &&
+                                        value == 1
+                                    ) {
+                                        setTimeout(() => {
+                                            teamSettingsRef.current.parentNode.parentNode.scrollTop =
+                                                teamSettingsRef.current.parentNode.scrollHeight; //({ behavior: 'smooth', block: "nearest", inline: "nearest" });
+                                        }, 100);
+                                    }
+                                }}
+                            />
+                        </HStack>
+                    </VStack>
+                </VStack>
+            </CardBody>
+        </Card>
     );
 }
 
@@ -134,19 +149,23 @@ export function ChooseTeamSettings(props) {
     // }
 
     return (
-        <VStack
-            ref={teamSettingsRef}
-            display={
-                !gameSettings?.teams || gameSettings.teams.length == 0
-                    ? "none"
-                    : "flex"
-            }
-        >
-            <Text fontWeight={"bold"} pt="2rem">
-                Team Settings
-            </Text>
-            {renderTeams()}
-        </VStack>
+        <Card>
+            <CardHeader>
+                <Text fontWeight={"500"}>Team Settings</Text>
+            </CardHeader>
+            <CardBody pt="0">
+                <VStack
+                    ref={teamSettingsRef}
+                    display={
+                        !gameSettings?.teams || gameSettings.teams.length == 0
+                            ? "none"
+                            : "flex"
+                    }
+                >
+                    {renderTeams()}
+                </VStack>
+            </CardBody>
+        </Card>
     );
 }
 
@@ -201,7 +220,7 @@ function TeamSettings(props) {
             let newOffset = getOffset(teamRef.current);
             let yDiff = newOffset.top - offset.top;
 
-            teamRef.current.scrollIntoView();
+            // teamRef.current.scrollIntoView();
 
             if (newOffset.top != offset.top) {
                 setOffset(newOffset);
@@ -221,8 +240,8 @@ function TeamSettings(props) {
             pt="2rem"
             pb="2rem"
             transition={"background 0.3s ease"}
-            bgColor={active ? "gray.600" : ""}
-            _hover={{ bgColor: "gray.700" }}
+            bgColor={active ? "gray.850" : "gray.850"}
+            _hover={{ bgColor: "gray.825" }}
             borderTop={"1px solid"}
             borderTopColor={"gray.600"}
         >
@@ -236,10 +255,10 @@ function TeamSettings(props) {
                     pl="2rem"
                 >
                     <IconButton
-                        color={isUpActive ? "gray.300" : "gray.600"}
-                        _hover={{ color: isUpActive ? "white" : "gray.600" }}
+                        color={isUpActive ? "gray.300" : "gray.850"}
+                        _hover={{ color: isUpActive ? "white" : "gray.850" }}
                         _active={{
-                            color: isUpActive ? "gray.100" : "gray.600",
+                            color: isUpActive ? "gray.100" : "gray.850",
                         }}
                         onClick={() => {
                             if (!isUpActive) return;
@@ -266,15 +285,15 @@ function TeamSettings(props) {
                         {props.team_order}
                     </Text>
                     <IconButton
-                        color={isDownActive ? "gray.300" : "gray.600"}
+                        color={isDownActive ? "gray.300" : "gray.850"}
                         cursor={isDownActive ? "pointer" : ""}
                         onClick={() => {
                             if (!isDownActive) return;
                             onChangeOrder(1);
                         }}
-                        _hover={{ color: isDownActive ? "white" : "gray.600" }}
+                        _hover={{ color: isDownActive ? "white" : "gray.850" }}
                         _active={{
-                            color: isDownActive ? "gray.100" : "gray.600",
+                            color: isDownActive ? "gray.100" : "gray.850",
                         }}
                         icon={<FaArrowCircleDown size="2rem" />}
                         width="2.8rem"
@@ -311,7 +330,7 @@ function TeamSettings(props) {
                             />
                         </HStack>
                     </VStack>
-                    <Box w="100%">
+                    <Box w="100%" h="3rem">
                         <SettingColorInput
                             id="color"
                             title=""
@@ -376,13 +395,13 @@ function SettingColorInput(props) {
                 <PopoverTrigger h="100%">
                     <Button
                         flex="1"
-                        fontWeight={props.fontWeight}
-                        fontSize={props.fontSize || "1rem"}
+                        fontWeight={props.fontWeight || "500"}
+                        fontSize={props.fontSize || "2rem"}
                         value={currentValue}
                         textShadow={"2px 2px #000"}
                         color={"white"}
                         bgColor={currentValue || "brand.500"}
-                        h={props.height || "100%"}
+                        h={props.height || "5rem"}
                         w={props.width || "100%"}
                     >
                         {currentValue || "#f00"}
@@ -461,6 +480,7 @@ function SettingTextInput(props) {
                 w={props.textWidth || "100%"}
                 display={props.title ? "inline-block" : "none"}
                 pr="0.5rem"
+                color="gray.20"
                 fontSize="xs"
                 htmlFor={id}
             >
@@ -470,6 +490,7 @@ function SettingTextInput(props) {
                 className=""
                 id={id}
                 fontSize="xs"
+                bgColor="gray.975"
                 aria-describedby=""
                 placeholder={props.placeholder}
                 onChange={(e) => {
@@ -525,7 +546,8 @@ function SettingNumberInput(props) {
                 as="label"
                 display={"inline-block"}
                 pr="0.5rem"
-                fontSize="xs"
+                color="gray.50"
+                fontSize="1.2rem"
                 htmlFor={id}
             >
                 {props.title}
@@ -533,7 +555,8 @@ function SettingNumberInput(props) {
             <NumberInput
                 className=""
                 id={id}
-                fontSize="xs"
+                fontSize="1.4rem"
+                bgColor="gray.975"
                 aria-describedby=""
                 readOnly={props.readOnly || false}
                 isDisabled={props.readOnly || false}
@@ -565,7 +588,7 @@ function SettingNumberInput(props) {
                 value={numberValue}
                 w={props.width || "100%"}
             >
-                <NumberInputField />
+                <NumberInputField fontSize="1.4rem" />
                 <NumberInputStepper>
                     <NumberIncrementStepper />
                     <NumberDecrementStepper />
@@ -582,108 +605,162 @@ export function ChooseScreenSettings(props) {
 
         if (!gameSettings) return <></>;
         return (
-            <VStack w="100%">
-                <Text fontWeight={"bold"}>Screen Settings</Text>
-                <VStack
-                    w="100%"
-                    bgColor="gray.900"
-                    py="3rem"
-                    alignItems={"flex-start"}
-                    px="2rem"
-                >
-                    <Text
-                        as="label"
-                        display={"inline-block"}
-                        pr="0.5rem"
-                        fontWeight={"bold"}
-                        fontSize="xs"
-                        htmlFor="resolution"
-                    >
-                        Screen Type
-                    </Text>
-                    <Select
-                        fontSize="xs"
-                        id="screenType"
-                        value={gameSettings?.screentype || "3"}
-                        onChange={(e) => {
-                            let val = Number.parseInt(e.target.value);
-
-                            if (!val) {
-                                console.error(
-                                    "Invalid screentype value: ",
-                                    val
-                                );
-                                return;
-                            }
-
-                            gameSettings.screentype = val;
-                            updateGameSettings(gameSettings);
-                        }}
-                    >
-                        <option value="1">(1) Full Screen</option>
-                        <option value="2">(2) Fixed Resolution</option>
-                        <option value="3">(3) Scaled Resolution</option>
-                    </Select>
-                    <Box
-                        id="viewportResolution"
-                        display={
-                            gameSettings?.screentype == 1 ? "none" : "block"
-                        }
-                        pt="2rem"
-                    >
-                        <HStack>
-                            <Text
-                                as="label"
-                                display={"inline-block"}
-                                pr="0.5rem"
-                                fontSize="xs"
+            <Card>
+                <CardHeader>
+                    <Text fontWeight={"500"}>Screen Settings</Text>
+                </CardHeader>
+                <CardBody>
+                    <VStack w="100%">
+                        <VStack
+                            w="100%"
+                            bgColor="gray.900"
+                            alignItems={"flex-start"}
+                            px="2rem"
+                        >
+                            <Box
+                                id="viewportscreentype"
+                                display={
+                                    gameSettings?.screentype == 1
+                                        ? "none"
+                                        : "block"
+                                }
+                                w="100%"
                             >
-                                Resolution
-                            </Text>
-                            <SettingNumberInput
-                                id="resow"
-                                title=""
-                                placeholder="4"
-                            />
-                            <Text>:</Text>
-                            <SettingNumberInput
-                                id="resoh"
-                                title=""
-                                placeholder="3"
-                            />
-                        </HStack>
-                    </Box>
-                    <Box
-                        id="viewportSize"
-                        display={
-                            gameSettings?.screentype != 3 ? "none" : "block"
-                        }
-                    >
-                        <HStack>
-                            <Text
-                                as="label"
-                                display={"inline-block"}
-                                pr="0.5rem"
-                                fontSize="xs"
+                                <Text
+                                    as="label"
+                                    display={"inline-block"}
+                                    pr="0.5rem"
+                                    fontWeight={"600"}
+                                    color="gray.20"
+                                    fontSize="1.4rem"
+                                    htmlFor="screenType"
+                                    pb="0.5rem"
+                                >
+                                    Screen Type
+                                </Text>
+                                <Select
+                                    fontSize="xs"
+                                    id="screenType"
+                                    bgColor="gray.975"
+                                    value={gameSettings?.screentype || "3"}
+                                    onChange={(e) => {
+                                        let val = Number.parseInt(
+                                            e.target.value
+                                        );
+
+                                        if (!val) {
+                                            console.error(
+                                                "Invalid screentype value: ",
+                                                val
+                                            );
+                                            return;
+                                        }
+
+                                        gameSettings.screentype = val;
+                                        updateGameSettings(gameSettings);
+                                    }}
+                                >
+                                    <option value="1">(1) Full Screen</option>
+                                    <option value="2">
+                                        (2) Fixed Resolution
+                                    </option>
+                                    <option value="3">
+                                        (3) Scaled Resolution
+                                    </option>
+                                </Select>
+                            </Box>
+                            <Box
+                                id="viewportResolution"
+                                display={
+                                    gameSettings?.screentype == 1
+                                        ? "none"
+                                        : "block"
+                                }
+                                pt="1rem"
                             >
-                                Screen
-                            </Text>
-                            <SettingNumberInput
-                                id="screenwidth"
-                                title="Width (px)"
-                                placeholder="800"
-                            />
-                            <Text>:</Text>
-                            <SettingNumberInput
-                                id="screenheight"
-                                title="Height"
-                                placeholder="600"
-                                readOnly={true}
-                            />
-                        </HStack>
-                    </Box>
-                </VStack>
-            </VStack>
+                                <Text
+                                    as="label"
+                                    display={"inline-block"}
+                                    pr="0.5rem"
+                                    fontWeight={"600"}
+                                    color="gray.20"
+                                    fontSize="1.4rem"
+                                    htmlFor="resolution"
+                                >
+                                    Resolution
+                                </Text>
+                                <HStack
+                                    justifyContent={"center"}
+                                    alignItems={"center"}
+                                >
+                                    <SettingNumberInput
+                                        id="resow"
+                                        title=""
+                                        placeholder="4"
+                                    />
+                                    <Text
+                                        as="span"
+                                        fontSize="2rem"
+                                        alignSelf={"flex-end"}
+                                    >
+                                        :
+                                    </Text>
+                                    <SettingNumberInput
+                                        id="resoh"
+                                        title=""
+                                        placeholder="3"
+                                    />
+                                </HStack>
+                            </Box>
+                            <Box
+                                pt="1rem"
+                                id="viewportSize"
+                                display={
+                                    gameSettings?.screentype != 3
+                                        ? "none"
+                                        : "block"
+                                }
+                            >
+                                <Text
+                                    as="label"
+                                    display={"inline-block"}
+                                    pr="0.5rem"
+                                    fontWeight={"600"}
+                                    color="gray.20"
+                                    fontSize="1.4rem"
+                                    htmlFor="screenwidth"
+                                >
+                                    Screen
+                                </Text>
+                                <HStack
+                                    pt="0.5rem"
+                                    justifyContent={"center"}
+                                    alignItems={"center"}
+                                >
+                                    <SettingNumberInput
+                                        id="screenwidth"
+                                        title="Width (px)"
+                                        placeholder="800"
+                                    />
+                                    <Text
+                                        as="span"
+                                        fontSize="2rem"
+                                        alignSelf={"flex-end"}
+                                    >
+                                        :
+                                    </Text>
+                                    <SettingNumberInput
+                                        id="screenheight"
+                                        title="Height"
+                                        placeholder="600"
+                                        readOnly={true}
+                                    />
+                                </HStack>
+                            </Box>
+                        </VStack>
+                    </VStack>
+                </CardBody>
+            </Card>
         );
     } catch (err) {
         console.error(err);

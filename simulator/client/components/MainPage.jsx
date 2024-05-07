@@ -1,6 +1,6 @@
 import { Component, useEffect, useRef } from "react";
 
-import { withRouter } from "react-router-dom";
+// import { withRouter } from "react-router-dom";
 // import GameList from "./games/GameList";
 
 import fs from "flatstore";
@@ -62,7 +62,7 @@ function MainPage(props) {
                     justifyContent={"center"}
                     // overflow="hidden"
                     px={["0.5rem", "1rem", "5rem"]}
-                    bg={"gray.800"}
+                    bg={"gray.975"}
                 >
                     <MainMenuChakra />
                 </HStack>
@@ -200,4 +200,4 @@ function ChoosePlayerName(props) {
     );
 }
 
-export default withRouter(MainPage);
+export default MainPage;

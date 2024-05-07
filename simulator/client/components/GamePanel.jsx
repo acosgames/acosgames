@@ -25,7 +25,7 @@ import fs from "flatstore";
 import { MdPerson } from "react-icons/md";
 import { GoEye } from "react-icons/go";
 import { CgMinimizeAlt } from "react-icons/cg";
-import { withRouter } from "react-router-dom";
+// import { withRouter } from "react-router-dom";
 import GamePanelService from "../services/GamePanelService";
 import {
     joinFakePlayer,
@@ -277,6 +277,10 @@ function GameIFrame(props) {
                     >
                         <DisplayUserInfo id={props.id} />
                         <Box
+                            position="absolute"
+                            right="0"
+                            top="50%"
+                            transform="translateY(-40%)"
                             display={
                                 fakePlayerList.length < 8 ? "block" : "none"
                             }
@@ -332,8 +336,11 @@ function DisplayUserInfo(props) {
 
     let isUserNext = GameStateService.validateNextUser(props.id);
 
-    let color = "white";
-    if (!isInGame || !isUserNext) color = "gray.400";
+    let color = "gray.400";
+    if (isInGame) {
+        color = "gray.10";
+    }
+    if (isUserNext) color = "brand.50";
 
     return (
         <HStack
@@ -341,6 +348,9 @@ function DisplayUserInfo(props) {
             px="3rem"
             width="100%"
             height="3rem"
+            justifyContent={"center"}
+            position="relative"
+            alignItems={"center"}
             // border={
             //     isUserNext ? "3px solid var(--chakra-colors-brand-500)" : "none"
             // }
@@ -367,23 +377,30 @@ function DisplayUserInfo(props) {
                 fs.set("gamePanelLayout", "expanded");
             }}
         >
-            <Tooltip label={isInGame ? "In game" : "Spectator"} placement="top">
-                <Text as="span" h="2.1rem">
+            <Tooltip
+                label={isInGame ? "In game" : "Spectator"}
+                placement="bottom"
+            >
+                <Text as="span" lineHeight={"3rem"} h="1.8rem" p="0">
                     <Icon
                         color={color}
                         as={isInGame ? MdPerson : GoEye}
-                        w="1.4rem"
-                        h="1.4rem"
+                        w="1.8rem"
+                        h="1.8rem"
+                        p="0"
                     />
                 </Text>
             </Tooltip>
-            <Tooltip label={user.id} placement="top">
+            <Tooltip label={user.id} placement="bottom">
                 <Text
+                    lineHeight={"3.4rem"}
+                    height="3rem"
                     cursor={"pointer"}
                     color={color}
+                    as="span"
                     display="inline-block"
-                    fontSize="xs"
-                    fontWeight="bold"
+                    fontSize="1.6rem"
+                    fontWeight="600"
                 >
                     {user.name}
                 </Text>
@@ -392,4 +409,4 @@ function DisplayUserInfo(props) {
     );
 }
 
-export default withRouter(GamePanel);
+export default GamePanel;

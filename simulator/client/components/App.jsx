@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { BrowserRouter, Switch, Route } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import MainPage from "./MainPage.jsx";
 
 import axios from "axios";
@@ -46,11 +46,9 @@ function App(props) {
 
     return (
         <BrowserRouter>
-            <Switch>
-                <Route path="*">
-                    <MainPage />
-                </Route>
-            </Switch>
+            <Routes>
+                <Route path="*" element={<MainPage />} />
+            </Routes>
         </BrowserRouter>
     );
 }

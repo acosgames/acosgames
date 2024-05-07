@@ -10,14 +10,9 @@ import {
     Divider,
 } from "@chakra-ui/react";
 import fs from "flatstore";
-import { Link, withRouter } from "react-router-dom";
+import { Link } from "react-router-dom";
 // import config from '../config'
-import {
-    CgChevronDoubleRightR,
-    CgChevronDoubleDownR,
-    CgChevronDoubleUpR,
-    CgChevronDoubleLeftR,
-} from "react-icons/cg";
+
 import { ActionPanel } from "./ActionPanel.jsx";
 import Timeleft from "./Timeleft.jsx";
 // import GameActions from './games/GameDisplay/GameActions';
@@ -86,31 +81,6 @@ function ACOSHeader(props) {
                         <Box>
                             <ActionPanel />
                         </Box>
-                        <Box p="0" m="0" height="100%" lineHeight={"100%"}>
-                            <Button
-                                onClick={() => {
-                                    fs.set("actionToggle", !actionToggle);
-                                }}
-                                height="100%"
-                            >
-                                <Icon
-                                    as={
-                                        isMobile
-                                            ? actionToggle
-                                                ? CgChevronDoubleDownR
-                                                : CgChevronDoubleUpR
-                                            : actionToggle
-                                            ? CgChevronDoubleRightR
-                                            : CgChevronDoubleLeftR
-                                    }
-                                    filter={
-                                        "drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"
-                                    }
-                                    fontSize="2rem"
-                                    color={"white"}
-                                />
-                            </Button>
-                        </Box>
                     </Stack>
                 </Flex>
             </Flex>
@@ -142,4 +112,4 @@ function ACOSHeader(props) {
 //     )
 // }
 
-export default fs.connect(["actionToggle", "isMobile"])(withRouter(ACOSHeader));
+export default fs.connect(["actionToggle", "isMobile"])(ACOSHeader);

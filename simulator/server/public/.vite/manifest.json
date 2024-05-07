@@ -1,0 +1,8 @@
+{
+  "main.jsx": {
+    "file": "bundle.production.js",
+    "name": "main",
+    "src": "main.jsx",
+    "isEntry": true
+  }
+}

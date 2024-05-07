@@ -559,15 +559,20 @@ class FSGWorker {
     }
 
     async reloadServerBundle(filepath) {
-        profiler.Start("Reloaded Server Bundle in");
+        let options = {
+            // filename: "*"
+            filename: "file:///" + this.bundleFilePath.replace(/\\/gi, "/"),
+            // filename: 'http://localhost:3100/server.bundle.dev.js'
+            // filename: 'server.bundle.dev.js'
+        };
+        profiler.Start(
+            `Reloaded Server Bundle ${options.filename.replace(
+                "file:///",
+                ""
+            )} in`
+        );
         {
-            let options = {
-                // filename: "*"
-                filename: "file:///" + this.bundleFilePath.replace(/\\/gi, "/"),
-                // filename: 'http://localhost:3100/server.bundle.dev.js'
-                // filename: 'server.bundle.dev.js'
-            };
-            console.log("reloadServerBundle: ", options);
+            // console.log("reloadServerBundle: ", options);
             filepath = filepath || this.bundleFilePath;
             var data = await fs.promises.readFile(filepath, "utf8");
             // if (this.gameScript) {
@@ -585,7 +590,12 @@ class FSGWorker {
 
             // this.gameScript = new VMScript(data, this.bundleFilePath).compile();
         }
-        profiler.End("Reloaded Server Bundle in");
+        profiler.End(
+            `Reloaded Server Bundle ${options.filename.replace(
+                "file:///",
+                ""
+            )} in`
+        );
 
         let filename = filepath.split(/\/|\\/gi);
         filename = filename[filename.length - 1];

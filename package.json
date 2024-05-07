@@ -18,7 +18,8 @@
     "dependencies": {
         "acos-json-delta": "^1.0.0",
         "acos-json-encoder": "^1.0.0",
-        "axios": "^0.26.0",
+        "axios": "^1.6.8",
+        "browser-sync": "^3.0.2",
         "chokidar": "^3.5.3",
         "core-js": "^3.25.3",
         "express": "^4.17.3",
@@ -27,16 +28,14 @@
         "formdata-node": "^5.0.0",
         "got": "^12.5.1",
         "nanoid": "^3.3.4",
+        "nodemon": "^3.0.1",
         "openskill": "^1.4.1",
         "seedrandom": "^3.0.5",
         "shelljs": "^0.8.5",
         "socket.io": "^4.5.3",
         "vlq": "^2.0.4",
+        "wait-on": "^7.2.0",
         "ws": "^8.13.0",
-        "yargs": "^17.0.1",
-        "browser-sync": "^2.27.10",
-        "nodemon": "^3.0.1",
-        "wait-on": "^6.0.1"
-    },
-    "devDependencies": {}
+        "yargs": "^17.0.1"
+    }
 }

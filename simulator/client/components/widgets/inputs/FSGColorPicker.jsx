@@ -1,15 +1,33 @@
-import { Button, HStack, IconButton, Input, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverHeader, PopoverTrigger, Text, Tooltip, VStack } from '@chakra-ui/react'
-import { FormControl, FormLabel, FormHelperText } from "@chakra-ui/form-control";
-import { updateGameField } from '../../../actions/notused/devgame';
-import { useEffect, useRef, useState } from 'react';
+import {
+    Button,
+    HStack,
+    IconButton,
+    Input,
+    Popover,
+    PopoverArrow,
+    PopoverBody,
+    PopoverCloseButton,
+    PopoverContent,
+    PopoverHeader,
+    PopoverTrigger,
+    Text,
+    Tooltip,
+    VStack,
+} from "@chakra-ui/react";
+import {
+    FormControl,
+    FormLabel,
+    FormHelperText,
+} from "@chakra-ui/form-control";
+import { updateGameField } from "../../../actions/notused/devgame";
+import { useEffect, useRef, useState } from "react";
 
-import { IoColorPaletteSharp } from '@react-icons';
-import { SketchPicker } from 'react-color';
+import { IoColorPaletteSharp } from "react-icons/io5";
+import { SketchPicker } from "react-color";
 const regexColorHex = /^#([0-9a-fA-F]{3}){1,2}$/i;
-import fs from 'flatstore';
+import fs from "flatstore";
 
 function FSGColorPicker(props) {
-
     // const inputChange = (e) => {
     //     let name = e.target.name;
     //     let value = e.target.value;
@@ -20,27 +38,29 @@ function FSGColorPicker(props) {
     // const inputRef = useRef();
 
     let defaultValue = props.value;
-    if (!regexColorHex.test(defaultValue))
-        defaultValue = '#f00';
+    if (!regexColorHex.test(defaultValue)) defaultValue = "#f00";
 
     let [colorValue, setColorValue] = useState(defaultValue);
 
     useEffect(() => {
-
-
         if (!regexColorHex.test(props.value)) {
             if (props.rules && props.group) {
-                updateGameField(props.name, '#f00', props.rules, props.group, props.error);
+                updateGameField(
+                    props.name,
+                    "#f00",
+                    props.rules,
+                    props.group,
+                    props.error
+                );
             }
-            props.onChange('#f00');
+            props.onChange("#f00");
         }
         // if (props.focus) {
         //     setTimeout(() => {
         //         inputRef?.current?.focus();
         //     }, props.focusDelay || 300)
         // }
-
-    }, [])
+    }, []);
 
     let timeoutHandle = 0;
     let lastUpdate = Date.now();
@@ -48,10 +68,7 @@ function FSGColorPicker(props) {
     let value = (props.group && props[props.group]) || colorValue;
 
     return (
-
         <VStack h="100%" flex="1">
-
-
             {/* <Input
                     onChange={(e) => {
 
@@ -92,20 +109,26 @@ function FSGColorPicker(props) {
                     color={props.color || 'white'}
                 /> */}
 
-            <Popover flex="1" h="100%" outline={'none'} _active={{ outline: 'none' }} bgColor={'transparent'}>
+            <Popover
+                flex="1"
+                h="100%"
+                outline={"none"}
+                _active={{ outline: "none" }}
+                bgColor={"transparent"}
+            >
                 <PopoverTrigger h="100%">
                     <Button
                         flex="1"
                         fontWeight={props.fontWeight}
                         fontSize={props.fontSize}
                         value={value}
-                        textShadow={'2px 2px #000'}
-                        color={'white'}
+                        textShadow={"2px 2px #000"}
+                        color={"white"}
                         bgColor={value || "brand.500"}
                         h={props.height || "100%"}
-                        w={props.width || '100%'}
+                        w={props.width || "100%"}
                     >
-                        {value || '#f00'}
+                        {value || "#f00"}
                     </Button>
                     {/* <IconButton
                             icon={<IoColorPaletteSharp />}
@@ -113,15 +136,31 @@ function FSGColorPicker(props) {
                             isRound="true"
                         /> */}
                 </PopoverTrigger>
-                <PopoverContent border="0" outline={'none'} _focus={{ outline: 'none' }} _active={{ outline: 'none' }} bgColor={'transparent'}>
+                <PopoverContent
+                    border="0"
+                    outline={"none"}
+                    _focus={{ outline: "none" }}
+                    _active={{ outline: "none" }}
+                    bgColor={"transparent"}
+                >
                     <PopoverArrow />
                     <PopoverCloseButton />
-                    <PopoverBody outline={'none'} _active={{ outline: 'none' }} bgColor={'transparent'}>
+                    <PopoverBody
+                        outline={"none"}
+                        _active={{ outline: "none" }}
+                        bgColor={"transparent"}
+                    >
                         <SketchPicker
-                            color={value || '#f00'}
+                            color={value || "#f00"}
                             onChange={(color) => {
                                 if (props.rules && props.group) {
-                                    updateGameField(props.name, color.hex, props.rules, props.group, props.error);
+                                    updateGameField(
+                                        props.name,
+                                        color.hex,
+                                        props.rules,
+                                        props.group,
+                                        props.error
+                                    );
                                 }
 
                                 props.onChange(color.hex);
@@ -131,16 +170,12 @@ function FSGColorPicker(props) {
                     </PopoverBody>
                 </PopoverContent>
             </Popover>
-
         </VStack>
-    )
-
+    );
 }
 
-
-let onCustomWatched = ownProps => {
-    if (ownProps.group)
-        return [ownProps.group];
+let onCustomWatched = (ownProps) => {
+    if (ownProps.group) return [ownProps.group];
     return [];
 };
 let onCustomProps = (key, value, store, ownProps) => {

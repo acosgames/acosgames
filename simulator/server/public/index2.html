@@ -1,44 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Play or develop your own competitive online web game." />
-        <meta name="author" content="ACOS Simulator" />
-        <!-- <meta http-equiv="Content-Security-Policy" content="default-src ws://localhost http://localhost 'self' 'unsafe-inline' https://cdn.acos.games;" /> -->
-        <title>ACOS Online</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;500;700&display=swap" rel="stylesheet"> -->
-        <link rel="stylesheet" href="https://use.typekit.net/yjp6ffy.css">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Play or develop your own competitive online web game." />
+    <meta name="author" content="ACOS Simulator" />
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src ws://localhost http://localhost 'self' 'unsafe-inline' https://cdn.acos.games;" /> -->
+    <title>ACOS Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;500;700&display=swap" rel="stylesheet"> -->
+    <link rel="stylesheet" href="https://use.typekit.net/yjp6ffy.css">
 
 
-        <!-- <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;500;700&display=swap" rel="stylesheet"> -->
-      
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-HC09PY1QY2"></script>
-        <script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-HC09PY1QY2');</script>
-        <style>
-            html, body { background-color: rgb(10,10,10); margin:0; padding:0}
-            #root { width:100%; height:100%; display:flex; flex-direction: column; justify-items: center; align-items: center;}
-            #ldng { width:100%; height:100%; left:0; right:0; position:absolute; } #ldng-frm img { width:300px; height:124.5px }
-            #ldng-frm { width:100%; height:100%; display:flex; flex-direction: column; justify-items: center; justify-content: center; align-content: center; align-items: center;}
-            .loadingTxt{color:white; display:block; margin-top:0rem; margin-bottom:2rem; font-size:36px; font-weight:bold; font-family:'Arial'}
-            .factory-7{width:90px;height:14px;box-shadow:0 3px 0 #D9E63A;position:relative;clip-path:inset(-40px 0 -5px)}.factory-7:before{content:"";position:absolute;inset:auto calc(50% - 17px) 0;height:50px;--g:linear-gradient(#ccc 0 0);background:var(--g),var(--g),var(--g),var(--g);background-size:16px 14px;background-repeat:no-repeat;animation:f7-1 2s infinite linear,f7-2 2s infinite linear}@keyframes f7-1{0%,100%{background-position:0 -50px,100% -50px}17.5%{background-position:0 100%,100% -50px,0 -50px,100% -50px}35%{background-position:0 100%,100% 100%,0 -50px,100% -50px}52.5%{background-position:0 100%,100% 100%,0 calc(100% - 16px),100% -50px}70%,98%{background-position:0 100%,100% 100%,0 calc(100% - 16px),100% calc(100% - 16px)}}@keyframes f7-2{0%,70%{transform:translate(0)}100%{transform:translate(200%)}}
-            .ldr-1 div {height:20px;width:20px;border-radius:50%;background: #D9E63A;float:left;margin:0 10px;background:#fff;transform:scale(0);}
-            .ldr-1 .ball1 {  animation: grow 0.8s infinite ease-in-out; animation-delay: 0.08s; z-index:1; }
-            .ldr-1 .ball2 {  animation: grow1 0.8s infinite ease-in-out;  animation-delay: 0.13s; }
-            .ldr-1 .ball3 {  animation: grow2 0.8s infinite ease-in-out; animation-delay: 0.18s; }
-            .ldr-1 .ball4 {  animation: grow3 0.8s infinite ease-in-out; animation-delay: 0.22s;  }
-            @keyframes grow {0% {transform: scale(0);}40% {transform: scale(0.5);}90% {transform: scale(0);}}
-            @keyframes grow1 {0% {transform: scale(0);}40% {transform: scale(0.8);}90% {transform: scale(0);}}
-            @keyframes grow2 {0% {transform: scale(0);}40% {transform: scale(1);}90% {transform: scale(0);}}
-            @keyframes grow3 {0% {transform: scale(0);}40% {transform: scale(1.8);}90% {transform: scale(0);}}
-        </style>
-    </head>
-    <body>
-        <div id="root">
-            <!-- <div id="ldng"><div id="ldng-frm"><img src="https://cdn.acos.games/file/acospub/acos-logo-combined.png" /><div class="ldr-1"><div class="ball1"></div><div class="ball2"></div><div class="ball3"></div><div class="ball4"></div></div></div> -->
-        </div>
-        <script src="/bundle.js" async></script>
-    </body>
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;500;700&display=swap" rel="stylesheet"> -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HC09PY1QY2"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'G-HC09PY1QY2');</script>
+    <style>
+        html,
+        body {
+            background-color: rgb(10, 10, 10);
+            margin: 0;
+            padding: 0
+        }
+
+        #root {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-items: center;
+            align-items: center;
+        }
+
+        #ldng {
+            width: 100%;
+            height: 100%;
+            left: 0;
+            right: 0;
+            position: absolute;
+        }
+
+        #ldng-frm img {
+            width: 300px;
+            height: 124.5px
+        }
+
+        #ldng-frm {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-items: center;
+            justify-content: center;
+            align-content: center;
+            align-items: center;
+        }
+
+        .loadingTxt {
+            color: white;
+            display: block;
+            margin-top: 0rem;
+            margin-bottom: 2rem;
+            font-size: 36px;
+            font-weight: bold;
+            font-family: 'Arial'
+        }
+
+        .factory-7 {
+            width: 90px;
+            height: 14px;
+            box-shadow: 0 3px 0 #D9E63A;
+            position: relative;
+            clip-path: inset(-40px 0 -5px)
+        }
+
+        .factory-7:before {
+            content: "";
+            position: absolute;
+            inset: auto calc(50% - 17px) 0;
+            height: 50px;
+            --g: linear-gradient(#ccc 0 0);
+            background: var(--g), var(--g), var(--g), var(--g);
+            background-size: 16px 14px;
+            background-repeat: no-repeat;
+            animation: f7-1 2s infinite linear, f7-2 2s infinite linear
+        }
+
+        @keyframes f7-1 {
+
+            0%,
+            100% {
+                background-position: 0 -50px, 100% -50px
+            }
+
+            17.5% {
+                background-position: 0 100%, 100% -50px, 0 -50px, 100% -50px
+            }
+
+            35% {
+                background-position: 0 100%, 100% 100%, 0 -50px, 100% -50px
+            }
+
+            52.5% {
+                background-position: 0 100%, 100% 100%, 0 calc(100% - 16px), 100% -50px
+            }
+
+            70%,
+            98% {
+                background-position: 0 100%, 100% 100%, 0 calc(100% - 16px), 100% calc(100% - 16px)
+            }
+        }
+
+        @keyframes f7-2 {
+
+            0%,
+            70% {
+                transform: translate(0)
+            }
+
+            100% {
+                transform: translate(200%)
+            }
+        }
+
+        .ldr-1 div {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #D9E63A;
+            float: left;
+            margin: 0 10px;
+            background: #fff;
+            transform: scale(0);
+        }
+
+        .ldr-1 .ball1 {
+            animation: grow 0.8s infinite ease-in-out;
+            animation-delay: 0.08s;
+            z-index: 1;
+        }
+
+        .ldr-1 .ball2 {
+            animation: grow1 0.8s infinite ease-in-out;
+            animation-delay: 0.13s;
+        }
+
+        .ldr-1 .ball3 {
+            animation: grow2 0.8s infinite ease-in-out;
+            animation-delay: 0.18s;
+        }
+
+        .ldr-1 .ball4 {
+            animation: grow3 0.8s infinite ease-in-out;
+            animation-delay: 0.22s;
+        }
+
+        @keyframes grow {
+            0% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(0.5);
+            }
+
+            90% {
+                transform: scale(0);
+            }
+        }
+
+        @keyframes grow1 {
+            0% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(0.8);
+            }
+
+            90% {
+                transform: scale(0);
+            }
+        }
+
+        @keyframes grow2 {
+            0% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+
+            90% {
+                transform: scale(0);
+            }
+        }
+
+        @keyframes grow3 {
+            0% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1.8);
+            }
+
+            90% {
+                transform: scale(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root">
+        <!-- <div id="ldng"><div id="ldng-frm"><img src="https://cdn.acos.games/file/acospub/acos-logo-combined.png" /><div class="ldr-1"><div class="ball1"></div><div class="ball2"></div><div class="ball3"></div><div class="ball4"></div></div></div> -->
+    </div>
+    <!-- <script src="/bundle.js" async></script> -->
+
+    <script type="module">
+        import RefreshRuntime from 'http://localhost:3250/@react-refresh'
+        RefreshRuntime.injectIntoGlobalHook(window)
+        window.$RefreshReg$ = () => { }
+        window.$RefreshSig$ = () => (type) => type
+        window.__vite_plugin_react_preamble_installed__ = true
+    </script>
+    <script type="module" src="http://localhost:3250/main.jsx"></script>
+</body>
+
 </html>

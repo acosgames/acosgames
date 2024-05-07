@@ -1,18 +1,20 @@
-import fs from 'flatstore';
-const DELTA = require('../../shared/delta');
-import { playerReady } from '../actions/game';
-import GamePanelService from './GamePanelService';
-import ENCODER from '../util/encoder';
+import fs from "flatstore";
+import DELTA from "acos-json-delta";
+import { playerReady } from "../actions/game";
+import GamePanelService from "./GamePanelService";
+import ENCODER from "acos-json-encoder";
+import ACOSDictionary from "shared/acos-dictionary.json";
+ENCODER.createDefaultDict(ACOSDictionary);
 
 class GameStateService {
     constructor() {
-        fs.set('gameState', {});
-        fs.set('deltaState', {});
-        fs.set('hiddenPlayerState', {});
+        fs.set("gameState", {});
+        fs.set("deltaState", {});
+        fs.set("hiddenPlayerState", {});
     }
 
     getGameState() {
-        return fs.copy('gameState');
+        return fs.copy("gameState");
     }
 
     getPlayers() {
@@ -34,18 +36,17 @@ class GameStateService {
 
     getPlayer(id) {
         let players = this.getPlayers();
-        if (id in players)
-            return players[id];
+        if (id in players) return players[id];
         return null;
     }
 
     hasTeams() {
-        let teaminfo = fs.get('teaminfo') || [];
+        let teaminfo = fs.get("teaminfo") || [];
         return teaminfo.length > 0;
     }
 
     anyTeamHasVacancy() {
-        let teaminfo = fs.get('teaminfo') || [];
+        let teaminfo = fs.get("teaminfo") || [];
         let vacancyCount = 0;
 
         for (const team of teaminfo) {
@@ -60,49 +61,42 @@ class GameStateService {
     }
 
     hasVacancy(team_slug) {
-        let gameSettings = fs.get('gameSettings');
-        let teaminfo = fs.get('teaminfo') || [];
+        let gameSettings = fs.get("gameSettings");
+        let teaminfo = fs.get("teaminfo") || [];
 
-        let gameState = fs.get('gameState');
+        let gameState = fs.get("gameState");
         let players = gameState?.players || {};
         let playerList = Object.keys(players);
-        if (playerList.length >= gameSettings.maxplayers)
-            return false;
+        if (playerList.length >= gameSettings.maxplayers) return false;
 
         if (team_slug) {
-            if (!gameState?.teams)
-                return true;
+            if (!gameState?.teams) return true;
 
-            let team = teaminfo.find(t => t.team_slug == team_slug);
-            if (!team)
-                return false;
+            let team = teaminfo.find((t) => t.team_slug == team_slug);
+            if (!team) return false;
 
-            if (team.vacancy <= 0)
-                return false;
+            if (team.vacancy <= 0) return false;
         }
 
         return true;
     }
 
     clearState() {
-        fs.set('gameState', {});
-        fs.set('deltaState', {});
-        fs.set('hiddenPlayerState', {});
+        fs.set("gameState", {});
+        fs.set("deltaState", {});
+        fs.set("hiddenPlayerState", {});
 
         this.updateGamePanels();
     }
 
     validateNextTeam(teams, teamid) {
-
         let gamestate = this.getGameState();
         let next = gamestate?.next;
         let nextid = next?.id;
 
-        if (typeof nextid === 'string') {
+        if (typeof nextid === "string") {
             //anyone can send actions
-            if (nextid == '*')
-                return true;
-
+            if (nextid == "*") return true;
 
             //validate team has players
             if (!teams || !teams[teamid] || !teams[teamid].players)
@@ -112,25 +106,19 @@ class GameStateService {
             if (nextid == teamid && Array.isArray(teams[teamid].players)) {
                 return true;
             }
-        }
-        else if (Array.isArray(nextid)) {
-
+        } else if (Array.isArray(nextid)) {
             //multiple users can send actions if in the array
             // if (nextid.includes(userid))
             //     return false;
 
             //validate teams exist
-            if (!teams)
-                return false;
+            if (!teams) return false;
 
-            if (nextid.includes(teamid))
-                return true;
-
+            if (nextid.includes(teamid)) return true;
         }
 
         return false;
     }
-
 
     validateNextUser(userid) {
         let gamestate = this.getGameState();
@@ -138,51 +126,47 @@ class GameStateService {
         let nextid = next?.id;
         let room = gamestate.room;
 
-        if (room?.status == 'pregame')
-            return true;
+        if (room?.status == "pregame") return true;
 
-        if (!next || !nextid)
-            return false;
+        if (!next || !nextid) return false;
 
-        if (!gamestate.state)
-            return false;
+        if (!gamestate.state) return false;
 
         //check if we ven have teams
         let teams = gamestate?.teams;
 
-
-        if (typeof nextid === 'string') {
+        if (typeof nextid === "string") {
             //anyone can send actions
-            if (nextid == '*')
-                return true;
+            if (nextid == "*") return true;
 
             //only specific user can send actions
-            if (nextid == userid)
-                return true;
+            if (nextid == userid) return true;
 
             //validate team has players
             if (!teams || !teams[nextid] || !teams[nextid].players)
                 return false;
 
             //allow players on specified team to send actions
-            if (Array.isArray(teams[nextid].players) && teams[nextid].players.includes(userid)) {
+            if (
+                Array.isArray(teams[nextid].players) &&
+                teams[nextid].players.includes(userid)
+            ) {
                 return true;
             }
-        }
-        else if (Array.isArray(nextid)) {
-
+        } else if (Array.isArray(nextid)) {
             //multiple users can send actions if in the array
-            if (nextid.includes(userid))
-                return true;
+            if (nextid.includes(userid)) return true;
 
             //validate teams exist
-            if (!teams)
-                return false;
+            if (!teams) return false;
 
             //multiple teams can send actions if in the array
             for (var i = 0; i < nextid.length; i++) {
                 let teamid = nextid[i];
-                if (Array.isArray(teams[teamid].players) && teams[teamid].players.includes(userid)) {
+                if (
+                    Array.isArray(teams[teamid].players) &&
+                    teams[teamid].players.includes(userid)
+                ) {
                     return true;
                 }
             }
@@ -191,11 +175,8 @@ class GameStateService {
         return false;
     }
 
-
-
     updateState(newState, prevState) {
-
-        let gameState = prevState || fs.get('gameState');
+        let gameState = prevState || fs.get("gameState");
         let copyGameState = JSON.parse(JSON.stringify(gameState));
         let copyNewState = JSON.parse(JSON.stringify(newState));
         let delta = DELTA.delta(copyGameState, copyNewState, {});
@@ -213,10 +194,8 @@ class GameStateService {
 
         // let deltaError = DELTA.delta(newState, merged, {});
 
-        // // if (Object.keys(deltaError).length > 0) 
+        // // if (Object.keys(deltaError).length > 0)
         // {
-
-
 
         //     console.error("MERGE ERROR: ", deltaError);
         // }
@@ -224,35 +203,26 @@ class GameStateService {
         let hiddenState = DELTA.hidden(delta.state);
         let hiddenPlayers = DELTA.hidden(delta.players);
 
+        if ("$" in delta) delete delta["$"];
 
+        if (delta.events && "$" in delta.events) delete delta.events["$"];
 
+        if (delta?.action?.user?.id) delta.action.user = delta.action.user.id;
 
-        if ('$' in delta)
-            delete delta['$'];
-
-        if (delta.events && '$' in delta.events)
-            delete delta.events['$'];
-
-        if (delta?.action?.user?.id)
-            delta.action.user = delta.action.user.id;
-
-        if (delta?.action && 'timeseq' in delta.action)
+        if (delta?.action && "timeseq" in delta.action)
             delete delta.action.timeseq;
 
-        if (delta?.action && 'timeleft' in delta.action)
+        if (delta?.action && "timeleft" in delta.action)
             delete delta.action.timeleft;
 
-
         let encoded = ENCODER.encode(delta);
-        fs.set('deltaEncoded', encoded.byteLength);
-
+        fs.set("deltaEncoded", encoded.byteLength);
 
         newState.delta = delta;
 
-        console.log('AFTER', newState.players);
-        fs.set('deltaState', delta);
-        fs.set('hiddenPlayerState', hiddenPlayers);
-
+        console.log("AFTER", newState.players);
+        fs.set("deltaState", delta);
+        fs.set("hiddenPlayerState", hiddenPlayers);
 
         let playerTeams = {};
         if (newState.teams) {
@@ -263,37 +233,41 @@ class GameStateService {
                 }
             }
         }
-        fs.set('playerTeams', playerTeams);
+        fs.set("playerTeams", playerTeams);
 
-        fs.set('gameState', newState);
-
-
-
+        fs.set("gameState", newState);
 
         this.updateGamePanels();
     }
 
     updateGamePanel(id) {
         try {
-            let gameState = fs.get('gameState');
-            let gamepanels = fs.get('gamepanels');
+            let gameState = fs.get("gameState");
+            let gamepanels = fs.get("gamepanels");
             let gamepanel = gamepanels[id];
 
             let pstate = JSON.parse(JSON.stringify(gameState));
 
-            if (!gamepanel?.iframe?.current)
-                return;
+            if (!gamepanel?.iframe?.current) return;
 
-            if (pstate.private)
-                delete pstate.private;
+            if (pstate.private) delete pstate.private;
 
             if (pstate?.room && pstate?.room?.isreplay) {
                 delete pstate.room.isreplay;
             }
 
-            let hiddenPlayers = fs.set('hiddenPlayerState');
-            if (hiddenPlayers && hiddenPlayers[id] && pstate?.players && pstate?.players[id]) {
-                pstate.local = Object.assign({}, pstate.players[id], hiddenPlayers[id]);
+            let hiddenPlayers = fs.set("hiddenPlayerState");
+            if (
+                hiddenPlayers &&
+                hiddenPlayers[id] &&
+                pstate?.players &&
+                pstate?.players[id]
+            ) {
+                pstate.local = Object.assign(
+                    {},
+                    pstate.players[id],
+                    hiddenPlayers[id]
+                );
                 pstate.private = { players: { [id]: hiddenPlayers[id] } };
             }
 
@@ -302,8 +276,6 @@ class GameStateService {
                 pstate.local.id = id;
             }
 
-
-
             GamePanelService.sendFrameMessage(gamepanel, pstate);
 
             if (pstate?.events?.join && Array.isArray(pstate.events.join)) {
@@ -311,18 +283,16 @@ class GameStateService {
                     let user = GamePanelService.getUserById(id);
 
                     if (gamepanel.ready && !gameState.room.isreplay)
-                        playerReady(user)
+                        playerReady(user);
                 }
             }
-        }
-        catch (e) {
+        } catch (e) {
             console.error(e);
         }
-
     }
 
     updateGamePanels() {
-        let gamepanels = fs.get('gamepanels');
+        let gamepanels = fs.get("gamepanels");
         for (const id in gamepanels) {
             this.updateGamePanel(id);
         }

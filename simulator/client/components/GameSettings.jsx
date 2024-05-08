@@ -30,6 +30,9 @@ import fs from "flatstore";
 import { FaArrowCircleUp, FaArrowCircleDown } from "react-icons/fa";
 import { useEffect, useRef, useState } from "react";
 import { SketchPicker } from "react-color";
+import { AnimatePresence, motion } from "framer-motion";
+
+const MotionBox = motion(Box);
 
 export function Settings(props) {
     let [gameSettings] = fs.useWatch("gameSettings");
@@ -64,7 +67,7 @@ export function ChooseGameSettings(props) {
                 <VStack>
                     <VStack bgColor="gray.900" px="2rem">
                         <HStack spacing="1rem" alignItems={"flex-end"}>
-                            <Text w="6rem" color="gray.20" fontWeight={"600"}>
+                            <Text w="6rem" color="gray.50" fontWeight={"600"}>
                                 Players
                             </Text>
                             <SettingNumberInput
@@ -79,7 +82,7 @@ export function ChooseGameSettings(props) {
                             />
                         </HStack>
                         <HStack spacing="1rem" alignItems={"flex-end"}>
-                            <Text w="6rem" color="gray.20" fontWeight={"600"}>
+                            <Text w="6rem" color="gray.50" fontWeight={"600"}>
                                 Teams
                             </Text>
                             <SettingNumberInput
@@ -127,11 +130,16 @@ export function ChooseTeamSettings(props) {
             return <></>;
         }
 
+        // let teamList = Object.keys(teams);
+        teams.sort((a, b) => {
+            return b.team_order - a.team_order;
+        });
         let elems = [];
         for (let i = 0; i < teams.length; i++) {
+            // let team_slug = teamList[i];
             elems.push(
                 <TeamSettings
-                    key={"key_" + teams[i].team_order + "team"}
+                    key={"key_" + teams[i].team_slug + "team"}
                     team_order={i}
                 />
             );
@@ -162,7 +170,7 @@ export function ChooseTeamSettings(props) {
                             : "flex"
                     }
                 >
-                    {renderTeams()}
+                    <AnimatePresence>{renderTeams()}</AnimatePresence>
                 </VStack>
             </CardBody>
         </Card>
@@ -192,17 +200,35 @@ function TeamSettings(props) {
         let gameSettings = fs.get("gameSettings");
         let teams = gameSettings.teams;
 
-        let newIndex = props.team_order + dir;
-        if (newIndex < 0) return;
-        if (newIndex >= teams.length) return;
+        // let newIndex = props.team_order + dir;
+        // if (newIndex < 0) return;
+        // if (newIndex >= teams.length) return;
 
-        arraymove(teams, props.team_order, newIndex);
+        // arraymove(teams, props.team_order, newIndex);
+        // let teamList = Object.keys(teams);
+        teams.sort((a, b) => {
+            return a.team_order - b.team_order;
+        });
 
-        for (let i = 0; i < teams.length; i++) {
-            if (teams[i].team_order != i) {
-                teams[i].team_order = i;
-            }
-        }
+        // let index = teamList.indexOf(props.team_order);
+        // let activeTeamSlug = teamList[index];
+        // let otherTeamSlug = teamList[index + dir];
+        let activeTeam = teams[props.team_order];
+        let otherTeam = teams[props.team_order + dir];
+
+        let otherTeamOrder = otherTeam.team_order;
+        let activeTeamOrder = activeTeam.team_order;
+        otherTeam.team_order = activeTeamOrder;
+        activeTeam.team_order = otherTeamOrder;
+
+        teams.sort((a, b) => {
+            return a.team_order - b.team_order;
+        });
+        // for (let i = 0; i < teams.length; i++) {
+        //     if (teams[i].team_order != i) {
+        //         teams[i].team_order = i;
+        //     }
+        // }
 
         updateGameSettings(gameSettings);
         setActive(true);
@@ -235,11 +261,13 @@ function TeamSettings(props) {
     let isDownActive = teams && props.team_order < teams.length - 1;
 
     return (
-        <Box
+        <MotionBox
+            layout
+            transition={{ duration: 1 }}
             ref={teamRef}
             pt="2rem"
             pb="2rem"
-            transition={"background 0.3s ease"}
+            // transition={"background 0.3s ease"}
             bgColor={active ? "gray.850" : "gray.850"}
             _hover={{ bgColor: "gray.825" }}
             borderTop={"1px solid"}
@@ -255,16 +283,16 @@ function TeamSettings(props) {
                     pl="2rem"
                 >
                     <IconButton
-                        color={isUpActive ? "gray.300" : "gray.850"}
+                        color={isUpActive ? "gray.50" : "gray.850"}
                         _hover={{ color: isUpActive ? "white" : "gray.850" }}
                         _active={{
-                            color: isUpActive ? "gray.100" : "gray.850",
+                            color: isUpActive ? "gray.50" : "gray.850",
                         }}
                         onClick={() => {
                             if (!isUpActive) return;
                             onChangeOrder(-1);
                         }}
-                        cursor={isUpActive ? "pointer" : ""}
+                        cursor={isUpActive ? "pointer" : "default"}
                         icon={<FaArrowCircleUp size="2rem" />}
                         width="2.8rem"
                         height="2.8rem"
@@ -272,28 +300,28 @@ function TeamSettings(props) {
                     />
                     <Text
                         as="span"
-                        backgroundColor="gray.600"
+                        backgroundColor="gray.700"
                         w="3rem"
                         h="3rem"
                         align="center"
                         lineHeight="3.1rem"
                         borderRadius={"50%"}
-                        color="white"
+                        color="gray.10"
                         fontSize="xs"
                         fontWeight={"bold"}
                     >
                         {props.team_order}
                     </Text>
                     <IconButton
-                        color={isDownActive ? "gray.300" : "gray.850"}
-                        cursor={isDownActive ? "pointer" : ""}
+                        color={isDownActive ? "gray.50" : "gray.850"}
+                        cursor={isDownActive ? "pointer" : "default"}
                         onClick={() => {
                             if (!isDownActive) return;
                             onChangeOrder(1);
                         }}
                         _hover={{ color: isDownActive ? "white" : "gray.850" }}
                         _active={{
-                            color: isDownActive ? "gray.100" : "gray.850",
+                            color: isDownActive ? "gray.50" : "gray.850",
                         }}
                         icon={<FaArrowCircleDown size="2rem" />}
                         width="2.8rem"
@@ -339,7 +367,7 @@ function TeamSettings(props) {
                     </Box>
                 </VStack>
             </HStack>
-        </Box>
+        </MotionBox>
     );
 }
 
@@ -480,7 +508,7 @@ function SettingTextInput(props) {
                 w={props.textWidth || "100%"}
                 display={props.title ? "inline-block" : "none"}
                 pr="0.5rem"
-                color="gray.20"
+                color="gray.50"
                 fontSize="xs"
                 htmlFor={id}
             >
@@ -490,7 +518,7 @@ function SettingTextInput(props) {
                 className=""
                 id={id}
                 fontSize="xs"
-                bgColor="gray.975"
+                bgColor="gray.950"
                 aria-describedby=""
                 placeholder={props.placeholder}
                 onChange={(e) => {
@@ -511,6 +539,7 @@ function SettingTextInput(props) {
                     updateGameSettings(gameSettings);
                     // e.target.focus();
                 }}
+                value={currentValue}
                 defaultValue={currentValue}
                 w={props.width || "100%"}
             />
@@ -556,7 +585,7 @@ function SettingNumberInput(props) {
                 className=""
                 id={id}
                 fontSize="1.4rem"
-                bgColor="gray.975"
+                bgColor="gray.950"
                 aria-describedby=""
                 readOnly={props.readOnly || false}
                 isDisabled={props.readOnly || false}
@@ -631,7 +660,7 @@ export function ChooseScreenSettings(props) {
                                     display={"inline-block"}
                                     pr="0.5rem"
                                     fontWeight={"600"}
-                                    color="gray.20"
+                                    color="gray.50"
                                     fontSize="1.4rem"
                                     htmlFor="screenType"
                                     pb="0.5rem"
@@ -641,7 +670,7 @@ export function ChooseScreenSettings(props) {
                                 <Select
                                     fontSize="xs"
                                     id="screenType"
-                                    bgColor="gray.975"
+                                    bgColor="gray.950"
                                     value={gameSettings?.screentype || "3"}
                                     onChange={(e) => {
                                         let val = Number.parseInt(
@@ -683,7 +712,7 @@ export function ChooseScreenSettings(props) {
                                     display={"inline-block"}
                                     pr="0.5rem"
                                     fontWeight={"600"}
-                                    color="gray.20"
+                                    color="gray.50"
                                     fontSize="1.4rem"
                                     htmlFor="resolution"
                                 >
@@ -726,7 +755,7 @@ export function ChooseScreenSettings(props) {
                                     display={"inline-block"}
                                     pr="0.5rem"
                                     fontWeight={"600"}
-                                    color="gray.20"
+                                    color="gray.50"
                                     fontSize="1.4rem"
                                     htmlFor="screenwidth"
                                 >

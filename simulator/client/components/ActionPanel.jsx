@@ -72,11 +72,16 @@ function GameActionsCompact(props) {
                     {isGameRunning || isGameOver ? "Reset Game" : "New Game"}
                 </Button>
             </HStack>
-            <HStack display={gameStatus == "gamestart" ? "flex" : "none"}>
-                <Button fontSize={"xxs"} bgColor={"yellow.600"} onClick={skip}>
+            {/* <HStack display={gameStatus == "gamestart" ? "flex" : "none"}>
+                <Button
+                    fontSize={"xxs"}
+                    color="gray.1200"
+                    bgColor={"brand.700"}
+                    onClick={skip}
+                >
                     Skip
                 </Button>
-            </HStack>
+            </HStack> */}
             <Tooltip
                 title={
                     playerList.length < gameSettings.minplayers
@@ -137,16 +142,16 @@ export function GameActionsExpanded(props) {
 
     return (
         <Card>
-            <CardHeader>
+            {/* <CardHeader>
                 <Text fontWeight="500">Game Actions</Text>
-            </CardHeader>
-            <CardBody pt="0">
-                <VStack
-                    height="100%"
-                    justifyItems={"center"}
-                    alignItems="center"
-                >
-                    <HStack>
+            </CardHeader> */}
+            <CardBody>
+                <VStack height="100%" w="100%">
+                    <HStack w="100%">
+                        <Box maxW="15rem">
+                            <ReplayControls />
+                        </Box>
+                        <Box flex="1"></Box>
                         <HStack display={isInGame ? "flex" : "none"}>
                             <Button
                                 fontSize={"xxs"}
@@ -158,6 +163,7 @@ export function GameActionsExpanded(props) {
                                     : "New Game"}
                             </Button>
                         </HStack>
+
                         <HStack
                             display={
                                 gameStatus == "gamestart" ? "flex" : "none"
@@ -165,7 +171,8 @@ export function GameActionsExpanded(props) {
                         >
                             <Button
                                 fontSize={"xxs"}
-                                bgColor={"yellow.600"}
+                                color="gray.1200"
+                                bgColor={"brand.700"}
                                 onClick={skip}
                             >
                                 Skip
@@ -180,6 +187,7 @@ export function GameActionsExpanded(props) {
                                 {"Start Game"}
                             </Button>
                         </HStack>
+                        <Box pr="1rem"></Box>
                     </HStack>
                     {/* <HStack display={isGameRunning ? 'flex' : 'none'}>
                 <Button

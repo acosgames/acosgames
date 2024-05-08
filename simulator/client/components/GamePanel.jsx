@@ -133,6 +133,16 @@ function GameIFrame(props) {
         bgWidth = steps * resow;
         bgHeight = steps * resoh;
 
+        // let isUserNext = GameStateService.validateNextUser(props.id);
+        let frameBorder = "";
+        //  isUserNext
+        //     ? "border: 2px solid var(--chakra-colors-brand-50)"
+        //     : "border: 2px solid transparent";
+
+        // if (!isUserNext) {
+        //     bgWidth -= 2;
+        //     // bgHeight -= 2;
+        // }
         if (screentype == 3) {
             gamescreenRef.current.style.width = bgWidth + "px";
             gamescreenRef.current.style.height = bgHeight + "px";
@@ -144,17 +154,25 @@ function GameIFrame(props) {
                     scale: scale,
                     translateZ: "0",
                 }) +
-                    `; transform-origin: left top; width:${screenwidth}px; height:${screenheight}px;`
+                    `; transform-origin: left top; width:${screenwidth}px; height:${screenheight}px; ${frameBorder}`
             );
         } else if (screentype == 2) {
             gamescreenRef.current.style.width = bgWidth + "px";
             gamescreenRef.current.style.height = bgHeight + "px";
-            iframeRef.current.setAttribute("style", "width:100%; height:100%;");
+            iframeRef.current.setAttribute(
+                "style",
+                "width:100%; height:100%;" + frameBorder
+            );
         } else if (screentype == 1) {
             gamescreenRef.current.style.width = windowWidth + "px";
             gamescreenRef.current.style.height = windowHeight + "px";
-            iframeRef.current.setAttribute("style", "width:100%; height:100%;");
+            iframeRef.current.setAttribute(
+                "style",
+                "width:100%; height:100%;" + frameBorder
+            );
         }
+
+        fs.set("iframeStyle", iframeRef.current.style);
     };
 
     let observerTimer = 0;
@@ -204,14 +222,9 @@ function GameIFrame(props) {
     let lastMessage = fs.get("gameState");
     let players = lastMessage?.players || {};
 
-    let fakePlayers = fs.get("fakePlayers") || {};
-
-    let fakePlayerList = Object.keys(fakePlayers);
-
     let isSpectator = !(props.id in players);
 
     // let user = GamePanelService.getUserById(props.id);
-    // let isUserNext = GameStateService.validateNextUser(props.id);
 
     return (
         <VStack
@@ -244,8 +257,10 @@ function GameIFrame(props) {
                     ref={gamescreenRef}
                     height="100%"
                     position="relative"
-                    boxShadow={"0px 12px 24px rgba(0,0,0,0.2)"}
+                    // boxShadow={"0px 12px 24px rgba(0,0,0,0.2)"}
                     alignSelf="center"
+                    bgColor="gray.700"
+                    // boxSizing="content-box"
                 >
                     <iframe
                         className="gamescreen"
@@ -275,21 +290,7 @@ function GameIFrame(props) {
                         height="3rem"
                         width="100%"
                     >
-                        <DisplayUserInfo id={props.id} />
-                        <Box
-                            position="absolute"
-                            right="0"
-                            top="50%"
-                            transform="translateY(-40%)"
-                            display={
-                                fakePlayerList.length < 8 ? "block" : "none"
-                            }
-                        >
-                            <DisplayUserActions
-                                id={props.id}
-                                from={"gamepanel"}
-                            />
-                        </Box>
+                        <DisplayUserInfo id={props.id} iframeRef={iframeRef} />
                     </HStack>
                 </Box>
             </VStack>
@@ -342,69 +343,112 @@ function DisplayUserInfo(props) {
     }
     if (isUserNext) color = "brand.50";
 
+    let fakePlayers = fs.get("fakePlayers") || {};
+
+    let fakePlayerList = Object.keys(fakePlayers);
+
+    useEffect(() => {
+        // let isUserNext = GameStateService.validateNextUser(props.id);
+        // let frameBorder = isUserNext
+        //     ? "border: 2px solid var(--chakra-colors-brand-50)"
+        //     : "border-top: 2px solid transparent";
+        // if (props.iframeRef.current) {
+        //     if (isUserNext) {
+        //         props.iframeRef.current.style.border =
+        //             "2px solid var(--chakra-colors-brand-50)";
+        //     } else {
+        //         props.iframeRef.current.style.border = "2px solid transparent";
+        //     }
+        //     // props.iframeRef.current.style =
+        //     //     fs.get("iframeStyle") + " " + frameBorder;
+        // }
+    });
     return (
         <HStack
-            spacing="1rem"
+            // spacing="1rem"
             px="3rem"
             width="100%"
-            height="3rem"
+            // height="3rem"
             justifyContent={"center"}
             position="relative"
             alignItems={"center"}
-            // border={
-            //     isUserNext ? "3px solid var(--chakra-colors-brand-500)" : "none"
-            // }
-            onClick={() => {
-                let fakePlayers = fs.get("fakePlayers");
-                let fakePlayerList = Object.keys(fakePlayers || {}) || [];
-                let gamepanels = fs.get("gamepanels");
-                let gamepanel = gamepanels[props.id];
-                if (gamepanel) {
-                    let primaryGamePanel = fs.get("primaryGamePanel");
-
-                    //go back to compact if selecting again
-                    if (
-                        gamepanel == primaryGamePanel &&
-                        fakePlayerList.length < 7
-                    ) {
-                        fs.set("primaryGamePanel", null);
-                        fs.set("gamePanelLayout", "compact");
-                        return;
-                    }
-
-                    fs.set("primaryGamePanel", gamepanel);
-                }
-                fs.set("gamePanelLayout", "expanded");
-            }}
+            boxSizing="border-box"
+            // bgColor="gray.700"
+            borderTop={
+                isUserNext
+                    ? "2px solid var(--chakra-colors-brand-500)"
+                    : "2px solid transparent"
+            }
+            bgColor={"gray.950"}
         >
-            <Tooltip
-                label={isInGame ? "In game" : "Spectator"}
-                placement="bottom"
+            <HStack
+                px="2rem"
+                onClick={() => {
+                    let fakePlayers = fs.get("fakePlayers");
+                    let fakePlayerList = Object.keys(fakePlayers || {}) || [];
+                    let gamepanels = fs.get("gamepanels");
+                    let gamepanel = gamepanels[props.id];
+                    if (gamepanel) {
+                        let primaryGamePanel = fs.get("primaryGamePanel");
+
+                        //go back to compact if selecting again
+                        if (
+                            gamepanel == primaryGamePanel &&
+                            fakePlayerList.length < 7
+                        ) {
+                            fs.set("primaryGamePanel", null);
+                            fs.set("gamePanelLayout", "compact");
+                            return;
+                        }
+
+                        fs.set("primaryGamePanel", gamepanel);
+                    }
+                    fs.set("gamePanelLayout", "expanded");
+                }}
             >
-                <Text as="span" lineHeight={"3rem"} h="1.8rem" p="0">
-                    <Icon
-                        color={color}
-                        as={isInGame ? MdPerson : GoEye}
-                        w="1.8rem"
+                <Tooltip
+                    label={isInGame ? "In game" : "Spectator"}
+                    placement="bottom"
+                >
+                    <Text
+                        as="span"
+                        //  lineHeight={"3rem"}
                         h="1.8rem"
                         p="0"
-                    />
-                </Text>
-            </Tooltip>
-            <Tooltip label={user.id} placement="bottom">
-                <Text
-                    lineHeight={"3.4rem"}
-                    height="3rem"
-                    cursor={"pointer"}
-                    color={color}
-                    as="span"
-                    display="inline-block"
-                    fontSize="1.6rem"
-                    fontWeight="600"
-                >
-                    {user.name}
-                </Text>
-            </Tooltip>
+                    >
+                        <Icon
+                            color={color}
+                            as={isInGame ? MdPerson : GoEye}
+                            w="1.8rem"
+                            h="1.8rem"
+                            p="0"
+                        />
+                    </Text>
+                </Tooltip>
+                <Tooltip label={user.id} placement="bottom">
+                    <Text
+                        // lineHeight={"3.4rem"}
+                        // height="3rem"
+                        cursor={"pointer"}
+                        color={color}
+                        as="span"
+                        display="inline-block"
+                        fontSize="1.4rem"
+                        fontWeight="500"
+                    >
+                        {user.name}
+                    </Text>
+                </Tooltip>
+            </HStack>
+            <Box
+                position="absolute"
+                right="1rem"
+                top="50%"
+                transform="translateY(-50%)"
+                display={fakePlayerList.length < 8 ? "block" : "none"}
+            >
+                <DisplayUserActions id={props.id} from={"gamepanel"} />
+            </Box>
         </HStack>
     );
 }

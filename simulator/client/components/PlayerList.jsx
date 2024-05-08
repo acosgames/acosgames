@@ -323,16 +323,17 @@ export function DisplayUserActions(props) {
             <Button
                 display={isLeaveAllowed ? "block" : "none"}
                 fontSize={"xxs"}
-                height={"1.4rem"}
-                lineHeight="1.4rem"
+                height={"1.8rem"}
+                lineHeight="1.8rem"
                 bgColor={"red.800"}
-                onClick={() => {
+                onClick={(e) => {
                     if (isFakePlayer) {
                         let fakePlayer = GamePanelService.getUserById(props.id);
                         leaveFakePlayer(fakePlayer);
-                        return;
+                        return false;
                     }
                     leaveGame();
+                    return false;
                 }}
             >
                 Leave
@@ -414,6 +415,7 @@ export function DisplayMyPlayers(props) {
                     key={"myplayers-" + p.id}
                 >
                     <Td
+                        cursor="pointer"
                         borderBottomColor="gray.975"
                         onClick={() => {
                             let gps = fs.get("gamepanels");

@@ -455,7 +455,7 @@ function onAction(action, skipDecode) {
         status = "pregame";
     }
     //set the action to this user
-    action.user = user;
+    action.user = Object.assign({}, action.user, user);
 
     let actionFunc = actionTypes[action.type] || onGameActionRequest;
 

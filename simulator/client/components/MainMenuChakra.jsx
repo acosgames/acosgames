@@ -37,7 +37,7 @@ function ACOSHeader(props) {
             display={"flex"}
             transition={"filter 0.3s ease-in"}
             width="100%"
-            maxWidth="1200px"
+            // maxWidth="1200px"
             h={["3rem", "4rem", "5rem"]}
             justifyContent={"center"}
         >
@@ -46,7 +46,7 @@ function ACOSHeader(props) {
                 justifyContent={"space-between"}
                 h={["3rem", "4rem", "5rem"]}
                 width="100%"
-                maxW={["1200px"]}
+                // maxW={["1200px"]}
             >
                 <HStack
                     spacing={["2rem", "2rem", "4rem"]}
@@ -72,16 +72,21 @@ function ACOSHeader(props) {
                     >
                         {gameStatus}
                     </Text>
-                    <Divider orientation="vertical" />
-                    <Timeleft />
+                    {/* <Divider orientation="vertical" /> */}
                 </HStack>
 
-                <Flex alignItems={"center"} height="100%">
+                <Flex
+                    justifyContent={"flex-end"}
+                    alignItems={"center"}
+                    height="100%"
+                    flex="1"
+                >
                     <Stack direction={"row"} spacing={0} height="100%">
                         <Box>
                             <ActionPanel />
                         </Box>
                     </Stack>
+                    <Timeleft />
                 </Flex>
             </Flex>
         </Box>

@@ -65,9 +65,6 @@ class GameStateService {
         let teaminfo = fs.get("teaminfo") || [];
 
         let gameState = fs.get("gameState");
-        let players = gameState?.players || {};
-        let playerList = Object.keys(players);
-        if (playerList.length >= gameSettings.maxplayers) return false;
 
         if (team_slug) {
             if (!gameState?.teams) return true;
@@ -77,6 +74,10 @@ class GameStateService {
 
             if (team.vacancy <= 0) return false;
         }
+
+        let players = gameState?.players || {};
+        let playerList = Object.keys(players);
+        if (playerList.length >= gameSettings.maxplayers) return false;
 
         return true;
     }
@@ -126,7 +127,7 @@ class GameStateService {
         let nextid = next?.id;
         let room = gamestate.room;
 
-        if (room?.status == "pregame") return true;
+        if (room?.status == "pregame") return false;
 
         if (!next || !nextid) return false;
 

@@ -1,9 +1,8 @@
-const NANOID = require('nanoid')
-const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
+const NANOID = require("nanoid");
+const nanoid = NANOID.customAlphabet("6789BCDFGHJKLMNPQRTW", 6);
 
 class UserManager {
     constructor() {
-
         this.allFakePlayers = {};
         this.fakePlayerNames = {};
         this.users = {};
@@ -11,12 +10,11 @@ class UserManager {
     }
 
     register(socket, name, parentid) {
-
         let shortid = null;
         if (name in this.users) {
             shortid = this.users[name].shortid;
         } else {
-            shortid = nanoid(6)
+            shortid = nanoid(6);
         }
 
         this.users[name] = {
@@ -24,13 +22,11 @@ class UserManager {
             name,
             socket,
             socketid: socket.id,
-            parentid
-        }
+            parentid,
+        };
 
         return this.users[name];
     }
-
-
 
     remove(socketid) {
         let user = this.getUserBySocketId(socketid);
@@ -39,9 +35,7 @@ class UserManager {
         }
     }
 
-
     createFakePlayers = (clientid, count) => {
-
         let fakeplayers = [];
         // let offset = Object.keys(this.allFakePlayers).length;
 
@@ -51,7 +45,11 @@ class UserManager {
             while (id in this.allFakePlayers) {
                 id = nanoid(6);
             }
-            let fakeplayer = { id, name: 'Player_' + (this.fakePlayerCounter + i), clientid };
+            let fakeplayer = {
+                id,
+                name: "Player_" + (this.fakePlayerCounter + i),
+                clientid,
+            };
             this.allFakePlayers[id] = fakeplayer;
             this.fakePlayerNames[fakeplayer.name] = fakeplayer;
 
@@ -60,7 +58,7 @@ class UserManager {
             this.fakePlayerCounter++;
         }
         return fakeplayers;
-    }
+    };
 
     getFakePlayers() {
         return this.allFakePlayers;
@@ -71,8 +69,7 @@ class UserManager {
         for (const shortid in this.allFakePlayers) {
             let fakePlayer = this.allFakePlayers[shortid];
             if (fakePlayer.clientid == clientid) {
-                if (func)
-                    func(fakePlayer);
+                if (func) func(fakePlayer);
                 fakePlayers.push(fakePlayer);
             }
         }
@@ -80,7 +77,12 @@ class UserManager {
     }
 
     getFakePlayer(shortid) {
-        return this.allFakePlayers[shortid];
+        let fakePlayer = this.allFakePlayers[shortid];
+        return {
+            id: fakePlayer.id,
+            name: fakePlayer.name,
+            clientid: fakePlayer.clientid,
+        };
     }
 
     removeFakePlayer(shortid) {
@@ -112,7 +114,6 @@ class UserManager {
         }
         return fakePlayers;
     }
-
 
     actionUser(user) {
         return { id: user.shortid, name: user.name };
@@ -151,10 +152,8 @@ class UserManager {
             }
         }
 
-
         return null;
     }
-
 }
 
 module.exports = new UserManager();

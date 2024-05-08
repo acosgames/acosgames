@@ -20,6 +20,9 @@ import {
     CgChevronDoubleUpR,
     CgChevronDoubleLeftR,
 } from "react-icons/cg";
+
+import { GoSidebarExpand, GoSidebarCollapse } from "react-icons/go";
+
 import { BsChatDotsFill } from "react-icons/bs";
 import { AiFillCloseCircle } from "react-icons/ai";
 // import { ImEnter } from 'react-icons/bs';
@@ -105,7 +108,7 @@ function SidePanel(props) {
                 height="3rem"
                 width="3rem"
                 position="absolute"
-                left="-3rem"
+                left="-3.5rem"
                 top="1rem"
                 zIndex="100"
             >
@@ -116,18 +119,13 @@ function SidePanel(props) {
                     height="100%"
                 >
                     <Icon
-                        as={
-                            isMobile
-                                ? actionToggle
-                                    ? CgChevronDoubleDownR
-                                    : CgChevronDoubleUpR
-                                : actionToggle
-                                ? CgChevronDoubleRightR
-                                : CgChevronDoubleLeftR
-                        }
+                        as={actionToggle ? GoSidebarCollapse : GoSidebarExpand}
                         filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
-                        fontSize="2rem"
-                        color={"gray.100"}
+                        fontSize="2.5rem"
+                        color={"gray.50"}
+                        _hover={{
+                            color: "gray.10",
+                        }}
                     />
                 </Button>
             </Box>

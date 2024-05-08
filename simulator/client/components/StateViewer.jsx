@@ -11,6 +11,7 @@ import {
     CardHeader,
     Heading,
     HStack,
+    Icon,
     IconButton,
     Select,
     Text,
@@ -20,23 +21,28 @@ import {
 } from "@chakra-ui/react";
 import fs from "flatstore";
 import ReactJson from "react-json-view";
-
+import { BiSkipPrevious, BiSkipNext, BiExpand } from "react-icons/bi";
 import { IoCopy } from "react-icons/io5";
 import { useState } from "react";
 import { replayNext, replayPrev } from "../actions/game";
 import GameStateService from "../services/GameStateService";
 import DELTA from "acos-json-delta";
 
+import { VscCollapseAll, VscExpandAll } from "react-icons/vsc";
+
+fs.set("viewerAccordianIndex", [0, 1, 2]);
+
 export function StateViewer(props) {
     let [gameState] = fs.useWatch("gameState");
     let [scope, setScope] = useState("server");
+    let [viewerAccordianIndex] = fs.useWatch("viewerAccordianIndex");
 
     if (!gameState) return <></>;
 
     let playerList = GameStateService.getPlayersArray();
     let deltaEncoded = fs.get("deltaEncoded") || 0;
 
-    deltaEncoded = 200;
+    // deltaEncoded = 200;
     let deltaEncodedColor = "brand.50";
     if (deltaEncoded >= 500) {
         deltaEncodedColor = "red.500";
@@ -105,8 +111,10 @@ export function StateViewer(props) {
         //     delete gameState.action.timeleft;
     }
 
+    let accordianIndex = 0;
+
     return (
-        <VStack width="100%">
+        <VStack width="100%" spacing="0">
             {/* <ReactJson
                 src={gameState}
                 theme="isotope"
@@ -119,12 +127,16 @@ export function StateViewer(props) {
                 <CardBody>
                     <VStack>
                         <HStack py="0rem" width="100%">
-                            <ReplayControls />
-                            <VStack w="100%">
-                                <Text fontWeight={"500"}>JSON Scope</Text>
+                            <Box maxW="15rem">
+                                <ReplayControls />
+                            </Box>
+                            <VStack flex="1" justifyContent={"flex-end"}>
+                                <Text fontWeight={"500"} color="gray.10">
+                                    JSON Scope
+                                </Text>
                                 <Select
-                                    w="100%"
-                                    bgColor="gray.975"
+                                    w="15rem"
+                                    bgColor="gray.950"
                                     color="gray.10"
                                     defaultValue={"server"}
                                     onChange={(e) => {
@@ -158,7 +170,7 @@ export function StateViewer(props) {
             </Card>
             <HStack>
                 <Text fontSize="1.2rem" fontWeight="400">
-                    Encoded Size:{" "}
+                    Delta Encoded Size:{" "}
                 </Text>
                 <Text
                     fontSize="1.6rem"
@@ -175,60 +187,94 @@ export function StateViewer(props) {
                     bytes
                 </Text>
             </HStack>
+            <HStack w="100%" justifyContent={"flex-end"}>
+                <IconButton
+                    icon={
+                        viewerAccordianIndex.length > 0 ? (
+                            <VscCollapseAll size="2rem" color="gray.10" />
+                        ) : (
+                            <VscExpandAll size="2rem" color="gray.10" />
+                        )
+                    }
+                    onClick={() => {
+                        let viewerAccordianIndex = fs.get(
+                            "viewerAccordianIndex"
+                        );
+                        if (viewerAccordianIndex.length > 0) {
+                            viewerAccordianIndex = [];
+                        } else {
+                            viewerAccordianIndex = [
+                                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                            ];
+                        }
+                        fs.set("viewerAccordianIndex", viewerAccordianIndex);
+                    }}
+                ></IconButton>
+            </HStack>
             <Accordion
                 allowMultiple={true}
-                allowToggle={true}
-                pt="1rem"
-                defaultIndex={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+                // allowToggle={true}
+                pt="0"
+                index={viewerAccordianIndex}
+                // defaultIndex={[1, 2, 3]}
+                // defaultIndex={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
                 w="100%"
             >
                 <ObjectViewer
-                    object={gameState?.action}
-                    title="action"
-                    bgColor="gray.700"
-                />
-
-                <ObjectViewer
+                    index={accordianIndex++}
                     object={gameState?.state}
                     title="state"
                     bgColor="gray.500"
                 />
                 <ObjectViewer
+                    index={accordianIndex++}
                     object={gameState?.players}
                     title="players"
                     bgColor="gray.500"
                 />
                 {gameState?.teams && (
                     <ObjectViewer
+                        index={accordianIndex++}
                         object={gameState?.teams}
                         title="teams"
                         bgColor="gray.500"
                     />
                 )}
                 <ObjectViewer
+                    index={accordianIndex++}
                     object={gameState?.next}
                     title="next"
                     bgColor="gray.500"
                 />
                 <ObjectViewer
+                    index={accordianIndex++}
                     object={gameState?.events}
                     title="events"
                     bgColor="gray.500"
                 />
                 <ObjectViewer
+                    index={accordianIndex++}
                     object={gameState?.timer}
                     title="timer"
                     bgColor="gray.500"
                 />
                 <ObjectViewer
+                    index={accordianIndex++}
                     object={gameState?.room}
                     title="room"
                     bgColor="gray.500"
                 />
                 <ObjectViewer
+                    index={accordianIndex++}
                     object={gameState?.local}
                     title="local"
                     bgColor="gray.500"
+                />
+                <ObjectViewer
+                    index={accordianIndex++}
+                    object={gameState?.action}
+                    title="action"
+                    bgColor="gray.700"
                 />
             </Accordion>
         </VStack>
@@ -238,7 +284,7 @@ export function StateViewer(props) {
 function ObjectViewer(props) {
     let object = props.object || {};
     let title = props.title;
-
+    let objectKeysLength = Object.keys(object).length;
     const { hasCopied, onCopy } = useClipboard(JSON.stringify(object, null, 4));
 
     return (
@@ -247,10 +293,35 @@ function ObjectViewer(props) {
             bgColor={props.bgColor || "gray.900"}
             w="100%"
         >
-            <AccordionButton height="2rem" lineHeight={"2rem"} px="1rem">
-                <HStack flex="1" textAlign="left">
-                    <Text w="100%" fontSize="1.4rem">
-                        {title}
+            <AccordionButton
+                height="2rem"
+                lineHeight={"2rem"}
+                px="1rem"
+                onClick={(e) => {
+                    let viewerAccordianIndex = fs.get("viewerAccordianIndex");
+                    if (!Array.isArray(viewerAccordianIndex)) {
+                        viewerAccordianIndex = [];
+                    }
+
+                    let index = viewerAccordianIndex.indexOf(props.index);
+                    if (index == -1) {
+                        viewerAccordianIndex.push(props.index);
+                    } else {
+                        viewerAccordianIndex.splice(index, 1);
+                    }
+
+                    fs.set("viewerAccordianIndex", viewerAccordianIndex);
+                }}
+            >
+                <HStack flex="1" alignItems={"center"}>
+                    <Text fontSize="1.4rem">{title}</Text>
+                    <Text
+                        pl="1rem"
+                        display={objectKeysLength > 0 ? "inline-block" : "none"}
+                        fontSize="1.2rem"
+                        color="gray.100"
+                    >
+                        {objectKeysLength}
                     </Text>
                 </HStack>
                 <AccordionIcon />
@@ -318,7 +389,9 @@ export function ReplayControls(props) {
             <Text
                 display={props.hideTitle ? "none" : "inline-block"}
                 as="span"
+                color="gray.10"
                 fontWeight={"500"}
+                pb="0.75rem"
             >
                 Replay Control
             </Text>
@@ -326,12 +399,16 @@ export function ReplayControls(props) {
                 <Tooltip label={"Previous State"}>
                     <Button
                         fontSize={"xxs"}
-                        bgColor={"gray.500"}
+                        // bgColor={"gray.850"}
+                        p="0"
+                        _hover={{
+                            color: "gray.100",
+                        }}
                         onClick={() => {
                             replayPrev();
                         }}
                     >
-                        &lt;
+                        <Icon w="3rem" h="3rem" as={BiSkipPrevious} />
                     </Button>
                 </Tooltip>
                 <Text as="span">{replayStats.position}</Text>
@@ -340,12 +417,16 @@ export function ReplayControls(props) {
                 <Tooltip label={"Next State"}>
                     <Button
                         fontSize={"xxs"}
-                        bgColor={"gray.500"}
+                        // bgColor={"gray.850"}
+                        p="0"
+                        _hover={{
+                            color: "gray.100",
+                        }}
                         onClick={() => {
                             replayNext();
                         }}
                     >
-                        &gt;
+                        <Icon w="3rem" h="3rem" as={BiSkipNext} />
                     </Button>
                 </Tooltip>
             </HStack>

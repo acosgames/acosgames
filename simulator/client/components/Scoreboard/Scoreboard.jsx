@@ -213,6 +213,7 @@ function RenderTeams({ gamepanelid, players, teams }) {
     // let teamList = Object.keys(teams);
     let teamElems = [];
 
+    if (!players) return <></>;
     // let [teams] = fs.useWatch("teams");
     // let teams = useBucketSelector(
     //     btGamePanels,

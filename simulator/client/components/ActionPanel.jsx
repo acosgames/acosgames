@@ -81,7 +81,7 @@ function GameActionsCompact(props) {
             <HStack
             // display={isInGame ? "flex" : "none"}
             >
-                <Button fontSize={"xxs"} bgColor={"red.800"} onClick={newGame}>
+                <Button fontSize={"xxs"} bgColor={"gray.400"} onClick={newGame}>
                     {isGameRunning || isGameOver ? "Reset Game" : "New Game"}
                 </Button>
             </HStack>
@@ -111,6 +111,7 @@ function GameActionsCompact(props) {
                         disabled={playerList.length < gameSettings.minplayers}
                         fontSize={"xxs"}
                         bgColor={"green.500"}
+                        _hover={{ bgColor: "brand.500" }}
                         onClick={startGame}
                     >
                         {"Start Game"}
@@ -184,7 +185,7 @@ export function GameActionsExpanded(props) {
                         >
                             <Button
                                 fontSize={"xxs"}
-                                bgColor={"red.800"}
+                                bgColor={"gray.400"}
                                 onClick={newGame}
                             >
                                 {isGameRunning || isGameOver
@@ -217,6 +218,7 @@ export function GameActionsExpanded(props) {
                             <Button
                                 fontSize={"xxs"}
                                 bgColor={"green.500"}
+                                _hover={{ bgColor: "brand.500" }}
                                 onClick={startGame}
                             >
                                 {"Start Game"}

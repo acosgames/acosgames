@@ -85,6 +85,7 @@ class UserManager {
 
     getFakePlayer(shortid) {
         let fakePlayer = this.allFakePlayers[shortid];
+        if (!fakePlayer) return;
         return {
             id: fakePlayer.id,
             name: fakePlayer.name,

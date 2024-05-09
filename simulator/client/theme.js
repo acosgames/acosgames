@@ -174,13 +174,26 @@ const components = {
     Card: {
         baseStyle: {
             container: {
-                clipPath:
-                    "polygon(100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%, 0 0)",
-                bgColor: "gray.900",
-                borderRadius: "8px",
                 w: "100%",
                 // border: "1px solid",
                 // borderColor: "var(--chakra-colors-gray-800)",
+                bgColor: "transparent",
+                position: "relative",
+                overflow: "visible",
+                zIndex: 2,
+                _before: {
+                    content: "''",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    clipPath:
+                        "polygon(100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%, 0 0)",
+                    bgColor: "gray.900",
+                    borderRadius: "8px",
+                    zIndex: -1,
+                },
             },
         },
     },
@@ -192,9 +205,9 @@ const components = {
             // top: "1rem",
             p: "1rem",
         },
-        defaultProps: {
-            variant: "base",
-        },
+        // defaultProps: {
+        //     variant: "base",
+        // },
     },
     Heading: {
         baseStyle: {
@@ -241,9 +254,9 @@ const components = {
                 _focus: { outline: "none" },
             },
         },
-        defaultProps: {
-            variant: "base",
-        },
+        // defaultProps: {
+        //     variant: "base",
+        // },
     },
     Tabs: {
         baseStyle: {

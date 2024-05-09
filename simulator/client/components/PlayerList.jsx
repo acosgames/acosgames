@@ -35,6 +35,8 @@ import { IoAddSharp, IoPlaySharp } from "react-icons/io5";
 import { FaChevronRight } from "react-icons/fa";
 import { AiFillCloseCircle } from "react-icons/ai";
 import { MdPerson } from "react-icons/md";
+import { IoPersonSharp } from "react-icons/io5";
+
 import { GoEye } from "react-icons/go";
 import GameStateService from "../services/GameStateService";
 import GamePanelService from "../services/GamePanelService";
@@ -223,6 +225,7 @@ export function JoinButton(props) {
                     display={"block"}
                     fontSize={"xxs"}
                     bgColor={"green.800"}
+                    _hover={{ bgColor: "brand.500" }}
                     height={"2.2rem"}
                     lineHeight="2.2rem"
                     onClick={() => {
@@ -245,6 +248,7 @@ export function JoinButton(props) {
                         as={Button}
                         fontSize={"xxs"}
                         bgColor={"green.800"}
+                        _hover={{ bgColor: "brand.500" }}
                         height={"2.2rem"}
                         lineHeight="2.2rem"
                     >
@@ -255,7 +259,18 @@ export function JoinButton(props) {
                             let hasVacancy = GameStateService.hasVacancy(
                                 t.team_slug
                             );
-                            if (!hasVacancy) return <></>;
+                            if (!hasVacancy)
+                                return (
+                                    <div
+                                        key={
+                                            props.id +
+                                            "-" +
+                                            props.from +
+                                            "team-" +
+                                            t.team_slug
+                                        }
+                                    ></div>
+                                );
                             return (
                                 <MenuItem
                                     borderLeft={"5px solid"}
@@ -325,7 +340,7 @@ export function DisplayUserActions(props) {
                 fontSize={"xxs"}
                 height={"1.8rem"}
                 lineHeight="1.8rem"
-                bgColor={"red.800"}
+                bgColor={"gray.500"}
                 onClick={(e) => {
                     if (isFakePlayer) {
                         let fakePlayer = GamePanelService.getUserById(props.id);
@@ -447,12 +462,19 @@ export function DisplayMyPlayers(props) {
                                 label={isInGame ? "In game" : "Spectator"}
                                 placement="top"
                             >
-                                <Icon
-                                    color={color}
-                                    as={isInGame ? MdPerson : GoEye}
-                                    w="1.6rem"
-                                    h="1.6rem"
-                                />
+                                <Text
+                                    as="span"
+                                    //  lineHeight={"3rem"}
+                                    // h="1.8rem"
+                                    p="0"
+                                >
+                                    <Icon
+                                        color={color}
+                                        as={isInGame ? IoPersonSharp : GoEye}
+                                        w="1.6rem"
+                                        h="1.6rem"
+                                    />
+                                </Text>
                             </Tooltip>
                             <Tooltip label={p.id} placement="top">
                                 <Text color={color} fontSize="1.4rem">

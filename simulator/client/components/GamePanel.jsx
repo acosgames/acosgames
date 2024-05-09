@@ -23,6 +23,8 @@ import { useEffect, useRef, useState } from "react";
 import fs from "flatstore";
 
 import { MdPerson } from "react-icons/md";
+import { IoPersonSharp } from "react-icons/io5";
+
 import { GoEye } from "react-icons/go";
 import { CgMinimizeAlt } from "react-icons/cg";
 // import { withRouter } from "react-router-dom";
@@ -374,11 +376,11 @@ function DisplayUserInfo(props) {
             alignItems={"center"}
             boxSizing="border-box"
             // bgColor="gray.700"
-            borderTop={
-                isUserNext
-                    ? "2px solid var(--chakra-colors-brand-500)"
-                    : "2px solid transparent"
-            }
+            // borderTop={
+            //     isUserNext
+            //         ? "2px solid var(--chakra-colors-brand-500)"
+            //         : "2px solid transparent"
+            // }
             bgColor={"gray.950"}
         >
             <HStack
@@ -418,7 +420,7 @@ function DisplayUserInfo(props) {
                     >
                         <Icon
                             color={color}
-                            as={isInGame ? MdPerson : GoEye}
+                            as={isInGame ? IoPersonSharp : GoEye}
                             w="1.8rem"
                             h="1.8rem"
                             p="0"

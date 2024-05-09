@@ -143,7 +143,7 @@ export function onLeave(message) {
 export function onReplayStats(message) {
     try {
         message = ENCODER.decode(message);
-        console.log("REPLAY STATS: ", message);
+        // console.log("REPLAY STATS: ", message);
         if (!message) return;
 
         fs.set("replayStats", message);
@@ -170,7 +170,7 @@ export function onReplay(message) {
 export function onTeamInfo(message) {
     try {
         message = ENCODER.decode(message);
-        console.log("TEAMINFO UPDATE: ", message);
+        // console.log("TEAMINFO UPDATE: ", message);
         if (!message) return;
 
         fs.set("teaminfo", message);
@@ -182,7 +182,7 @@ export function onTeamInfo(message) {
 export function onGameUpdate(message) {
     try {
         message = ENCODER.decode(message);
-        console.log("GAME UPDATE: ", message);
+        // console.log("GAME UPDATE: ", message);
         if (!message) return;
 
         GameStateService.updateState(message);
@@ -215,7 +215,7 @@ export function onSpectate(message) {}
 
 export function onFakePlayer(message) {
     message = ENCODER.decode(message);
-    console.log("FAKEPLAYER: ", message);
+    // console.log("FAKEPLAYER: ", message);
     if (!message || typeof message.type === "undefined") return;
 
     let fakePlayers = fs.get("fakePlayers") || {};

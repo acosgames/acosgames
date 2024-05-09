@@ -52,6 +52,16 @@ body {
   //   -moz-osx-font-smoothing: grayscale;
 }
 
+.json-view {
+  color: #898a8b;
+  --json-property: #d1d2d4;
+  --json-index: #96b5b4;
+  --json-number: #b983af;
+  --json-string: #d08770;
+  --json-boolean: #b48ead;
+  --json-null: #b48ead;
+}
+
 
 a {
   color: #fff;

@@ -186,13 +186,13 @@ const onPong = (message) => {
         let latency = currentTime - latencyStart;
         let offsetTime = currentTime - serverTime;
         let realTime = currentTime + offsetTime + Math.ceil(latency / 2);
-        console.log("Latency Start: ", latencyStart);
+        // console.log("Latency Start: ", latencyStart);
         console.log("Latency: ", latency);
-        console.log("Offset Time: ", offsetTime);
-        console.log("Server Offset: ", serverOffset);
-        console.log("Server Time: ", serverTime);
-        console.log("Client Time: ", currentTime);
-        console.log("Real Time: ", realTime);
+        // console.log("Offset Time: ", offsetTime);
+        // console.log("Server Offset: ", serverOffset);
+        // console.log("Server Time: ", serverTime);
+        // console.log("Client Time: ", currentTime);
+        // console.log("Real Time: ", realTime);
     } catch (e) {
         console.error(e);
     }

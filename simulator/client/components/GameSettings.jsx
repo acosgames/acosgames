@@ -29,8 +29,11 @@ import fs from "flatstore";
 
 import { FaArrowCircleUp, FaArrowCircleDown } from "react-icons/fa";
 import { useEffect, useRef, useState } from "react";
-import { SketchPicker } from "react-color";
+// import { SketchPicker } from "react-color";
 import { AnimatePresence, motion } from "framer-motion";
+
+import { ColorPicker, useColor } from "react-color-palette";
+import "react-color-palette/css";
 
 const MotionBox = motion(Box);
 
@@ -179,7 +182,7 @@ export function ChooseTeamSettings(props) {
 
 function TeamSettings(props) {
     const teamRef = useRef();
-    let [offset, setOffset] = useState(null);
+    // let [offset, setOffset] = useState(null);
     let [active, setActive] = useState(false);
 
     const arraymove = (arr, fromIndex, toIndex) => {
@@ -188,13 +191,13 @@ function TeamSettings(props) {
         arr.splice(toIndex, 0, element);
     };
 
-    const getOffset = (el) => {
-        const rect = el.getBoundingClientRect();
-        return {
-            left: rect.left + window.scrollX,
-            top: rect.top + window.scrollY,
-        };
-    };
+    // const getOffset = (el) => {
+    //     const rect = el.getBoundingClientRect();
+    //     return {
+    //         left: rect.left + window.scrollX,
+    //         top: rect.top + window.scrollY,
+    //     };
+    // };
 
     const onChangeOrder = (dir) => {
         let gameSettings = fs.get("gameSettings");
@@ -237,22 +240,22 @@ function TeamSettings(props) {
         }, 1000);
     };
 
-    useEffect(() => {
-        setOffset(getOffset(teamRef.current));
-    }, []);
+    // useEffect(() => {
+    //     setOffset(getOffset(teamRef.current));
+    // }, []);
 
-    useEffect(() => {
-        if (active) {
-            let newOffset = getOffset(teamRef.current);
-            let yDiff = newOffset.top - offset.top;
+    // useEffect(() => {
+    //     if (active) {
+    //         let newOffset = getOffset(teamRef.current);
+    //         let yDiff = newOffset.top - offset.top;
 
-            // teamRef.current.scrollIntoView();
+    //         // teamRef.current.scrollIntoView();
 
-            if (newOffset.top != offset.top) {
-                setOffset(newOffset);
-            }
-        }
-    });
+    //         if (newOffset.top != offset.top) {
+    //             setOffset(newOffset);
+    //         }
+    //     }
+    // });
 
     let gameSettings = fs.get("gameSettings");
     let teams = gameSettings.teams;
@@ -264,7 +267,7 @@ function TeamSettings(props) {
         <MotionBox
             layout
             transition={{ duration: 1 }}
-            ref={teamRef}
+            // ref={teamRef}
             pt="2rem"
             pb="2rem"
             // transition={"background 0.3s ease"}
@@ -379,7 +382,9 @@ function SettingColorInput(props) {
     let gameSettings = fs.get("gameSettings");
 
     let currentValue = id in gameSettings ? gameSettings[id] : 0;
-    let [colorValue, setColorValue] = useState(currentValue);
+    // let [colorValue, setColorValue] = useState(currentValue);
+
+    const [color, setColor] = useColor("#123123");
 
     let isTeamId = "team_order" in props;
     let team_order = -1;
@@ -416,6 +421,7 @@ function SettingColorInput(props) {
             <Popover
                 flex="1"
                 h="100%"
+                w="120%"
                 outline={"none"}
                 _active={{ outline: "none" }}
                 bgColor={"transparent"}
@@ -437,6 +443,7 @@ function SettingColorInput(props) {
                 </PopoverTrigger>
                 <PopoverContent
                     border="0"
+                    width="120%"
                     outline={"none"}
                     _focus={{ outline: "none" }}
                     _active={{ outline: "none" }}
@@ -449,7 +456,12 @@ function SettingColorInput(props) {
                         _active={{ outline: "none" }}
                         bgColor={"transparent"}
                     >
-                        <SketchPicker
+                        <ColorPicker
+                            color={color || "#f00"}
+                            onChange={setColor}
+                            hideAlpha="true"
+                        />
+                        {/* <SketchPicker
                             defaultValue={currentValue || "#f00"}
                             color={colorValue}
                             onChange={(color) => {
@@ -473,7 +485,7 @@ function SettingColorInput(props) {
                                 }
                                 updateGameSettings(gameSettings);
                             }}
-                        />
+                        /> */}
                     </PopoverBody>
                 </PopoverContent>
             </Popover>
@@ -539,8 +551,8 @@ function SettingTextInput(props) {
                     updateGameSettings(gameSettings);
                     // e.target.focus();
                 }}
-                value={currentValue}
-                defaultValue={currentValue}
+                // value={currentValue || ""}
+                defaultValue={currentValue || ""}
                 w={props.width || "100%"}
             />
         </HStack>
@@ -613,8 +625,8 @@ function SettingNumberInput(props) {
 
                     updateGameSettings(gameSettings);
                 }}
-                defaultValue={currentValue}
-                value={numberValue}
+                defaultValue={currentValue || 0}
+                value={numberValue || 0}
                 w={props.width || "100%"}
             >
                 <NumberInputField fontSize="1.4rem" />

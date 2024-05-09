@@ -20,7 +20,10 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import fs from "flatstore";
-import ReactJson from "react-json-view";
+// import ReactJson from "@vahagn13/react-json-view";
+import JsonView from "react18-json-view";
+import "react18-json-view/src/style.css";
+
 import { BiSkipPrevious, BiSkipNext, BiExpand } from "react-icons/bi";
 import { IoCopy } from "react-icons/io5";
 import { useState } from "react";
@@ -187,8 +190,9 @@ export function StateViewer(props) {
                     bytes
                 </Text>
             </HStack>
-            <HStack w="100%" justifyContent={"flex-end"}>
+            <HStack w="100%" justifyContent={"flex-start"} pl="1rem">
                 <IconButton
+                    bgColor="transparent"
                     icon={
                         viewerAccordianIndex.length > 0 ? (
                             <VscCollapseAll size="2rem" color="gray.10" />
@@ -357,10 +361,19 @@ function ObjectViewer(props) {
                         onClick={onCopy}
                     />
                 </HStack>
-                <VStack w="100%" alignItems={"flex-start"}>
+                <VStack w="100%" alignItems={"flex-start"} overflow="hidden">
                     <HStack w="100%"></HStack>
-                    <Box px="1rem">
-                        <ReactJson
+                    <Box px="0" w="100%">
+                        <JsonView
+                            src={object}
+                            theme="vscode"
+                            name={false}
+                            enableClipboard={false}
+                            displayDataTypes={false}
+                            displayObjectSize={false}
+                            // displayArrayKey={false}
+                        />
+                        {/* <ReactJson
                             src={object}
                             theme="ocean"
                             name={false}
@@ -368,7 +381,7 @@ function ObjectViewer(props) {
                             displayDataTypes={false}
                             displayObjectSize={false}
                             // displayArrayKey={false}
-                        />
+                        /> */}
                     </Box>
                 </VStack>
             </AccordionPanel>

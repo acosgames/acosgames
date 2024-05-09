@@ -221,7 +221,7 @@ class GameStateService {
 
         newState.delta = delta;
 
-        console.log("AFTER", newState.players);
+        // console.log("AFTER", newState.players);
         fs.set("deltaState", delta);
         fs.set("hiddenPlayerState", hiddenPlayers);
 

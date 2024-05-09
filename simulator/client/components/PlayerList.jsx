@@ -537,6 +537,7 @@ export function DisplayMyPlayers(props) {
                             leftIcon={<IoAddSharp color="white" />}
                             fontSize={"xxs"}
                             bgColor={"teal.700"}
+                            _hover={{ bgColor: "teal.500" }}
                             onClick={() => {
                                 spawnFakePlayers();
                             }}

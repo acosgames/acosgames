@@ -19,6 +19,7 @@ import {
     startGame,
 } from "../actions/game";
 import { ReplayControls } from "./StateViewer.jsx";
+import GameStateService from "../services/GameStateService";
 
 export function ActionPanel(props) {
     return (
@@ -49,6 +50,16 @@ function GameActionsCompact(props) {
 
     let playerList = Object.keys(gameState.players || {});
 
+    let totalSlotsRemaining = GameStateService.hasVacancy();
+    if (gameState.teams) {
+        totalSlotsRemaining = 0;
+        let teamList = Object.keys(gameState.teams);
+        for (let i = 0; i < teamList.length; i++) {
+            let team_slug = teamList[i];
+            totalSlotsRemaining += GameStateService.hasVacancy(team_slug);
+        }
+    }
+
     return (
         <HStack height="100%" justifyItems={"center"} alignItems="center">
             {/* 
@@ -67,7 +78,9 @@ function GameActionsCompact(props) {
                     Join Game
                 </Button>
             </HStack> */}
-            <HStack display={isInGame ? "flex" : "none"}>
+            <HStack
+            // display={isInGame ? "flex" : "none"}
+            >
                 <Button fontSize={"xxs"} bgColor={"red.800"} onClick={newGame}>
                     {isGameRunning || isGameOver ? "Reset Game" : "New Game"}
                 </Button>
@@ -89,7 +102,11 @@ function GameActionsCompact(props) {
                         : ""
                 }
             >
-                <HStack display={isPregame ? "flex" : "none"}>
+                <HStack
+                    display={
+                        isPregame && !totalSlotsRemaining ? "flex" : "none"
+                    }
+                >
                     <Button
                         disabled={playerList.length < gameSettings.minplayers}
                         fontSize={"xxs"}
@@ -128,7 +145,7 @@ export function GameActionsExpanded(props) {
     let [wsStatus] = fs.useWatch("wsStatus");
     let [gameStatus] = fs.useWatch("gameStatus");
     let [gamePanelLayout] = fs.useWatch("gamePanelLayout");
-
+    let [gameState] = fs.useWatch("gameState");
     // gamePanelLayout = gamePanelLayout || 'compact';
 
     if (wsStatus == "disconnected") {
@@ -139,6 +156,16 @@ export function GameActionsExpanded(props) {
     let isPregame = gameStatus == "pregame";
     let isInGame = gameStatus != "gamestart";
     let isGameOver = gameStatus == "gameover";
+
+    let totalSlotsRemaining = GameStateService.hasVacancy();
+    if (gameState.teams) {
+        totalSlotsRemaining = 0;
+        let teamList = Object.keys(gameState.teams);
+        for (let i = 0; i < teamList.length; i++) {
+            let team_slug = teamList[i];
+            totalSlotsRemaining += GameStateService.hasVacancy(team_slug);
+        }
+    }
 
     return (
         <Card>
@@ -152,7 +179,9 @@ export function GameActionsExpanded(props) {
                             <ReplayControls />
                         </Box>
                         <Box flex="1"></Box>
-                        <HStack display={isInGame ? "flex" : "none"}>
+                        <HStack
+                        //  display={isInGame ? "flex" : "none"}
+                        >
                             <Button
                                 fontSize={"xxs"}
                                 bgColor={"red.800"}
@@ -178,7 +207,13 @@ export function GameActionsExpanded(props) {
                                 Skip
                             </Button>
                         </HStack>
-                        <HStack display={isPregame ? "flex" : "none"}>
+                        <HStack
+                            display={
+                                isPregame && !totalSlotsRemaining
+                                    ? "flex"
+                                    : "none"
+                            }
+                        >
                             <Button
                                 fontSize={"xxs"}
                                 bgColor={"green.500"}

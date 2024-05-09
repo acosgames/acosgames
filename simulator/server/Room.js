@@ -1,24 +1,20 @@
-const NANOID = require('nanoid');
-const GameSettingsManager = require('./GameSettingsManager');
-const { cloneObj } = require('./util');
-const nanoid = NANOID.customAlphabet('6789BCDFGHJKLMNPQRTW', 6)
-
-
+const NANOID = require("nanoid");
+const GameSettingsManager = require("./GameSettingsManager");
+const { cloneObj } = require("./util");
+const nanoid = NANOID.customAlphabet("6789BCDFGHJKLMNPQRTW", 6);
 
 class Room {
     constructor(settings) {
-
         this.room_slug = nanoid(8);
-        this.status = 'pregame';
+        this.status = "pregame";
         this.sequence = 0;
         this.starttime = Date.now();
         this.endtime = 0;
         this.spectators = [];
         this.history = [{}];
         this.gamestate = 0;
-        this.gsm = new GameSettingsManager(); //game settings manager
-        if (settings)
-            this.gsm = settings;
+        this.gsm = GameSettingsManager; //game settings manager
+        if (settings) this.gsm = settings;
 
         this.deadline = 0;
         this.skipCount = 0;
@@ -27,8 +23,9 @@ class Room {
 
         if (this.gsm.get()) {
             this.createTeamsBySize();
+        } else {
+            console.error("GSM DOES NOT EXIST!! ?!");
         }
-
     }
 
     json() {
@@ -37,22 +34,21 @@ class Room {
             status: this.status,
             sequence: this.sequence,
             starttime: this.starttime,
-            endtime: this.endtime
-        }
+            endtime: this.endtime,
+        };
     }
 
     hasVacancy() {
         return this.sequence == 0 || (this.isPregame() && !this.isFull());
     }
 
-
     replayStats() {
         let gamestartIndex = this.getGameStartIndex();
 
         return {
             total: Math.max(0, this.history.length - gamestartIndex),
-            position: Math.max(0, ((this.gamestate - gamestartIndex) + 1))
-        }
+            position: Math.max(0, this.gamestate - gamestartIndex + 1),
+        };
     }
 
     getGameState() {
@@ -79,7 +75,7 @@ class Room {
         let gamestartIndex = -1;
         for (let i = 0; i < this.history.length; i++) {
             let hist = this.history[i];
-            if (hist?.room?.status == 'gamestart') {
+            if (hist?.room?.status == "gamestart") {
                 gamestartIndex = i;
                 break;
             }
@@ -88,18 +84,16 @@ class Room {
     }
 
     jumpToState(index) {
-
         let gamestartIndex = this.getGameStartIndex();
 
-        if (index < gamestartIndex)
-            index = gamestartIndex;
+        if (index < gamestartIndex) index = gamestartIndex;
 
         if (index >= this.history.length) {
             index = this.history.length - 1;
         }
 
         let current = this.history[index];
-        let prev = ((index - 1) < gamestartIndex) ? {} : this.history[index - 1];
+        let prev = index - 1 < gamestartIndex ? {} : this.history[index - 1];
         this.updateGame(current, index);
         this.gamestate = index; //overwwrite the gamestate index
 
@@ -111,7 +105,6 @@ class Room {
                 this.setDeadline(0);
             }
             current.room.updated = now;
-
         }
 
         if (prev?.room?.updated) {
@@ -122,16 +115,13 @@ class Room {
             prev.room.updated = now;
         }
 
-        if (current?.room)
-            current.room.isreplay = true;
+        if (current?.room) current.room.isreplay = true;
 
         return { current, prev };
     }
 
-
-
     updateGame(newGamestate, replayIndex) {
-        if (typeof replayIndex === 'undefined') {
+        if (typeof replayIndex === "undefined") {
             if (this.gamestate < this.history.length - 1) {
                 this.history.splice(this.gamestate + 1);
             }
@@ -146,7 +136,6 @@ class Room {
             this.gamestate = replayIndex;
         }
 
-
         if (newGamestate?.room?.status) {
             this.status = newGamestate.room.status;
         }
@@ -158,13 +147,10 @@ class Room {
         if (this.isGameOver()) {
             this.setDeadline(0);
             this.endtime = Date.now();
-        }
-        else if (newGamestate?.timer?.end) {
+        } else if (newGamestate?.timer?.end) {
             this.setDeadline(newGamestate.timer.end);
         }
-
     }
-
 
     createTeamsBySize() {
         let gameSettings = this.gsm.get();
@@ -183,10 +169,19 @@ class Room {
         //battlegrounds scenario
         else if (gameSettings.maxteams == 1) {
             let team = gameSettings.teams[0];
-            let maxteamcount = Math.floor(gameSettings.maxplayers / team.maxplayers)
+            let maxteamcount = Math.floor(
+                gameSettings.maxplayers / team.maxplayers
+            );
             for (let i = 0; i < maxteamcount; i++) {
                 let teamid = i + 1;
-                teamsBySize.push({ team_slug: 'team_' + teamid, maxplayers: team.maxplayers, minplayers: team.minplayers, vacancy: team.maxplayers, players: [], captains: [] })
+                teamsBySize.push({
+                    team_slug: "team_" + teamid,
+                    maxplayers: team.maxplayers,
+                    minplayers: team.minplayers,
+                    vacancy: team.maxplayers,
+                    players: [],
+                    captains: [],
+                });
             }
             maxTeamSize = team.maxplayers;
         }
@@ -195,16 +190,22 @@ class Room {
             for (const team of gameSettings.teams) {
                 if (team.maxplayers > maxTeamSize)
                     maxTeamSize = team.maxplayers;
-                teamsBySize.push({ team_slug: team.team_slug, maxplayers: team.maxplayers, minplayers: team.minplayers, vacancy: team.maxplayers, players: [], captains: [] });
+                teamsBySize.push({
+                    team_slug: team.team_slug,
+                    maxplayers: team.maxplayers,
+                    minplayers: team.minplayers,
+                    vacancy: team.maxplayers,
+                    players: [],
+                    captains: [],
+                });
             }
         }
         //sort in descending order, so we can fill largest vacancies first
         teamsBySize.sort((a, b) => {
             b.vacancy - a.vacancy;
-        })
+        });
 
-        if (this.history.length > 1)
-            return;
+        if (this.history.length > 1) return;
 
         let gameState = this.history[0];
         gameState.teams = {};
@@ -234,7 +235,7 @@ class Room {
                 return { team_slug: team.team_slug };
             }
         }
-        return { error: 'No teams available' }
+        return { error: "No teams available" };
     }
 
     getTeamInfo() {
@@ -255,12 +256,11 @@ class Room {
 
     removeSpectator(user) {
         if (Array.isArray(this.spectators))
-            this.spectators = this.spectators.filter(u => u.id != user.id);
+            this.spectators = this.spectators.filter((u) => u.id != user.id);
     }
 
     addSpectator(user) {
-        if (!this.spectators.includes(user.id))
-            this.spectators.push(user.id);
+        if (!this.spectators.includes(user.id)) this.spectators.push(user.id);
     }
 
     setSettings(settings) {
@@ -282,24 +282,23 @@ class Room {
     }
     hasPlayer(shortid) {
         let gamestate = this.getGameState();
-        return gamestate?.players && (shortid in gamestate?.players);
+        return gamestate?.players && shortid in gamestate?.players;
     }
 
     copyGameState() {
         return cloneObj(this.getGameState());
     }
 
-
     isGameOver() {
-        return this.status == 'gameover';
+        return this.status == "gameover";
     }
 
     isPregame() {
-        return this.status == 'pregame';
+        return this.status == "pregame";
     }
 
     isGameStart() {
-        return this.status == 'gamestart';
+        return this.status == "gamestart";
     }
 }
 

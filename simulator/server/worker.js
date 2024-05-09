@@ -326,6 +326,11 @@ class FSGWorker {
         delete timer.set;
     }
 
+    generatePortrait = () => {
+        let portraitid = Math.floor(Math.random() * (2104 - 1 + 1) + 1);
+        return portraitid;
+    };
+
     async onAction({ room, action, gamestate, gameSettings }) {
         try {
             // profiler.Start("[WorkerOnAction]")
@@ -364,6 +369,8 @@ class FSGWorker {
                     globalGame.players[shortid] = {};
                 globalGame.players[shortid].name = username;
                 globalGame.players[shortid].id = shortid;
+                globalGame.players[shortid].portraitid =
+                    this.generatePortrait();
 
                 if (globalGame.teams) {
                     if (action?.user?.team_slug) {

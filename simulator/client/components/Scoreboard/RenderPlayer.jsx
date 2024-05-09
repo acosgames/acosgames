@@ -36,7 +36,7 @@ export default function RenderPlayer({
 }) {
     let [gameState] = fs.useWatch("gameState");
     let isUserNext = GameStateService.validateNextUser(shortid);
-
+    let filename = `assorted-${portraitid || 1}-medium.webp`;
     return (
         <HStackMotion
             key={"motion-" + name}
@@ -52,7 +52,23 @@ export default function RenderPlayer({
                 spacing="0rem"
                 borderRightRadius={"0"}
                 overflow="hidden"
+                // alignItems={"flex-start"}
             >
+                <Image
+                    display="inline-block"
+                    src={`https://assets.acos.games/images/portraits/${filename}`}
+                    loading="lazy"
+                    // borderRadius={"8px"}
+                    maxHeight="100%"
+                    w={"4rem"}
+                    h={"4rem"}
+                    // mb="1rem"
+                    position="relative"
+                    zIndex="2"
+                    // transform="skew(15deg)"
+                    // border="1px solid"
+                    // borderColor={player.ready ? "brand.100" : "brand.900"}
+                />
                 <VStack
                     w="100%"
                     alignItems={"flex-start"}
@@ -65,7 +81,7 @@ export default function RenderPlayer({
                     <HStack
                         w="100%"
                         // bgColor={gamepanel.room.isReplay ? "gray.1050" : "gray.1200"}
-                        pl="1.5rem"
+                        pl="1rem"
                         pr="1rem"
                     >
                         <Text
@@ -83,7 +99,14 @@ export default function RenderPlayer({
                         >
                             {name}
                         </Text>
-
+                        <Image
+                            src={`https://assets.acos.games/images/country/US.svg`}
+                            // mt="0.5rem"
+                            borderColor="gray.100"
+                            borderRadius="0px"
+                            width="1.75rem"
+                            filter="opacity(0.8)"
+                        />
                         <Box flex="1"></Box>
                         <Text
                             color={isUserNext ? "brand.50" : "gray.50"}

@@ -22,7 +22,7 @@ const NANOID = require("nanoid");
 const nanoid = NANOID.customAlphabet("6789BCDFGHJKLMNPQRTW", 6);
 
 const UserManager = require("./UserManager");
-const RoomManager = require("./RoomManager");
+const RoomManagerService = require("./RoomManager");
 
 const port = process.env.PORT || 3100;
 
@@ -35,11 +35,10 @@ const gameWorkingDirectory = process.argv[2];
 const GameSettingsManager = require("./GameSettingsManager");
 const { isObject } = require("./rank");
 const { cloneObj } = require("./util");
-const settings = new GameSettingsManager(
-    gameWorkingDirectory,
-    onGameSettingsReloaded
-);
+const settings = GameSettingsManager;
 
+settings.start(gameWorkingDirectory, onGameSettingsReloaded);
+const RoomManager = new RoomManagerService();
 RoomManager.setSettings(settings);
 
 function onGameSettingsReloaded() {
@@ -93,6 +92,8 @@ function onConnect(socket) {
     let name = socket.handshake.query.username;
     if (!name) return;
 
+    let isFirstUser = UserManager.isFirstUser();
+
     console.log("[ACOS] user connected: " + name);
     let newUser = UserManager.register(socket, name);
     let user = UserManager.actionUser(newUser);
@@ -121,11 +122,14 @@ function onConnect(socket) {
         }
     }
 
-    io.emit("teaminfo", encode(room.getTeamInfo()));
-
     socket.join("gameroom");
 
-    socket.emit("game", encode(room.copyGameState()));
+    if (isFirstUser) {
+        createNewGame(user);
+    } else {
+        socket.emit("game", encode(room.copyGameState()));
+        io.emit("teaminfo", encode(room.getTeamInfo()));
+    }
 
     //user is already in game, just rejoin them and send them full game state
     // let room = RoomManager.current();
@@ -349,8 +353,8 @@ const onGameActionRequest = (action) => {
 };
 
 const onNewGameRequest = (action) => {
-    let room = RoomManager.create();
     let client = UserManager.getUserByShortid(action.user.id);
+    let room = RoomManager.create();
     // onAction(client.socket, { type: 'join', user: action.user }, true);
     let prevGamestate = room.copyGameState();
     io.emit("replayStats", encode(room.replayStats()));
@@ -358,6 +362,10 @@ const onNewGameRequest = (action) => {
     io.emit("teaminfo", encode(room.getTeamInfo()));
 
     return true;
+};
+const createNewGame = (user) => {
+    let action = { user, type: "newgame" };
+    onAction(encode(action));
 };
 
 const calculateTimeleft = (gamestate) => {

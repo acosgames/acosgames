@@ -66,20 +66,20 @@ class GameStateService {
 
         let gameState = fs.get("gameState");
 
-        if (team_slug) {
-            if (!gameState?.teams) return true;
+        if (team_slug && gameState?.teams) {
+            // if (!gameState?.teams) return true;
 
             let team = teaminfo.find((t) => t.team_slug == team_slug);
-            if (!team) return false;
+            if (team) return team.vacancy;
 
-            if (team.vacancy <= 0) return false;
+            // if (team.vacancy <= 0) return false;
         }
 
         let players = gameState?.players || {};
         let playerList = Object.keys(players);
-        if (playerList.length >= gameSettings.maxplayers) return false;
+        return gameSettings.maxplayers - playerList.length;
 
-        return true;
+        // return true;
     }
 
     clearState() {
@@ -235,6 +235,17 @@ class GameStateService {
             }
         }
         fs.set("playerTeams", playerTeams);
+
+        if (newState.players) {
+            for (const id in newState.players) {
+                newState.players[id].id = id;
+                newState.players[
+                    id
+                ].portrait = `https://assets.acos.games/images/portraits/assorted-${
+                    newState?.players[id]?.portraitid || 1
+                }-medium.webp`;
+            }
+        }
 
         fs.set("gameState", newState);
 

@@ -1,12 +1,10 @@
-
-const Room = require('./Room');
-const GameSettingsManager = require('./GameSettingsManager');
+const Room = require("./Room");
+const GameSettingsManager = require("./GameSettingsManager");
 
 class RoomManager {
     constructor() {
-
-        this.room = new Room();
-        this.settings = new GameSettingsManager();
+        this.settings = GameSettingsManager;
+        this.room = new Room(this.settings);
     }
 
     setSettings(settings) {
@@ -14,34 +12,28 @@ class RoomManager {
     }
 
     create() {
-
         this.room = new Room(this.settings);
         // this.rooms.push(room);
 
         return this.room;
     }
 
-
     gameover() {
         let room = this.current();
-        if (!room)
-            return null;
+        if (!room) return null;
 
-        room.roomstatus = 'gameover';
+        room.roomstatus = "gameover";
         return room;
     }
 
     update(gamestate) {
         let room = this.current();
-        if (!room)
-            return null;
+        if (!room) return null;
 
         room.update(gamestate);
 
         return room;
     }
-
-
 
     gamestate(room) {
         return room ? room.getGameState() : this.current().getGameState();
@@ -50,7 +42,7 @@ class RoomManager {
     current() {
         let currentRoom = null;
         // if (this.rooms.length > 0) {
-        currentRoom = this.room;// this.rooms[this.rooms.length - 1];
+        currentRoom = this.room; // this.rooms[this.rooms.length - 1];
         // }
 
         if (currentRoom) {
@@ -65,7 +57,7 @@ class RoomManager {
     getActiveRoom() {
         for (const room_slug in rooms) {
             let room = rooms[room_slug];
-            if (room.status = 'gamestart') {
+            if ((room.status = "gamestart")) {
                 return room;
             }
         }
@@ -75,14 +67,12 @@ class RoomManager {
     getOpenRoom() {
         for (const room_slug in rooms) {
             let room = rooms[room_slug];
-            if (room.status = 'pregame') {
+            if ((room.status = "pregame")) {
                 return room;
             }
         }
         return null;
     }
-
-
 }
 
-module.exports = new RoomManager();
+module.exports = RoomManager;

@@ -35,6 +35,13 @@ class UserManager {
         }
     }
 
+    isFirstUser() {
+        let userList = Object.keys(this.users);
+        let fakePlayerList = Object.keys(this.allFakePlayers);
+        let total = userList.length + fakePlayerList.length;
+        return total == 0;
+    }
+
     createFakePlayers = (clientid, count) => {
         let fakeplayers = [];
         // let offset = Object.keys(this.allFakePlayers).length;

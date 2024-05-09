@@ -54,7 +54,7 @@ body {
 
 .json-view {
   color: #898a8b;
-  --json-property: #d1d2d4;
+  --json-property: #e6e7e9;
   --json-index: #96b5b4;
   --json-number: #b983af;
   --json-string: #d08770;
@@ -456,6 +456,10 @@ code {
   height: 100%;
 }
 
+.gamescreen {
+  // background-color:#222;
+  visibility: hidden;
+}
 // .gamescreen {
 //   width: 100%;
 //   height: 100%;
@@ -833,6 +837,27 @@ code {
 
 .chakra-form-control {
   margin-bottom: 2rem;
+}
+
+
+/*react-color-palette */
+.rcp-body {
+padding:0;
+gap:10px;
+}
+.rcp-fields {
+  gap:10px;
+}
+.rcp-field {
+  justify-content: center;
+  align-items: center;
+  padding-bottom:10px;
+}
+.rcp-field-input {
+  width:80%;
+}
+.rcp-field-label {
+  display:none;
 }
 
 .blink_me {

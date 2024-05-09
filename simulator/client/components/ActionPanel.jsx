@@ -199,7 +199,6 @@ export function GameActionsExpanded(props) {
                                     : "New Game"}
                             </Button>
                         </HStack>
-
                         <HStack
                             display={
                                 gameStatus == "gamestart" ? "flex" : "none"

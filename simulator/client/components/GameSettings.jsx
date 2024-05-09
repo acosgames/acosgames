@@ -32,7 +32,7 @@ import { useEffect, useRef, useState } from "react";
 // import { SketchPicker } from "react-color";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { ColorPicker, useColor } from "react-color-palette";
+import { ColorPicker, Hue, Saturation, useColor } from "react-color-palette";
 import "react-color-palette/css";
 
 const MotionBox = motion(Box);
@@ -433,8 +433,12 @@ function SettingColorInput(props) {
                         fontSize={props.fontSize || "2rem"}
                         value={currentValue}
                         textShadow={"2px 2px #000"}
-                        color={"white"}
+                        color={"gray.0"}
                         bgColor={currentValue || "brand.500"}
+                        _hover={{
+                            bgColor: currentValue || "brand.500",
+                            opacity: 0.8,
+                        }}
                         h={props.height || "5rem"}
                         w={props.width || "100%"}
                     >
@@ -455,11 +459,34 @@ function SettingColorInput(props) {
                         outline={"none"}
                         _active={{ outline: "none" }}
                         bgColor={"transparent"}
+                        width="100%"
                     >
+                        {/* <Saturation
+                            height={100}
+                            color={color}
+                            onChange={setColor}
+                        /> */}
+                        {/* <Hue height={100} color={color} onChange={setColor} /> */}
+
                         <ColorPicker
                             color={color || "#f00"}
-                            onChange={setColor}
+                            onChange={(c1) => {
+                                let value = c1.hex;
+                                let gameSettings = fs.get("gameSettings");
+                                if (!isTeamId && id in gameSettings) {
+                                    gameSettings[id] = value;
+                                } else if (
+                                    isTeamId &&
+                                    gameSettings.teams[team_order]
+                                ) {
+                                    gameSettings.teams[team_order][id] = value;
+                                }
+                                updateGameSettings(gameSettings);
+                                setColor(c1);
+                            }}
+                            height={100}
                             hideAlpha="true"
+                            hideInput={["rgb", "hsv"]}
                         />
                         {/* <SketchPicker
                             defaultValue={currentValue || "#f00"}

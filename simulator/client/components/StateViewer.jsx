@@ -58,6 +58,9 @@ export function StateViewer(props) {
 
         copy.private = {};
         copy.local = {};
+
+        for (let id in copy.players) delete copy.players[id].portrait;
+
         gameState = copy;
     } else if (scope == "spectator") {
         let copy = GameStateService.getGameState();
@@ -77,6 +80,7 @@ export function StateViewer(props) {
     } else if (scope == "packet") {
         let delta = fs.copy("deltaState");
         delta.local = {};
+        for (let id in delta.players) delete delta.players[id].portrait;
         gameState = delta;
     } else {
         let copy = GameStateService.getGameState();

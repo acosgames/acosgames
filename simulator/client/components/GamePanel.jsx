@@ -150,28 +150,37 @@ function GameIFrame(props) {
             gamescreenRef.current.style.height = bgHeight + "px";
             scale = bgWidth / screenwidth;
 
-            iframeRef.current.setAttribute(
-                "style",
-                transformStr({
-                    scale: scale,
-                    translateZ: "0",
-                }) +
-                    `; transform-origin: left top; width:${screenwidth}px; height:${screenheight}px; ${frameBorder}`
-            );
+            iframeRef.current.style.transform = `scale(${scale})`;
+            iframeRef.current.style.transform += "translateZ(0)";
+            iframeRef.current.style["transform-origin"] = "left top";
+            iframeRef.current.style.width = screenwidth + "px";
+            iframeRef.current.style.height = screenheight + "px";
+            // iframeRef.current.setAttribute(
+            //     "style",
+            //     transformStr({
+            //         scale: scale,
+            //         translateZ: "0",
+            //     }) +
+            //         `; transform-origin: left top; width:${screenwidth}px; height:${screenheight}px; ${frameBorder}`
+            // );
         } else if (screentype == 2) {
             gamescreenRef.current.style.width = bgWidth + "px";
             gamescreenRef.current.style.height = bgHeight + "px";
-            iframeRef.current.setAttribute(
-                "style",
-                "width:100%; height:100%;" + frameBorder
-            );
+            iframeRef.current.style.width = "100%";
+            iframeRef.current.style.height = "100%";
+            // iframeRef.current.setAttribute(
+            //     "style",
+            //     "width:100%; height:100%;" + frameBorder
+            // );
         } else if (screentype == 1) {
             gamescreenRef.current.style.width = windowWidth + "px";
             gamescreenRef.current.style.height = windowHeight + "px";
-            iframeRef.current.setAttribute(
-                "style",
-                "width:100%; height:100%;" + frameBorder
-            );
+            iframeRef.current.style.width = "100%";
+            iframeRef.current.style.height = "100%";
+            // iframeRef.current.setAttribute(
+            //     "style",
+            //     "width:100%; height:100%;" + frameBorder
+            // );
         }
 
         fs.set("iframeStyle", iframeRef.current.style);
@@ -261,7 +270,8 @@ function GameIFrame(props) {
                     position="relative"
                     // boxShadow={"0px 12px 24px rgba(0,0,0,0.2)"}
                     alignSelf="center"
-                    bgColor="gray.700"
+                    // bgColor="gray.700"
+                    // visibility={gamepanel?.iframe?.current ? "visible" : "hidden"}
                     // boxSizing="content-box"
                 >
                     <iframe
@@ -272,6 +282,7 @@ function GameIFrame(props) {
                             let gamepanel = gamepanels[props.id];
 
                             gamepanel.iframe = iframeRef;
+                            iframeRef.current.style.visibility = "visible";
                             onResize();
 
                             setTimeout(() => {
@@ -284,6 +295,7 @@ function GameIFrame(props) {
                                 : "//localhost:3100/iframe.html"
                         }
                         sandbox="allow-scripts  allow-same-origin"
+                        allowtransparency="true"
                     />
                     <HStack
                         position={"absolute"}

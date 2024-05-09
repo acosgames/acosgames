@@ -108,7 +108,7 @@ function SidePanel(props) {
                 height="3rem"
                 width="3rem"
                 position="absolute"
-                left="-3.5rem"
+                left="-2.5rem"
                 top="1rem"
                 zIndex="100"
             >
@@ -117,12 +117,15 @@ function SidePanel(props) {
                         fs.set("actionToggle", !actionToggle);
                     }}
                     height="100%"
+                    bgColor="transparent"
+                    _hover={{ bgColor: "transparent" }}
+                    p="0"
                 >
                     <Icon
                         as={actionToggle ? GoSidebarCollapse : GoSidebarExpand}
                         filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
                         fontSize="2.5rem"
-                        color={"gray.50"}
+                        color={"gray.100"}
                         _hover={{
                             color: "gray.10",
                         }}

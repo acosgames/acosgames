@@ -81,7 +81,12 @@ function GameActionsCompact(props) {
             <HStack
             // display={isInGame ? "flex" : "none"}
             >
-                <Button fontSize={"xxs"} bgColor={"gray.400"} onClick={newGame}>
+                <Button
+                    fontSize={"xxs"}
+                    bgColor={"gray.700"}
+                    color="gray.30"
+                    onClick={newGame}
+                >
                     {isGameRunning || isGameOver ? "Reset Game" : "New Game"}
                 </Button>
             </HStack>
@@ -185,7 +190,8 @@ export function GameActionsExpanded(props) {
                         >
                             <Button
                                 fontSize={"xxs"}
-                                bgColor={"gray.400"}
+                                bgColor={"gray.700"}
+                                color="gray.30"
                                 onClick={newGame}
                             >
                                 {isGameRunning || isGameOver

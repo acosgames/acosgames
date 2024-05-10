@@ -656,18 +656,14 @@ function createWorker(index) {
 // });
 
 app.get("/client.bundle.dev.js", function (req, res) {
-    res.sendFile(
-        path.join(process.argv[2], "./builds/client/client.bundle.dev.js")
-    );
+    res.sendFile(path.join(process.argv[2], "./builds/client.bundle.dev.js"));
 });
 app.get("/server.bundle.dev.js", function (req, res) {
-    res.sendFile(
-        path.join(process.argv[2], "./builds/server/server.bundle.dev.js")
-    );
+    res.sendFile(path.join(process.argv[2], "./builds/server.bundle.dev.js"));
 });
 app.get("/server.bundle.dev.js.map", function (req, res) {
     res.sendFile(
-        path.join(process.argv[2], "./builds/server/server.bundle.dev.js.map")
+        path.join(process.argv[2], "./builds/server.bundle.dev.js.map")
     );
 });
 
@@ -710,7 +706,7 @@ app.get("/", function (req, res) {
     );
 });
 
-let assetPath = path.join(process.argv[2], "./builds/client/assets");
+let assetPath = path.join(process.argv[2], "./builds/assets");
 app.use("/assets/", (req, res, next) => {
     res.sendFile(path.join(assetPath, req.path));
     console.log(req.path);

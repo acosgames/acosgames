@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "module": "ES6",
+        "target": "es2019",
+        "declaration": true,
+        "outDir": "./game/dist"
+    },
+    "include": ["./game/**/*"]
+}

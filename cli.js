@@ -251,7 +251,7 @@ function runBrowserSync(isDev) {
         // }
         // else {
         let gameClientPath = path.join(cwd, "/game-client/**");
-        let buildsClientPath = path.join(cwd, "/builds/client/**");
+        let buildsClientPath = path.join(cwd, "/builds/client*");
         let projectNodeModulePath = path.join(cwd, "/node_modules");
         cmd = `${waitOnPath} http://localhost:3100/ && ${browserSyncPath} start --no-ghost-mode --ws  --port 3300 --ui-port 3301 --proxy localhost:3100 --no-open --files=${gameClientPath} --files=${buildsClientPath}  --ignore=${projectNodeModulePath}`;
         // }

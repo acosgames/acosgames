@@ -164,7 +164,7 @@ async function deployAll(got, FormData, FormDataEncoder) {
 
             if (isDir) {
                 console.log(assetFile);
-                throw "[ERROR] [ACOS] Your assets folder has directories.  Assets should only be in the '/builds/client/assets' root folder.";
+                throw "[ERROR] [ACOS] Your assets folder has directories.  Assets should only be in the '/builds/assets' root folder.";
             }
             // console.log(assetFile.name, assetFile.isDirectory())
         }

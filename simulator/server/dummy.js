@@ -9,7 +9,7 @@ const fs = require("fs");
 
 function testSourceMap() {
     let jsonStr = fs.readFileSync(
-        "../memorize-up/builds/server/server.bundle.dev.js.map"
+        "../memorize-up/builds/server.bundle.dev.js.map"
     );
     let json = JSON.parse(jsonStr);
 

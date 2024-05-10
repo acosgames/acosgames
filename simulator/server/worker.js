@@ -80,13 +80,14 @@ var globalGameSettings = {};
 // };
 
 const globals = Object.freeze({
-    log: (args) => {
+    gamelog: () => {
         // var args = Array.from(arguments);
         // console.log.apply(console, args);
-        console.log(args);
+        // console.log(args);
+        console.log.apply(console, ...arguments);
     },
-    error: (...args) => {
-        console.error.apply(console, ...args);
+    gameerror: () => {
+        console.error.apply(console, ...arguments);
         // console.error(msg)
     },
     finish: (newGame) => {
@@ -231,7 +232,7 @@ class FSGWorker {
     constructor() {
         this.action = {};
         this.gameHistory = [];
-        this.bundlePath = path.join(workerData.dir, "./builds/server/");
+        this.bundlePath = path.join(workerData.dir, "./builds/");
         this.bundleFilename = "server.bundle.dev.js";
         this.bundleFilePath = path.resolve(
             this.bundlePath,
@@ -661,7 +662,7 @@ class FSGWorker {
                 {
                     // await this.gameScript.run(vmContext, { timeout: 200 })
 
-                    this.gameScript.runInNewContext(this.nodeContext);
+                    this.gameScript.runInNewContext({});
                     // onWebsocket();
                     // .catch(err => {
                     //     if (!err) {

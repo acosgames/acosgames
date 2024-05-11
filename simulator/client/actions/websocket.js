@@ -1,4 +1,3 @@
-import fs from "flatstore";
 import ENCODER from "acos-json-encoder";
 import ACOSDictionary from "shared/acos-dictionary.json";
 ENCODER.createDefaultDict(ACOSDictionary);
@@ -18,28 +17,29 @@ import {
 
 import GamePanelService from "../services/GamePanelService";
 import GameStateService from "../services/GameStateService";
+import {
+    btGameSettings,
+    btGameStatus,
+    btLatencyInfo,
+    btLocalGameSettings,
+    btPrevGameSettings,
+    btSocket,
+    btSocketUser,
+    btUsername,
+    btWebsocketStatus,
+} from "./buckets";
 
 // var latency = 0;
 // var latencyStart = 0;
 // var offsetTime = 0;
 const defaultGameSettings = {}; // { minplayers: 1, maxplayers: 1, minteams: 0, maxteams: 0, teams: [], screentype: 3, resow: 4, resoh: 3, screenwidth: 800 };
 
-fs.set("socket", null);
-fs.set("latency", 0);
-fs.set("latencyStart", 0);
-fs.set("latencyOffsetTime", 0);
-fs.set("wsStatus", "disconnected");
-fs.set("gameStatus", "none");
-fs.set("prevGameSettings", defaultGameSettings);
-fs.set("gameSettings", defaultGameSettings);
-fs.set("localGameSettings", defaultGameSettings);
-fs.set("replayStats", { position: 0, total: 0 });
 //--------------------------------------------------
 //WebSockets Connection / Management
 //--------------------------------------------------
 export function connect(username) {
     // note.textContent = 'Status: connecting...';
-    let socket = fs.get("socket");
+    let socket = btSocket.get();
 
     if (socket && !socket.disconnected) {
         // socket.disconnect();
@@ -48,7 +48,7 @@ export function connect(username) {
 
     username = username || "Player " + Math.floor(Math.random() * 1000);
 
-    fs.set("username", username);
+    btUsername.set(username);
 
     let host = window.location.host;
     console.log(host);
@@ -90,23 +90,23 @@ export function connect(username) {
     socket.on("replay", onReplay);
     socket.on("replayStats", onReplayStats);
 
-    fs.set("socket", socket);
+    btSocket.set(socket);
 }
 
 export function wsSend(type, payload) {
-    let socket = fs.get("socket");
+    let socket = btSocket.get();
     socket.emit(type, ENCODER.encode(payload));
 }
 
 export function updateGameSettings(newSettings) {
-    fs.set("prevGameSettings", fs.get("gameSettings"));
-    fs.set("gameSettings", newSettings);
-    let socket = fs.get("socket");
+    btPrevGameSettings.set(btGameSettings.get());
+    btGameSettings.set(newSettings);
+    let socket = btSocket.get();
     wsSend("gameSettings", newSettings);
 }
 
 export function saveGameSettings() {
-    let newSettings = fs.get("gameSettings");
+    let newSettings = btGameSettings.get();
     wsSend("gameSettings", newSettings);
 }
 
@@ -119,18 +119,18 @@ const onGameSettings = (message) => {
         //message should have { id, name }
         message = ENCODER.decode(message);
 
-        fs.set("localGameSettings", message.gameSettings);
-        fs.set("prevGameSettings", fs.get("gameSettings"));
-        fs.set("gameSettings", message.gameSettings);
+        btLocalGameSettings.set(message.gameSettings);
+        btPrevGameSettings.set(btGameSettings.get());
+        btGameSettings.set(message.gameSettings);
     } catch (e) {
         console.error(e);
     }
 };
 
 const onConnect = (evt) => {
-    fs.set("wsStatus", "connected");
-    let socket = fs.get("socket");
-    let socketUser = fs.get("socketUser");
+    btWebsocketStatus.set("connected");
+    let socket = btSocket.get();
+    let socketUser = btSocketUser.get();
 };
 
 const onConnected = (message) => {
@@ -142,24 +142,14 @@ const onConnected = (message) => {
         let gameSettings = message.gameSettings;
         ping();
 
-        fs.set("localGameSettings", gameSettings);
-        fs.set("prevGameSettings", fs.get("gameSettings"));
-        fs.set("gameSettings", gameSettings);
+        btLocalGameSettings.set(gameSettings);
+        btPrevGameSettings.set(btGameSettings.get());
+        btGameSettings.set(gameSettings);
 
-        fs.set("socketUser", socketUser);
-        fs.set("wsStatus", "connected");
+        btSocketUser.set(socketUser);
+        btWebsocketStatus.set("connected");
 
         GamePanelService.createGamePanel(socketUser.id);
-
-        // let fakePlayerList = Object.keys(fakePlayers || {}) || [];
-        // if (primaryGamePanel == null && fakePlayerList && fakePlayerList.length >= 7) {
-        //     let socketUser = fs.get('socketUser');
-        //     if (primaryGamePanel == gamepanels[socketUser.id])
-        //         return;
-        //     fs.set('primaryGamePanel', gamepanels[socketUser.id]);
-        //     fs.set('gamePanelLayout', 'expanded');
-
-        // }
     } catch (e) {
         console.error(e);
     }
@@ -168,9 +158,9 @@ const onConnected = (message) => {
 const ping = () => {
     try {
         let latencyStart = new Date().getTime();
-        let socket = fs.get("socket");
         wsSend("ping", { payload: latencyStart });
-        fs.set("latencyStart", latencyStart);
+
+        btLatencyInfo.assign({ latencyStart });
     } catch (e) {
         console.error(e);
     }
@@ -179,7 +169,7 @@ const ping = () => {
 const onPong = (message) => {
     try {
         message = ENCODER.decode(message);
-        let latencyStart = fs.get("latencyStart");
+        let latencyStart = btLatencyInfo.get((b) => b.latencyStart);
         let serverOffset = message.payload.offset;
         let serverTime = message.payload.serverTime;
         let currentTime = new Date().getTime();
@@ -193,6 +183,13 @@ const onPong = (message) => {
         // console.log("Server Time: ", serverTime);
         // console.log("Client Time: ", currentTime);
         // console.log("Real Time: ", realTime);
+        btLatencyInfo.assign({
+            serverOffset,
+            serverTime,
+            currentTime,
+            latency,
+            realTime,
+        });
     } catch (e) {
         console.error(e);
     }
@@ -209,9 +206,9 @@ const onLastAction = (message) => {
 
 const onDisconnect = (e) => {
     try {
-        fs.set("wsStatus", "disconnected");
-        fs.set("gameStatus", "none");
-        let socket = fs.get("socket");
+        btWebsocketStatus.set("disconnected");
+        btGameStatus.set("none");
+        let socket = btSocket.get();
         console.log(socket.id + " disconnect", e, socket.io.engine);
     } catch (e) {
         console.error(e);

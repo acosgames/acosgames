@@ -19,7 +19,6 @@ import {
     useClipboard,
     VStack,
 } from "@chakra-ui/react";
-import fs from "flatstore";
 // import ReactJson from "@vahagn13/react-json-view";
 import JsonView from "react18-json-view";
 import "react18-json-view/src/style.css";
@@ -32,18 +31,25 @@ import GameStateService from "../services/GameStateService";
 import DELTA from "acos-json-delta";
 
 import { VscCollapseAll, VscExpandAll } from "react-icons/vsc";
-
-fs.set("viewerAccordianIndex", [0, 1, 2]);
+import {
+    btDeltaEncoded,
+    btDeltaState,
+    btGameState,
+    btGameStatus,
+    btReplayStats,
+    btViewerAccordianIndex,
+} from "../actions/buckets";
+import { useBucket } from "react-bucketjs";
 
 export function StateViewer(props) {
-    let [gameState] = fs.useWatch("gameState");
     let [scope, setScope] = useState("server");
-    let [viewerAccordianIndex] = fs.useWatch("viewerAccordianIndex");
+    let gameState = useBucket(btGameState);
+    let viewerAccordianIndex = useBucket(btViewerAccordianIndex);
 
     if (!gameState) return <></>;
 
     let playerList = GameStateService.getPlayersArray();
-    let deltaEncoded = fs.get("deltaEncoded") || 0;
+    let deltaEncoded = btDeltaEncoded.get() || 0;
 
     // deltaEncoded = 200;
     let deltaEncodedColor = "brand.50";
@@ -78,7 +84,7 @@ export function StateViewer(props) {
         if (gameState?.action && "timeleft" in gameState.action)
             delete gameState.action.timeleft;
     } else if (scope == "packet") {
-        let delta = fs.copy("deltaState");
+        let delta = btDeltaState.copy();
         delta.local = {};
         for (let id in delta.players) delete delta.players[id].portrait;
         gameState = delta;
@@ -205,9 +211,7 @@ export function StateViewer(props) {
                         )
                     }
                     onClick={() => {
-                        let viewerAccordianIndex = fs.get(
-                            "viewerAccordianIndex"
-                        );
+                        let viewerAccordianIndex = btViewerAccordianIndex.get();
                         if (viewerAccordianIndex.length > 0) {
                             viewerAccordianIndex = [];
                         } else {
@@ -215,7 +219,7 @@ export function StateViewer(props) {
                                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                             ];
                         }
-                        fs.set("viewerAccordianIndex", viewerAccordianIndex);
+                        btViewerAccordianIndex.set(viewerAccordianIndex);
                     }}
                 ></IconButton>
             </HStack>
@@ -306,7 +310,7 @@ function ObjectViewer(props) {
                 lineHeight={"2rem"}
                 px="1rem"
                 onClick={(e) => {
-                    let viewerAccordianIndex = fs.get("viewerAccordianIndex");
+                    let viewerAccordianIndex = btViewerAccordianIndex.get();
                     if (!Array.isArray(viewerAccordianIndex)) {
                         viewerAccordianIndex = [];
                     }
@@ -318,7 +322,7 @@ function ObjectViewer(props) {
                         viewerAccordianIndex.splice(index, 1);
                     }
 
-                    fs.set("viewerAccordianIndex", viewerAccordianIndex);
+                    btViewerAccordianIndex.set(viewerAccordianIndex);
                 }}
             >
                 <HStack flex="1" alignItems={"center"}>
@@ -394,15 +398,17 @@ function ObjectViewer(props) {
 }
 
 export function ReplayControls(props) {
-    let [gameStatus] = fs.useWatch("gameStatus");
-    let [replayStats] = fs.useWatch("replayStats");
+    let gameStatus = useBucket(btGameStatus);
+    let replayStats = useBucket(btReplayStats);
     let hasGameReplay = gameStatus != "pregame";
 
     // if (!hasGameReplay)
     //     return <></>
 
+    let position = replayStats.position;
+    let total = replayStats.total;
     return (
-        <VStack w="100%" h="100%" justifyContent={"center"} spacing="0">
+        <VStack w="100%" h="100%" justifyContent={"center"} spacing="0.5rem">
             <Text
                 display={props.hideTitle ? "none" : "inline-block"}
                 as="span"
@@ -412,7 +418,7 @@ export function ReplayControls(props) {
             >
                 Replay Control
             </Text>
-            <HStack justifyContent={"center"}>
+            <HStack justifyContent={"center"} gap="0">
                 <Tooltip label={"Previous State"}>
                     <Button
                         fontSize={"xxs"}
@@ -428,9 +434,25 @@ export function ReplayControls(props) {
                         <Icon w="3rem" h="3rem" as={BiSkipPrevious} />
                     </Button>
                 </Tooltip>
-                <Text as="span">{replayStats.position}</Text>
-                <Text as="span">/</Text>
-                <Text as="span">{replayStats.total}</Text>
+                <HStack spacing="0.5rem">
+                    <Text
+                        as="span"
+                        w={total > 999 ? "4rem" : total > 99 ? "3rem" : "2rem"}
+                        textAlign={"right"}
+                    >
+                        {position}
+                    </Text>
+                    <Text as="span" fontSize="1rem">
+                        of
+                    </Text>
+                    <Text
+                        as="span"
+                        w={total > 999 ? "4rem" : total > 99 ? "3rem" : "2rem"}
+                        textAlign={"left"}
+                    >
+                        {total}
+                    </Text>
+                </HStack>
                 <Tooltip label={"Next State"}>
                     <Button
                         fontSize={"xxs"}

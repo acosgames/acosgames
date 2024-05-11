@@ -9,7 +9,6 @@ import {
     Wrap,
     WrapItem,
 } from "@chakra-ui/react";
-import fs from "flatstore";
 import { useEffect, useRef, useState } from "react";
 import Connection from "./Connection.jsx";
 import GamePanel from "./GamePanel.jsx";
@@ -17,17 +16,23 @@ import GamePanel from "./GamePanel.jsx";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 
-fs.set("gamePanelLayout", "compact");
-
 import { GoEye } from "react-icons/go";
 import { IoPlaySharp } from "react-icons/io5";
 import GameStateService from "../services/GameStateService";
+import { useBucket } from "react-bucketjs";
+import {
+    btFakePlayers,
+    btGamepanelLayout,
+    btGamepanels,
+    btGameState,
+    btPrimaryGamePanel,
+    btSocketUser,
+} from "../actions/buckets.js";
 function GamePanelList(props) {
-    let [fakePlayers] = fs.useWatch("fakePlayers");
-    let [primaryGamePanel] = fs.useWatch("primaryGamePanel");
-    let [layout] = fs.useWatch("gamePanelLayout");
-    let [gamepanels] = fs.useWatch("gamepanels");
-    // let primaryGamePanel = fs.get('primaryGamePanel');
+    let fakePlayers = useBucket(btFakePlayers);
+    let primaryGamePanel = useBucket(btPrimaryGamePanel);
+    let layout = useBucket(btGamepanelLayout);
+    let gamepanels = useBucket(btGamepanels);
     const gamePanelListRef = useRef();
 
     let [width, setWidth] = useState(200);
@@ -48,8 +53,6 @@ function GamePanelList(props) {
 
         // if (!gamePanelListRef?.current)
         //     return;
-
-        // let layout = fs.get('gamePanelLayout');
 
         // let width = gamePanelListRef.current.offsetWidth;
         // let height = gamePanelListRef.current.offsetHeight;
@@ -82,15 +85,15 @@ function GamePanelList(props) {
             panelHeight = 100;
         }
 
-        let lastMessage = fs.get("gameState");
-        let gamepanels = fs.get("gamepanels");
+        let lastMessage = btGameState.get();
+        let gamepanels = btGamepanels.get();
 
         for (const id in gamepanels) {
             let gamepanel = gamepanels[id];
 
             let user = fakePlayers && fakePlayers[id];
             if (!user) {
-                user = fs.get("socketUser");
+                user = btSocketUser.get();
                 if (!user) continue;
             }
 
@@ -163,16 +166,16 @@ function GamePanelList(props) {
 }
 
 const onClickOverlay = (e, id) => {
-    let gamepanels = fs.get("gamepanels");
+    let gamepanels = btGamepanels.get();
     let gamepanel = gamepanels[id];
     if (gamepanel) {
-        fs.set("primaryGamePanel", gamepanel);
+        btPrimaryGamePanel.set(gamepanel);
     }
     return false;
 };
 
 function CompactLayout(props) {
-    let gamepanels = fs.get("gamepanels") || {};
+    let gamepanels = btGamepanels.get() || {};
     let panelCount = Object.keys(gamepanels)?.length;
     return (
         <Box
@@ -191,7 +194,7 @@ function CompactLayout(props) {
                 {/* {panelCount > 1 && */}
 
                 {/* } */}
-                <Box height="3rem" w="100%"></Box>
+                {/* <Box height="3rem" w="100%"></Box> */}
 
                 <GamePanel id={props.id} />
             </VStack>
@@ -204,12 +207,12 @@ function ExpandedLayout(props) {
         <VStack
             // onClick={(e) => { onClickOverlay(e, props.id) }}
             display={!props.isPrimary ? "none" : "flex"}
-            spacing="0"
+            spacing="2rem"
             w={"100%"}
-            h={"calc(100% - 3rem)"}
+            h={"100%"}
             position={"absolute"}
             left={"0"}
-            top={"3rem"}
+            top={"0"}
         >
             <GamePanel id={props.id} />
         </VStack>

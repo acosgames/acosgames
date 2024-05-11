@@ -3,14 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import MainPage from "./MainPage.jsx";
 
 import axios from "axios";
-import fs from "flatstore";
-// import GamePanelSpawner from "./games/GameDisplay/GamePanelSpawner";
-// import GamePanel from "./GamePanel";
-// import { createGamePanel } from "../actions/gamepanel";
-
-fs.delimiter(">");
-fs.set("isMobile", false);
-fs.set("iframeRoute", "//localhost:3100/iframe.html");
+import { btIFrameRoute, btIsMobile } from "../actions/buckets.js";
 
 function App(props) {
     let [, setIsMobile] = useState(false);
@@ -19,7 +12,7 @@ function App(props) {
         let screenWidth = window.screen.width;
         let isMobile = screenWidth <= 600;
         setIsMobile(isMobile);
-        fs.set("isMobile", isMobile);
+        btIsMobile.set(isMobile);
     };
 
     const getRoutes = async () => {
@@ -27,7 +20,7 @@ function App(props) {
             let response = await axios.get("/routes");
 
             if (response?.data) {
-                fs.set("iframeRoute", response?.data?.iframe);
+                btIFrameRoute.set(response?.data?.iframe);
             }
         } catch (e) {
             console.error(e);

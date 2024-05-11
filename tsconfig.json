@@ -3,7 +3,8 @@
         "module": "ES6",
         "target": "es2019",
         "declaration": true,
-        "outDir": "./game/dist"
+        "outDir": "./game/dist",
+        "paths": { "*": ["./game/types/*.d.ts"] }
     },
     "include": ["./game/**/*"]
 }

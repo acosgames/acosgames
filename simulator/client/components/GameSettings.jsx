@@ -25,7 +25,6 @@ import {
     Wrap,
 } from "@chakra-ui/react";
 import { updateGameSettings } from "../actions/websocket";
-import fs from "flatstore";
 
 import { FaArrowCircleUp, FaArrowCircleDown } from "react-icons/fa";
 import { useEffect, useRef, useState } from "react";
@@ -34,13 +33,20 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { ColorPicker, Hue, Saturation, useColor } from "react-color-palette";
 import "react-color-palette/css";
+import { useBucket } from "react-bucketjs";
+import {
+    btGameSettings,
+    btPrevGameSettings,
+    btTeamSettingsRef,
+    btWebsocketStatus,
+} from "../actions/buckets";
+import { SettingNumberInput, SettingTextInput } from "./Inputs";
 
 const MotionBox = motion(Box);
 
 export function Settings(props) {
-    let [gameSettings] = fs.useWatch("gameSettings");
-
-    let [wsStatus] = fs.useWatch("wsStatus");
+    let gameSettings = useBucket(btGameSettings);
+    let wsStatus = useBucket(btWebsocketStatus);
     if (wsStatus != "connected" && wsStatus != "ingame") {
         return <></>;
     }
@@ -99,9 +105,8 @@ export function ChooseGameSettings(props) {
                                 placeholder="0"
                                 onChange={(id, value) => {
                                     let teamSettingsRef =
-                                        fs.get("teamSettingsRef");
-                                    let gameSettings =
-                                        fs.get("prevGameSettings");
+                                        btTeamSettingsRef.get();
+                                    let gameSettings = btPrevGameSettings.get();
                                     if (
                                         teamSettingsRef &&
                                         gameSettings.maxteams == 0 &&
@@ -125,7 +130,7 @@ export function ChooseGameSettings(props) {
 export function ChooseTeamSettings(props) {
     const teamSettingsRef = useRef();
 
-    let [gameSettings] = fs.useWatch("gameSettings");
+    let gameSettings = useBucket(btGameSettings);
 
     const renderTeams = () => {
         let teams = gameSettings.teams;
@@ -152,7 +157,7 @@ export function ChooseTeamSettings(props) {
     };
 
     useEffect(() => {
-        fs.set("teamSettingsRef", teamSettingsRef);
+        btTeamSettingsRef.set(teamSettingsRef);
     }, []);
 
     // if (!gameSettings?.teams || gameSettings.teams.length == 0) {
@@ -200,7 +205,7 @@ function TeamSettings(props) {
     // };
 
     const onChangeOrder = (dir) => {
-        let gameSettings = fs.get("gameSettings");
+        let gameSettings = btGameSettings.get();
         let teams = gameSettings.teams;
 
         // let newIndex = props.team_order + dir;
@@ -257,7 +262,7 @@ function TeamSettings(props) {
     //     }
     // });
 
-    let gameSettings = fs.get("gameSettings");
+    let gameSettings = btGameSettings.get();
     let teams = gameSettings.teams;
 
     let isUpActive = teams && props.team_order > 0;
@@ -378,8 +383,7 @@ const regexColorHex = /^#([0-9a-fA-F]{3}){1,2}$/i;
 
 function SettingColorInput(props) {
     let id = props.id;
-    //let [gameSettings] = fs.useWatch('gameSettings');
-    let gameSettings = fs.get("gameSettings");
+    let gameSettings = btGameSettings.get();
 
     let currentValue = id in gameSettings ? gameSettings[id] : 0;
     // let [colorValue, setColorValue] = useState(currentValue);
@@ -401,7 +405,7 @@ function SettingColorInput(props) {
 
             if (props.onChange) props.onChange(id, value);
 
-            let gameSettings = fs.get("gameSettings");
+            let gameSettings = btGameSettings.get();
             if (!isTeamId && id in gameSettings) {
                 gameSettings[id] = value;
             } else if (isTeamId && gameSettings.teams[team_order]) {
@@ -472,7 +476,7 @@ function SettingColorInput(props) {
                             color={color || "#f00"}
                             onChange={(c1) => {
                                 let value = c1.hex;
-                                let gameSettings = fs.get("gameSettings");
+                                let gameSettings = btGameSettings.get();
                                 if (!isTeamId && id in gameSettings) {
                                     gameSettings[id] = value;
                                 } else if (
@@ -488,31 +492,6 @@ function SettingColorInput(props) {
                             hideAlpha="true"
                             hideInput={["rgb", "hsv"]}
                         />
-                        {/* <SketchPicker
-                            defaultValue={currentValue || "#f00"}
-                            color={colorValue}
-                            onChange={(color) => {
-                                let value = color.hex;
-
-                                if (props.onChange) props.onChange(id, value);
-
-                                setColorValue(value);
-                            }}
-                            onChangeComplete={(color) => {
-                                let value = color.hex;
-
-                                let gameSettings = fs.get("gameSettings");
-                                if (!isTeamId && id in gameSettings) {
-                                    gameSettings[id] = value;
-                                } else if (
-                                    isTeamId &&
-                                    gameSettings.teams[team_order]
-                                ) {
-                                    gameSettings.teams[team_order][id] = value;
-                                }
-                                updateGameSettings(gameSettings);
-                            }}
-                        /> */}
                     </PopoverBody>
                 </PopoverContent>
             </Popover>
@@ -520,155 +499,9 @@ function SettingColorInput(props) {
     );
 }
 
-function SettingTextInput(props) {
-    let id = props.id;
-    let [gameSettings] = fs.useWatch("gameSettings");
-    let currentValue = id in gameSettings ? gameSettings[id] : 0;
-
-    let isTeamId = "team_order" in props;
-    let team_order = -1;
-    if (isTeamId && gameSettings.teams && gameSettings.teams.length > 0) {
-        team_order = Number.parseInt(props.team_order || 0);
-        currentValue = gameSettings.teams[team_order][id];
-    }
-
-    return (
-        <HStack
-            key={"setting-" + id}
-            id={"setting-" + id}
-            display={gameSettings?.screentype == 1 ? "none" : "flex"}
-            alignItems={"center"}
-            width="100%"
-            spacing="0"
-        >
-            <Text
-                fontWeight={"bold"}
-                as="label"
-                w={props.textWidth || "100%"}
-                display={props.title ? "inline-block" : "none"}
-                pr="0.5rem"
-                color="gray.50"
-                fontSize="xs"
-                htmlFor={id}
-            >
-                {props.title}
-            </Text>
-            <Input
-                className=""
-                id={id}
-                fontSize="xs"
-                bgColor="gray.950"
-                aria-describedby=""
-                placeholder={props.placeholder}
-                onChange={(e) => {
-                    let value = e.target.value;
-
-                    if (props.onChange) props.onChange(id, value);
-
-                    // if( !('team_order' in props) ) {
-                    //     fs.set(id, value);
-                    // }
-
-                    let gameSettings = fs.get("gameSettings");
-                    if (!isTeamId && id in gameSettings) {
-                        gameSettings[id] = value;
-                    } else if (isTeamId && gameSettings.teams[team_order]) {
-                        gameSettings.teams[team_order][id] = value;
-                    }
-                    updateGameSettings(gameSettings);
-                    // e.target.focus();
-                }}
-                // value={currentValue || ""}
-                defaultValue={currentValue || ""}
-                w={props.width || "100%"}
-            />
-        </HStack>
-    );
-}
-
-function SettingNumberInput(props) {
-    let id = props.id;
-    let [gameSettings] = fs.useWatch("gameSettings");
-
-    let currentValue =
-        id in gameSettings ? Number.parseInt(gameSettings[id]) : 0;
-
-    let [numberValue, setNumberValue] = useState(currentValue);
-
-    let isTeamId = "team_order" in props;
-    let team_order = -1;
-    if (isTeamId && gameSettings.teams && gameSettings.teams.length > 0) {
-        team_order = Number.parseInt(props.team_order || 0);
-        currentValue = Number.parseInt(gameSettings.teams[team_order][id]);
-    }
-
-    useEffect(() => {
-        if (currentValue != numberValue) {
-            setNumberValue(currentValue);
-        }
-    });
-
-    return (
-        <VStack key={"setting-" + id} id={"setting-" + id}>
-            <Text
-                as="label"
-                display={"inline-block"}
-                pr="0.5rem"
-                color="gray.50"
-                fontSize="1.2rem"
-                htmlFor={id}
-            >
-                {props.title}
-            </Text>
-            <NumberInput
-                className=""
-                id={id}
-                fontSize="1.4rem"
-                bgColor="gray.950"
-                aria-describedby=""
-                readOnly={props.readOnly || false}
-                isDisabled={props.readOnly || false}
-                placeholder={props.placeholder}
-                onChange={(value) => {
-                    // let value = e.target.value;
-
-                    try {
-                        value = Number.parseInt(value) || 0;
-                    } catch (e) {
-                        value = 0;
-                    }
-
-                    if (props.onChange) props.onChange(id, value);
-
-                    setNumberValue(value);
-
-                    // fs.set(id, value);
-                    let gameSettings = fs.get("gameSettings");
-                    if (!isTeamId && id in gameSettings) {
-                        gameSettings[id] = value;
-                    } else if (isTeamId && gameSettings.teams[team_order]) {
-                        gameSettings.teams[team_order][id] = value;
-                    }
-
-                    updateGameSettings(gameSettings);
-                }}
-                defaultValue={currentValue || 0}
-                value={numberValue || 0}
-                w={props.width || "100%"}
-            >
-                <NumberInputField fontSize="1.4rem" />
-                <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                </NumberInputStepper>
-            </NumberInput>
-        </VStack>
-    );
-}
-
 export function ChooseScreenSettings(props) {
     try {
-        let [gameSettings] = fs.useWatch("gameSettings");
+        let gameSettings = useBucket(btGameSettings);
         let [saved, setSaved] = useState(false);
 
         if (!gameSettings) return <></>;

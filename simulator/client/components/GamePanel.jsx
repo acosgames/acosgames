@@ -20,7 +20,6 @@ import {
 } from "@chakra-ui/react";
 
 import { useEffect, useRef, useState } from "react";
-import fs from "flatstore";
 
 import { MdPerson } from "react-icons/md";
 import { IoPersonSharp } from "react-icons/io5";
@@ -37,12 +36,24 @@ import {
 } from "../actions/game";
 import GameStateService from "../services/GameStateService";
 import { DisplayUserActions } from "./PlayerList.jsx";
-
-fs.set("iframes", {});
-fs.set("iframesLoaded", {});
+import {
+    btDisplayMode,
+    btFakePlayers,
+    btFullScreenElement,
+    btGamepanelLayout,
+    btGamepanels,
+    btGameSettings,
+    btGameState,
+    btIFrameRoute,
+    btIFrameStyle,
+    btIsFullScreen,
+    btMainPageRef,
+    btPrimaryGamePanel,
+} from "../actions/buckets";
+import { useBucket } from "react-bucketjs";
 
 function GamePanel(props) {
-    let gamepanels = fs.get("gamepanels") || {};
+    let gamepanels = btGamepanels.get() || {};
     let panelCount = Object.keys(gamepanels)?.length;
 
     return (
@@ -54,9 +65,9 @@ function GamePanel(props) {
 
 function GameIFrame(props) {
     let gamepanel = props.gamepanel;
-    let [displayMode] = fs.useWatch("displayMode");
-    let [gameSettings] = fs.useWatch("gameSettings");
-    let [iframeRoute] = fs.useWatch("iframeRoute");
+    let displayMode = useBucket(btDisplayMode);
+    let gameSettings = useBucket(btGameSettings);
+    let iframeRoute = useBucket(btIFrameRoute);
 
     const [isOpen, setIsOpen] = useState(true);
     const [isLoaded, setIsLoaded] = useState(true);
@@ -183,21 +194,20 @@ function GameIFrame(props) {
             // );
         }
 
-        fs.set("iframeStyle", iframeRef.current.style);
+        btIFrameStyle.set(iframeRef.current.style);
     };
 
     let observerTimer = 0;
 
     const myObserver = new ResizeObserver((entries) => {
         onResize();
-        //fs.set('primaryGamePanel', fs.get('primaryGamePanel'));
     });
 
     const onFullScreenChange = (evt) => {
         if (document.fullscreenElement) {
-            fs.set("isFullScreen", true);
+            btIsFullScreen.set(true);
         } else {
-            fs.set("isFullScreen", false);
+            btIsFullScreen.set(false);
         }
     };
 
@@ -205,15 +215,15 @@ function GameIFrame(props) {
         window.addEventListener("resize", onResize);
         document.addEventListener("fullscreenchange", onFullScreenChange);
 
-        let gamepanels = fs.get("gamepanels");
+        let gamepanels = btGamepanels.get();
         let gamepanel = gamepanels[props.id];
         if (gamepanel) {
             gamepanel.iframe = iframeRef;
         }
 
-        fs.set("fullScreenElem", gameResizer);
+        btFullScreenElement.set(gameResizer);
 
-        const mainPageRef = fs.get("mainPageRef");
+        const mainPageRef = btMainPageRef.get();
         myObserver.observe(mainPageRef.current);
 
         setTimeout(() => {
@@ -230,7 +240,7 @@ function GameIFrame(props) {
         onResize();
     });
 
-    let lastMessage = fs.get("gameState");
+    let lastMessage = btGameState.get();
     let players = lastMessage?.players || {};
 
     let isSpectator = !(props.id in players);
@@ -273,16 +283,22 @@ function GameIFrame(props) {
                     // bgColor="gray.700"
                     // visibility={gamepanel?.iframe?.current ? "visible" : "hidden"}
                     // boxSizing="content-box"
+
+                    // border="2px solid var(--chakra-colors-gray-700)"
                 >
                     <iframe
                         className="gamescreen"
                         ref={iframeRef}
                         onLoad={() => {
-                            let gamepanels = fs.get("gamepanels");
+                            let gamepanels = btGamepanels.get();
                             let gamepanel = gamepanels[props.id];
 
                             gamepanel.iframe = iframeRef;
                             iframeRef.current.style.visibility = "visible";
+                            iframeRef.current.style.border =
+                                "2px solid var(--chakra-colors-gray-800)";
+                            iframeRef.current.style["box-shadow"] =
+                                "0 0 5px var(--chakra-colors-gray-1000), 0 0 10px var(--chakra-colors-gray-1000)";
                             onResize();
 
                             setTimeout(() => {
@@ -297,7 +313,7 @@ function GameIFrame(props) {
                         sandbox="allow-scripts  allow-same-origin"
                         allowtransparency="true"
                     />
-                    <HStack
+                    {/* <HStack
                         position={"absolute"}
                         top={"-3rem"}
                         left="0"
@@ -305,11 +321,11 @@ function GameIFrame(props) {
                         width="100%"
                     >
                         <DisplayUserInfo id={props.id} iframeRef={iframeRef} />
-                    </HStack>
+                    </HStack> */}
                 </Box>
             </VStack>
 
-            <Box
+            {/* <Box
                 position="absolute"
                 bottom="1rem"
                 right="1rem"
@@ -325,7 +341,7 @@ function GameIFrame(props) {
                     icon={<CgMinimizeAlt color="gray.300" />}
                     onClick={() => {
                         if (props.displayMode == "theatre") {
-                            fs.set("displayMode", "none");
+                            btDisplayMode.set("none");
                         }
                         if (props.isFullScreen) document.exitFullscreen();
                         // openFullscreen(props.fullScreenElem)
@@ -333,13 +349,13 @@ function GameIFrame(props) {
                 >
                     Exit Full Screen
                 </IconButton>
-            </Box>
+            </Box> */}
         </VStack>
     );
 }
 
 function DisplayUserInfo(props) {
-    let [lastMessage] = fs.useWatch("gameState");
+    let lastMessage = useBucket(btGameState);
 
     let isInGame = false;
     let players = lastMessage?.players;
@@ -353,30 +369,14 @@ function DisplayUserInfo(props) {
 
     let color = "gray.400";
     if (isInGame) {
-        color = "gray.10";
+        color = "gray.200";
     }
-    if (isUserNext) color = "brand.50";
+    if (isUserNext) color = "gray.30";
 
-    let fakePlayers = fs.get("fakePlayers") || {};
+    let fakePlayers = btFakePlayers.get() || {};
 
     let fakePlayerList = Object.keys(fakePlayers);
 
-    useEffect(() => {
-        // let isUserNext = GameStateService.validateNextUser(props.id);
-        // let frameBorder = isUserNext
-        //     ? "border: 2px solid var(--chakra-colors-brand-50)"
-        //     : "border-top: 2px solid transparent";
-        // if (props.iframeRef.current) {
-        //     if (isUserNext) {
-        //         props.iframeRef.current.style.border =
-        //             "2px solid var(--chakra-colors-brand-50)";
-        //     } else {
-        //         props.iframeRef.current.style.border = "2px solid transparent";
-        //     }
-        //     // props.iframeRef.current.style =
-        //     //     fs.get("iframeStyle") + " " + frameBorder;
-        // }
-    });
     return (
         <HStack
             // spacing="1rem"
@@ -398,26 +398,26 @@ function DisplayUserInfo(props) {
             <HStack
                 px="2rem"
                 onClick={() => {
-                    let fakePlayers = fs.get("fakePlayers");
+                    let fakePlayers = btFakePlayers.get();
                     let fakePlayerList = Object.keys(fakePlayers || {}) || [];
-                    let gamepanels = fs.get("gamepanels");
+                    let gamepanels = btGamepanels.get();
                     let gamepanel = gamepanels[props.id];
                     if (gamepanel) {
-                        let primaryGamePanel = fs.get("primaryGamePanel");
+                        let primaryGamePanel = btPrimaryGamePanel.get();
 
                         //go back to compact if selecting again
                         if (
                             gamepanel == primaryGamePanel &&
                             fakePlayerList.length < 7
                         ) {
-                            fs.set("primaryGamePanel", null);
-                            fs.set("gamePanelLayout", "compact");
+                            btPrimaryGamePanel.set(null);
+                            btGamepanelLayout.set("compact");
                             return;
                         }
 
-                        fs.set("primaryGamePanel", gamepanel);
+                        btPrimaryGamePanel.set(gamepanel);
                     }
-                    fs.set("gamePanelLayout", "expanded");
+                    btGamepanelLayout.set("expanded");
                 }}
             >
                 <Tooltip
@@ -433,8 +433,8 @@ function DisplayUserInfo(props) {
                         <Icon
                             color={color}
                             as={isInGame ? IoPersonSharp : GoEye}
-                            w="1.8rem"
-                            h="1.8rem"
+                            w="1.2rem"
+                            h="1.2rem"
                             p="0"
                         />
                     </Text>
@@ -447,7 +447,7 @@ function DisplayUserInfo(props) {
                         color={color}
                         as="span"
                         display="inline-block"
-                        fontSize="1.4rem"
+                        fontSize="1.1rem"
                         fontWeight="500"
                     >
                         {user.name}

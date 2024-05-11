@@ -9,18 +9,23 @@ import {
     Text,
     Divider,
 } from "@chakra-ui/react";
-import fs from "flatstore";
 import { Link } from "react-router-dom";
 // import config from '../config'
 
 import { ActionPanel } from "./ActionPanel.jsx";
 import Timeleft from "./Timeleft.jsx";
+import { useBucket } from "react-bucketjs";
+import {
+    btActionToggle,
+    btGameStatus,
+    btIsMobile,
+} from "../actions/buckets.js";
 // import GameActions from './games/GameDisplay/GameActions';
 
-function ACOSHeader(props) {
-    let [isMobile] = fs.useWatch("isMobile");
-    let [actionToggle] = fs.useWatch("actionToggle");
-    let [gameStatus] = fs.useWatch("gameStatus");
+export default function MainHeader(props) {
+    let isMobile = useBucket(btIsMobile);
+    let actionToggle = useBucket(btActionToggle);
+    let gameStatus = useBucket(btGameStatus);
 
     let statusColor = "white";
     if (gameStatus == "pregame") statusColor = "yellow.200";
@@ -40,6 +45,7 @@ function ACOSHeader(props) {
             // maxWidth="1200px"
             h={["3rem", "4rem", "5rem"]}
             justifyContent={"center"}
+            className="mainmenuchakra"
         >
             <Flex
                 alignItems={"center"}
@@ -51,6 +57,7 @@ function ACOSHeader(props) {
                 <HStack
                     spacing={["2rem", "2rem", "4rem"]}
                     justifyContent={"center"}
+                    opacity={gameStatus == "gamestart" ? "0.1" : "1"}
                 >
                     <Box>
                         <Link to="/" className="">
@@ -68,10 +75,15 @@ function ACOSHeader(props) {
                     <Text
                         fontSize="2rem"
                         fontWeight={"100"}
+                        as="span"
+                        width="12rem"
                         color={statusColor}
                     >
                         {gameStatus}
                     </Text>
+                    <Box w="10rem" alignSelf={"center"} justifySelf={"center"}>
+                        <Timeleft />
+                    </Box>
                     {/* <Divider orientation="vertical" /> */}
                 </HStack>
 
@@ -80,41 +92,16 @@ function ACOSHeader(props) {
                     alignItems={"center"}
                     height="100%"
                     flex="1"
+                    display={["none", "none", "flex"]}
+                    opacity={gameStatus == "gamestart" ? "0.1" : "1"}
                 >
                     <Stack direction={"row"} spacing={0} height="100%">
-                        <Box>
+                        <Box w="30rem">
                             <ActionPanel />
                         </Box>
                     </Stack>
-                    <Timeleft />
                 </Flex>
             </Flex>
         </Box>
     );
 }
-
-// function Timeleft(props) {
-
-//     let [timeleftUpdated] = fs.useWatch('timeleftUpdated');
-
-//     let timeleft = fs.get('timeleft') || 0;
-
-//     try {
-//         timeleft = Number.parseInt(timeleft) / 1000;
-
-//         if (timeleft > 10)
-//             timeleft = Math.floor(timeleft);
-//     }
-//     catch (e) {
-//         timeleft = 0;
-//     }
-
-//     return (
-//         <HStack width="100%" height={'100%'} alignContent='center' justifyContent={'center'}>
-//             <Icon as={IoTimeOutline} fontSize='md' fontWeight="bold" color={'gray.100'}></Icon>
-//             <Text w="20rem" color={'white'} fontSize='xl'>{timeleft}</Text>
-//         </HStack>
-//     )
-// }
-
-export default fs.connect(["actionToggle", "isMobile"])(ACOSHeader);

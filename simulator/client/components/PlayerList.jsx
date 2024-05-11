@@ -22,7 +22,6 @@ import {
     Tr,
     VStack,
 } from "@chakra-ui/react";
-import fs from "flatstore";
 import {
     joinFakePlayer,
     joinGame,
@@ -40,12 +39,26 @@ import { IoPersonSharp } from "react-icons/io5";
 import { GoEye } from "react-icons/go";
 import GameStateService from "../services/GameStateService";
 import GamePanelService from "../services/GamePanelService";
+import { useBucket } from "react-bucketjs";
+import {
+    btFakePlayers,
+    btGamepanelLayout,
+    btGamepanels,
+    btGameSettings,
+    btGameState,
+    btGameStatus,
+    btPlayerTeams,
+    btPrimaryGamePanel,
+    btSocket,
+    btSocketUser,
+    btWebsocketStatus,
+} from "../actions/buckets";
 
 export function DisplayGamePlayers(props) {
-    let [gameState] = fs.useWatch("gameState");
+    let gameState = useBucket(btGameState);
 
-    let gameSettings = fs.get("gameSettings");
-    let playerTeams = fs.get("playerTeams");
+    let gameSettings = btGameSettings.get();
+    let playerTeams = btPlayerTeams.get();
 
     let playerList = GameStateService.getPlayersArray();
     if (playerList.length == 0) return <></>;
@@ -200,7 +213,7 @@ export function DisplayGamePlayers(props) {
 }
 
 export function JoinButton(props) {
-    let [gameSettings] = fs.useWatch("gameSettings");
+    let gameSettings = useBucket(btGameSettings);
 
     if (!props.isJoinAllowed) {
         return <></>;
@@ -310,8 +323,8 @@ export function JoinButton(props) {
 }
 
 export function DisplayUserActions(props) {
-    let [gameState] = fs.useWatch("gameState");
-    let [gameSettings] = fs.useWatch("gameSettings");
+    let gameState = useBucket(btGameState);
+    let gameSettings = useBucket(btGameSettings);
 
     let user = GamePanelService.getUserById(props.id);
     let isFakePlayer = "clientid" in user;
@@ -358,10 +371,10 @@ export function DisplayUserActions(props) {
 }
 
 export function DisplayMyPlayers(props) {
-    let [fakePlayers] = fs.useWatch("fakePlayers");
-    let [gameStatus] = fs.useWatch("gameStatus");
-    let [primaryGP] = fs.useWatch("primaryGamePanel");
-    let [wsStatus] = fs.useWatch("wsStatus");
+    let fakePlayers = useBucket(btFakePlayers);
+    let gameStatus = useBucket(btGameStatus);
+    let primaryGP = useBucket(btPrimaryGamePanel);
+    let wsStatus = useBucket(btWebsocketStatus);
     if (wsStatus == "disconnected") {
         return <></>;
     }
@@ -373,18 +386,18 @@ export function DisplayMyPlayers(props) {
         let players = GameStateService.getPlayers();
         let elems = [];
 
-        let gamepanels = fs.get("gamepanels");
-        let primaryGamePanel = fs.get("primaryGamePanel");
-        let gameSettings = fs.get("gameSettings");
+        let gamepanels = btGamepanels.get();
+        let primaryGamePanel = btPrimaryGamePanel.get();
+        let gameSettings = btGameSettings.get();
         let playerList = GameStateService.getPlayersArray();
-        let playerTeams = fs.get("playerTeams");
-        let fakePlayers = fs.get("fakePlayers");
+        let playerTeams = btPlayerTeams.get();
+        let fakePlayers = btFakePlayers.get();
 
         // if (fakePlayerIds.length == 0)
         //     return elems;
 
         let myplayers = [];
-        let socketUser = fs.get("socketUser");
+        let socketUser = btSocketUser.get();
         myplayers.push(socketUser);
 
         for (const shortid in fakePlayers) {
@@ -415,10 +428,10 @@ export function DisplayMyPlayers(props) {
             // if (isInGame)
             //     continue;
 
-            gamepanels = fs.get("gamepanels");
+            gamepanels = btGamepanels.get();
             let gamepanel = gamepanels[p.id];
             let isUserNext = GameStateService.validateNextUser(p.id);
-            primaryGamePanel = fs.get("primaryGamePanel");
+            primaryGamePanel = btPrimaryGamePanel.get();
             let color = "white";
             if (!isInGame || !isUserNext) color = "#aaa";
 
@@ -433,24 +446,24 @@ export function DisplayMyPlayers(props) {
                         cursor="pointer"
                         borderBottomColor="gray.975"
                         onClick={() => {
-                            let gps = fs.get("gamepanels");
+                            let gps = btGamepanels.get();
                             let gp = gps[p.id];
                             if (gp) {
-                                primaryGamePanel = fs.get("primaryGamePanel");
+                                primaryGamePanel = btPrimaryGamePanel.get();
 
                                 //go back to compact if selecting again
                                 if (
                                     gp == primaryGamePanel &&
                                     myplayers.length <= 8
                                 ) {
-                                    fs.set("primaryGamePanel", null);
-                                    fs.set("gamePanelLayout", "compact");
+                                    btPrimaryGamePanel.set(null);
+                                    btGamepanelLayout.set("compact");
                                     return;
                                 }
 
-                                fs.set("primaryGamePanel", gp);
+                                btPrimaryGamePanel.set(gp);
                             }
-                            fs.set("gamePanelLayout", "expanded");
+                            btGamepanelLayout.set("expanded");
                         }}
                     >
                         <HStack

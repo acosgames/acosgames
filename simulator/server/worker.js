@@ -79,46 +79,6 @@ var globalGameSettings = {};
 //     })
 // };
 
-const globals = Object.freeze({
-    gamelog: () => {
-        // var args = Array.from(arguments);
-        // console.log.apply(console, args);
-        // console.log(args);
-        console.log.apply(console, ...arguments);
-    },
-    gameerror: () => {
-        console.error.apply(console, ...arguments);
-        // console.error(msg)
-    },
-    finish: (newGame) => {
-        try {
-            globalResult = cloneObj(newGame);
-        } catch (e) {
-            console.error(e);
-        }
-    },
-    random: () => {
-        try {
-            return DiscreteRandom.random();
-        } catch (e) {
-            console.error(e);
-        }
-    },
-    game: () => cloneObj(globalGame),
-    actions: () => {
-        return cloneObj(globalActions);
-    },
-    killGame: () => {
-        globalDone = true;
-    },
-    database: () => {
-        return globalDatabase;
-    },
-    ignore: () => {
-        globalIgnore = true;
-    },
-});
-
 // let vmContext = null;
 // isolate = new ivm.Isolate({ memoryLimit: 128, inspector: true, });
 // function onVM() {
@@ -245,7 +205,7 @@ class FSGWorker {
         this.settingsPath = path.join(workerData.dir, "./game-settings.json");
         this.dbPath = path.join(workerData.dir, "./game-server/database.json");
 
-        this.nodeContext = vm;
+        this.nodeContext = {};
         if (!fs.existsSync(this.dbPath)) this.dbPath = null;
 
         this.gameScript = null;
@@ -592,7 +552,7 @@ class FSGWorker {
                 filename: options.filename,
             });
 
-            this.nodeContext = vm.createContext(globals);
+            // this.nodeContext = vm.createContext(globals);
 
             // this.gameScript = isolate.compileScriptSync(data, options);
 
@@ -660,9 +620,49 @@ class FSGWorker {
             try {
                 profiler.Start("Game Logic");
                 {
+                    const globals = {
+                        gamelog: () => {
+                            // var args = Array.from(arguments);
+                            // console.log.apply(console, args);
+                            // console.log(args);
+                            console.log.apply(console, ...arguments);
+                        },
+                        gameerror: () => {
+                            console.error.apply(console, ...arguments);
+                            // console.error(msg)
+                        },
+                        save: (newGame) => {
+                            try {
+                                globalResult = cloneObj(newGame);
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        },
+                        random: () => {
+                            try {
+                                return DiscreteRandom.random();
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        },
+                        game: () => cloneObj(globalGame),
+                        actions: () => {
+                            return cloneObj(globalActions);
+                        },
+                        killGame: () => {
+                            globalDone = true;
+                        },
+                        database: () => {
+                            return globalDatabase;
+                        },
+                        ignore: () => {
+                            globalIgnore = true;
+                        },
+                    };
                     // await this.gameScript.run(vmContext, { timeout: 200 })
-
-                    this.gameScript.runInNewContext({});
+                    vm.createContext(globals);
+                    this.gameScript.runInNewContext(globals);
+                    // console.log(globals);
                     // onWebsocket();
                     // .catch(err => {
                     //     if (!err) {

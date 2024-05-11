@@ -1,12 +1,15 @@
 import { motion } from "framer-motion";
 
 import { Box, HStack, Image, Text, VStack } from "@chakra-ui/react";
-import fs from "flatstore";
+
 import GameStateService from "../../services/GameStateService";
 const HStackMotion = motion(HStack);
 
+import { btGamepanels, btGameState } from "../../actions/buckets";
+import { useBucket } from "react-bucketjs";
+
 function IsNextIndicator({ gamepanelid, shortid }) {
-    let [gamepanels] = fs.useWatch("gamepanels");
+    let gamepanels = useBucket(btGamepanels);
     let isUserNext = GameStateService.validateNextUser(shortid);
 
     return (
@@ -34,7 +37,8 @@ export default function RenderPlayer({
     score,
     team,
 }) {
-    let [gameState] = fs.useWatch("gameState");
+    let gameState = useBucket(btGameState);
+
     let isUserNext = GameStateService.validateNextUser(shortid);
     let filename = `assorted-${portraitid || 1}-medium.webp`;
     return (

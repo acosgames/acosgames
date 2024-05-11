@@ -1,18 +1,10 @@
 import { Box, Heading, HStack, Text, Tooltip } from "@chakra-ui/react";
-import fs from "flatstore";
-// import { getGamePanel, getPrimaryGamePanel, getRoomStatus, isUserNext } from '../../actions/room';
+import { useBucket } from "react-bucketjs";
+import { btTimeleft, btTimeleftUpdated } from "../actions/buckets";
 
 function Timeleft(props) {
-    // let [primaryGamePanelId] = fs.useWatch('primaryGamePanel');
-
-    // if (typeof primaryGamePanelId === 'undefined' || primaryGamePanelId == null)
-    //     return <></>
-
-    return <TimeleftDisplay />;
-}
-function TimeleftDisplay(props) {
-    let [timeleftUpdated] = fs.useWatch("timeleftUpdated");
-    let timeleft = fs.get("timeleft") || 0;
+    let timeleftUpdated = useBucket(btTimeleftUpdated);
+    let timeleft = btTimeleft.get() || 0;
 
     // let [timeleft] = fs.useWatch('timeleft/' + props.id) || 0;
     // let [gamepanel] = fs.useWatch('gamepanel/' + props.id);
@@ -48,21 +40,7 @@ function TimeleftDisplay(props) {
     let greaterThan10 = timeleft >= 10;
     let isEven = timeleft % 2 == 0;
 
-    // let isNext = isUserNext(gamepanel);
-
-    // let roomStatus = 'NONE';
-    // if (gamepanel?.room?.room_slug)
-    //     roomStatus = getRoomStatus(gamepanel.room.room_slug);
-
-    // let nextColor = 'yellow.500'
-    // let nextText = 'WAIT';
-    // if (roomStatus == 'GAME' && isNext) {
-    //     nextText = 'GO';
-    //     nextColor = 'brand.900'
-    // } else if (roomStatus != 'GAME' && roomStatus != 'LOADING') {
-    //     nextText = 'GG';
-    //     nextColor = 'gray.200'
-    // }
+    let textColor = "gray.40";
 
     return (
         <HStack
@@ -84,7 +62,7 @@ function TimeleftDisplay(props) {
                 px="0rem"
                 py="1.5rem"
                 // mr="4rem"
-                cursor="pointer"
+                // cursor="pointer"
                 //bgColor={isNext ? 'gray.700' : ""}
                 borderRadius="1rem"
                 bgColor="gray.900"
@@ -94,27 +72,16 @@ function TimeleftDisplay(props) {
                 spacing="0"
                 fontSize="xl"
                 fontWeight="light"
-                color="gray.10"
+                color={textColor}
                 position="relative"
-                // pl="1rem"
-                // _after={{
-                //     content: "''",
-                //     width: "100%",
-                //     height: "100%",
-                //     transform: "skew(-20deg)",
-                //     position: "absolute",
-                //     borderLeft: "6px solid",
-                //     borderLeftColor: "gray.50",
-                //     borderRight: "6px solid",
-                //     borderRightColor: "gray.50",
-                //     top: 0,
-                //     left: 0,
-                //     bgColor: "gray.900",
-                //     zIndex: -1,
-                // }}
             >
                 <HStack spacing="0" display={hour > 0 ? "flex" : "none"}>
-                    <Heading fontSize="2rem" as="span" className="digitaltimer">
+                    <Heading
+                        fontSize="2rem"
+                        as="span"
+                        className="digitaltimer"
+                        color={textColor}
+                    >
                         {hour < 10 ? "0" + hour : hour}
                     </Heading>
                 </HStack>
@@ -123,6 +90,7 @@ function TimeleftDisplay(props) {
                     as="span"
                     px="0.25rem"
                     fontSize="2rem"
+                    color={textColor}
                 >
                     :
                 </Heading>
@@ -136,11 +104,17 @@ function TimeleftDisplay(props) {
                         className="digitaltimer"
                         fontSize="2rem"
                         textAlign={"center"}
+                        color={textColor}
                     >
                         {min < 10 ? "0" + min : min}
                     </Heading>
                 </HStack>
-                <Heading as="span" px="0.25rem" color="white" fontSize="2rem">
+                <Heading
+                    as="span"
+                    px="0.25rem"
+                    fontSize="2rem"
+                    color={textColor}
+                >
                     :
                 </Heading>
                 <HStack spacing="0" w="2.25rem">
@@ -149,6 +123,7 @@ function TimeleftDisplay(props) {
                         className="digitaltimer"
                         fontSize="2rem"
                         textAlign={"center"}
+                        color={textColor}
                     >
                         {min >= 0 && sec < 10 ? "0" + sec : sec}
                     </Heading>
@@ -160,12 +135,12 @@ function TimeleftDisplay(props) {
                     pt="0.25rem"
                     fontSize="2rem"
                     textAlign={"center"}
+                    color={textColor}
                 >
                     .
                 </Heading>
                 <HStack
                     spacing="0"
-                    // visibility={greaterThan10 ? "hidden" : "visible"}
                     alignItems={"flex-end"}
                     justifyContent={"flex-end"}
                     w="1.5rem"
@@ -176,10 +151,7 @@ function TimeleftDisplay(props) {
                         fontSize="1.4rem"
                         lineHeight={"4rem"}
                         textAlign={"center"}
-                        // color={greaterThan10 ? "white" : "red.500"}
-                        // animation={greaterThan10 ? '' : 'timerblink 1s infinite'}
-                        // className="digitaltimer"
-                        // fontVariantNumeric="tabular-nums"
+                        color={textColor}
                     >
                         {ms}
                     </Heading>

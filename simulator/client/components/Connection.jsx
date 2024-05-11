@@ -5,7 +5,6 @@ import {
     // withRouter,
 } from "react-router-dom";
 
-import fs from "flatstore";
 import GamePanelService from "../services/GamePanelService";
 
 // import { connect } from '../actions/websocket'

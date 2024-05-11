@@ -11,7 +11,6 @@ import {
     TabPanel,
     Tab,
 } from "@chakra-ui/react";
-import fs from "flatstore";
 import { useState } from "react";
 
 import {
@@ -37,17 +36,20 @@ import {
 import { GameActionsExpanded } from "./ActionPanel.jsx";
 import { StateViewer } from "./StateViewer.jsx";
 import Scoreboard from "./Scoreboard/Scoreboard";
+import { useBucket } from "react-bucketjs";
+import {
+    btActionToggle,
+    btDisplayMode,
+    btGameSettings,
+    btIsMobile,
+    btLocalGameSettings,
+} from "../actions/buckets";
 // import Scoreboard from "./Scoreboard.jsx";
 
-fs.set("chat", []);
-fs.set("chatMessage", "");
-fs.set("chatMode", "all");
-fs.set("actionToggle", true);
-
 function SidePanel(props) {
-    let [actionToggle] = fs.useWatch("actionToggle");
-    let [isMobile] = fs.useWatch("isMobile");
-    let [displayMode] = fs.useWatch("displayMode");
+    let actionToggle = useBucket(btActionToggle);
+    let isMobile = useBucket(btIsMobile);
+    let displayMode = useBucket(btDisplayMode);
 
     let toggle = actionToggle && displayMode != "theatre";
     let desktopIcon = toggle ? (
@@ -96,11 +98,12 @@ function SidePanel(props) {
                 isMobile
                     ? "100%"
                     : toggle
-                    ? ["44.0rem", "44rem", "48.0rem"]
+                    ? ["44.0rem", "44rem", "28.0rem", "48.0rem"]
                     : "0"
             }
-            borderLeft="1px solid var(--chakra-colors-gray-900)"
-            // filter="drop-shadow(0 0 5px rgba(25,25,25,.25))"
+            borderLeft="2px solid var(--chakra-colors-gray-975)"
+            boxShadow="inset 0 0 4px rgba(25,25,25,.9)"
+            role="group"
         >
             <Box
                 p="0"
@@ -114,7 +117,7 @@ function SidePanel(props) {
             >
                 <Button
                     onClick={() => {
-                        fs.set("actionToggle", !actionToggle);
+                        btActionToggle.set(!actionToggle);
                     }}
                     height="100%"
                     bgColor="transparent"
@@ -160,6 +163,7 @@ function SidePanel(props) {
                         <Tab _focus={{ outline: "none" }}>Players</Tab>
                         <Tab _focus={{ outline: "none" }}>JSON</Tab>
                         <Tab _focus={{ outline: "none" }}>Settings</Tab>
+                        <Tab _focus={{ outline: "none" }}>Stats</Tab>
                     </TabList>
 
                     <TabPanels h="100%" p="0" pl="0.5rem">
@@ -208,96 +212,12 @@ function SidePanel(props) {
                                 <Settings />
                             </VStack>
                         </TabPanel>
+                        <TabPanel></TabPanel>
                     </TabPanels>
                 </Tabs>
             </VStack>
         </HStack>
     );
 }
-
-function SaveSettingButton(props) {
-    let [gameSettings] = fs.useWatch("gameSettings");
-    let [localGameSettings] = fs.useWatch("localGameSettings");
-    let needsUpdate = false;
-    if (JSON.stringify(gameSettings) != JSON.stringify(localGameSettings))
-        needsUpdate = true;
-
-    return <></>;
-    return (
-        <Button
-            display={needsUpdate ? "block" : "none"}
-            fontSize={"xxs"}
-            bgColor={"green.800"}
-            onClick={saveGameSettings}
-        >
-            {"Save"}
-        </Button>
-    );
-}
-
-function ChatHeader(props) {
-    let [mode, setMode] = useState("all");
-
-    const onChangeMode = (mode) => {
-        setMode(mode);
-        fs.set("chatMode", mode);
-    };
-    return (
-        <HStack
-            boxShadow={
-                "0 10px 15px -3px rgba(0, 0, 0, .2), 0 4px 6px -2px rgba(0, 0, 0, .1);"
-            }
-            pl={"1rem"}
-            width={
-                props.isMobile
-                    ? "100%"
-                    : props.toggle
-                    ? ["24.0rem", "24rem", "34.0rem"]
-                    : "0rem"
-            }
-            height={["3rem", "4rem", "5rem"]}
-            spacing={"2rem"}
-            mt={"0 !important"}
-        >
-            <Text
-                cursor="pointer"
-                as={"span"}
-                fontSize={"xxs"}
-                color={mode == "all" ? "gray.100" : "gray.300"}
-                textShadow={mode == "all" ? "0px 0px 5px #63ed56" : ""}
-                onClick={() => {
-                    onChangeMode("all");
-                }}
-            >
-                Actions
-            </Text>
-            <Text
-                cursor="pointer"
-                as={"span"}
-                fontSize={"xxs"}
-                color={mode == "game" ? "gray.100" : "gray.300"}
-                textShadow={mode == "game" ? "0px 0px 5px #63ed56" : ""}
-                onClick={() => {
-                    onChangeMode("game");
-                }}
-            >
-                Players
-            </Text>
-            <Text
-                cursor="pointer"
-                as={"span"}
-                fontSize={"xxs"}
-                color={mode == "party" ? "gray.100" : "gray.300"}
-                textShadow={mode == "party" ? "0px 0px 5px #63ed56" : ""}
-                onClick={() => {
-                    onChangeMode("party");
-                }}
-            >
-                Debug
-            </Text>
-        </HStack>
-    );
-}
-ChatHeader = fs.connect([])(ChatHeader);
 
 export default SidePanel;

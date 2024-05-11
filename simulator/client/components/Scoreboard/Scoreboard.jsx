@@ -15,22 +15,11 @@ import {
 import { useEffect, useRef, useState, memo } from "react";
 
 import SimpleBar from "simplebar-react";
-// import {
-//   findGamePanelByRoom,
-//   getPrimaryGamePanel,
-// } from "../../../actions/room";
-
-// import ratingconfig from "shared/util/ratingconfig";
-// import config from "../../../config";
-import fs from "flatstore";
 import { motion, AnimatePresence } from "framer-motion";
 import RenderPlayer from "./RenderPlayer.jsx";
-// import {
-//   compareStringified,
-//   useBucket,
-//   useBucketSelector,
-// } from "../../../actions/bucket";
-// import { btGamePanels, btPrimaryGamePanel } from "../../../actions/buckets";
+import { btGameState } from "../../actions/buckets.js";
+import { useBucket } from "react-bucketjs";
+
 const ChakraSimpleBar = chakra(SimpleBar);
 const MotionVStack = motion(VStack);
 
@@ -38,7 +27,7 @@ export default function Scoreboard({}) {
     const scrollRef = useRef();
 
     return (
-        <Card mt="1rem">
+        <Card mt="1rem" minHeight={"23rem"}>
             <CardHeader pb="0">
                 <Text as="span" fontWeight="500">
                     Scoreboard
@@ -101,40 +90,15 @@ export default function Scoreboard({}) {
 }
 
 export function RenderPlayers({ room_slug }) {
-    // const [parent, enableAnimations] = useAutoAnimate();
-    // let primary = getPrimaryGamePanel();
-    // let id = primary?.id;
-    // if (room_slug) {
-    //     primary = findGamePanelByRoom(room_slug);
-    //     id = primary?.id;
-    // }
-
-    // let primaryId = useBucketSelector(btGamePanels, (bucket) => bucket[id]);
-
     let [sort, setSorted] = useState(false);
 
-    // useEffect(() => {
-    //   enableAnimations(true);
-    // }, []);
-
-    // if (!primary) return <></>;
-
-    // let [gameSettings] = fs.useWatch("gameSettings");
-    let [gameState] = fs.useWatch("gameState");
-    // let players = gameState.players;
-
-    // let gamestate = gameState;
+    let gameState = useBucket(btGameState);
     let players = gameState.players;
     let teams = gameState.teams;
 
     if (teams) {
         return (
-            <VStack
-                w="100%"
-                spacing="0"
-                // p="0.25rem"
-                // spacing="0.25rem"
-            >
+            <VStack w="100%" spacing="0">
                 <HStack w="100%">
                     <Box h="1px" flex="1"></Box>
                     <Text
@@ -210,16 +174,9 @@ export function RenderPlayers({ room_slug }) {
 }
 
 function RenderTeams({ gamepanelid, players, teams }) {
-    // let teamList = Object.keys(teams);
     let teamElems = [];
 
     if (!players) return <></>;
-    // let [teams] = fs.useWatch("teams");
-    // let teams = useBucketSelector(
-    //     btGamePanels,
-    //     (panels) => panels[gamepanelid]?.gamestate?.teams,
-    //     compareStringified
-    // );
 
     let teamList = Object.keys(teams || []);
     if (!teamList) return <></>;
@@ -228,22 +185,11 @@ function RenderTeams({ gamepanelid, players, teams }) {
         let teamA = teams[a];
         let teamB = teams[b];
         if (teamA.score == teamB.score) {
-            return teamA.name.localeCompare(teamB.name);
+            return teamA?.name?.localeCompare(teamB?.name || "unknown");
         }
 
         return teamB.score - teamA.score;
     });
-    // if (teams) teams[teamList[0]].score = 10;
-
-    // teamList.sort((a, b) => {
-    //   let teamA = teams[a];
-    //   let teamB = teams[b];
-    //   if (teamA.score == teamB.score) {
-    //     return teamA.name.localeCompare(teamB.name);
-    //   }
-
-    //   return teamB.score - teamA.score;
-    // });
 
     for (let i = 0; i < teamList.length; i++) {
         let team_slug = teamList[i];
@@ -251,7 +197,6 @@ function RenderTeams({ gamepanelid, players, teams }) {
 
         teamElems.push(
             <RenderTeam
-                // gamepanelid={gamepanelid}
                 key={"renderteams-" + team_slug}
                 team={team}
                 players={players}

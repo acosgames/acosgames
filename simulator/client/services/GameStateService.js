@@ -1,20 +1,29 @@
-import fs from "flatstore";
 import DELTA from "acos-json-delta";
 import { playerReady } from "../actions/game";
 import GamePanelService from "./GamePanelService";
 import ENCODER from "acos-json-encoder";
 import ACOSDictionary from "shared/acos-dictionary.json";
+import {
+    btDeltaEncoded,
+    btDeltaState,
+    btGamepanels,
+    btGameSettings,
+    btGameState,
+    btHiddenPlayerState,
+    btPlayerTeams,
+    btTeamInfo,
+} from "../actions/buckets";
 ENCODER.createDefaultDict(ACOSDictionary);
 
 class GameStateService {
     constructor() {
-        fs.set("gameState", {});
-        fs.set("deltaState", {});
-        fs.set("hiddenPlayerState", {});
+        btGameState.set({});
+        btDeltaState.set({});
+        btHiddenPlayerState.set({});
     }
 
     getGameState() {
-        return fs.copy("gameState");
+        return btGameState.copy();
     }
 
     getPlayers() {
@@ -41,12 +50,12 @@ class GameStateService {
     }
 
     hasTeams() {
-        let teaminfo = fs.get("teaminfo") || [];
+        let teaminfo = btTeamInfo.get() || [];
         return teaminfo.length > 0;
     }
 
     anyTeamHasVacancy() {
-        let teaminfo = fs.get("teaminfo") || [];
+        let teaminfo = btTeamInfo.get() || [];
         let vacancyCount = 0;
 
         for (const team of teaminfo) {
@@ -61,10 +70,10 @@ class GameStateService {
     }
 
     hasVacancy(team_slug) {
-        let gameSettings = fs.get("gameSettings");
-        let teaminfo = fs.get("teaminfo") || [];
+        let gameSettings = btGameSettings.get();
+        let teaminfo = btTeamInfo.get() || [];
 
-        let gameState = fs.get("gameState");
+        let gameState = btGameState.get();
 
         if (team_slug && gameState?.teams) {
             // if (!gameState?.teams) return true;
@@ -83,9 +92,9 @@ class GameStateService {
     }
 
     clearState() {
-        fs.set("gameState", {});
-        fs.set("deltaState", {});
-        fs.set("hiddenPlayerState", {});
+        btGameState.set({});
+        btDeltaState.set({});
+        btHiddenPlayerState.set({});
 
         this.updateGamePanels();
     }
@@ -177,7 +186,7 @@ class GameStateService {
     }
 
     updateState(newState, prevState) {
-        let gameState = prevState || fs.get("gameState");
+        let gameState = prevState || btGameState.get();
         let copyGameState = JSON.parse(JSON.stringify(gameState));
         let copyNewState = JSON.parse(JSON.stringify(newState));
         let delta = DELTA.delta(copyGameState, copyNewState, {});
@@ -217,13 +226,13 @@ class GameStateService {
             delete delta.action.timeleft;
 
         let encoded = ENCODER.encode(delta);
-        fs.set("deltaEncoded", encoded.byteLength);
+        btDeltaEncoded.set(encoded.byteLength);
 
         newState.delta = delta;
 
         // console.log("AFTER", newState.players);
-        fs.set("deltaState", delta);
-        fs.set("hiddenPlayerState", hiddenPlayers);
+        btDeltaState.set(delta);
+        btHiddenPlayerState.set(hiddenPlayers);
 
         let playerTeams = {};
         if (newState.teams) {
@@ -234,7 +243,7 @@ class GameStateService {
                 }
             }
         }
-        fs.set("playerTeams", playerTeams);
+        btPlayerTeams.set(playerTeams);
 
         if (newState.players) {
             for (const id in newState.players) {
@@ -247,15 +256,15 @@ class GameStateService {
             }
         }
 
-        fs.set("gameState", newState);
+        btGameState.set(newState);
 
         this.updateGamePanels();
     }
 
     updateGamePanel(id) {
         try {
-            let gameState = fs.get("gameState");
-            let gamepanels = fs.get("gamepanels");
+            let gameState = btGameState.get();
+            let gamepanels = btGamepanels.get();
             let gamepanel = gamepanels[id];
 
             let pstate = JSON.parse(JSON.stringify(gameState));
@@ -268,7 +277,7 @@ class GameStateService {
                 delete pstate.room.isreplay;
             }
 
-            let hiddenPlayers = fs.set("hiddenPlayerState");
+            let hiddenPlayers = btHiddenPlayerState.set();
             if (
                 hiddenPlayers &&
                 hiddenPlayers[id] &&
@@ -304,7 +313,7 @@ class GameStateService {
     }
 
     updateGamePanels() {
-        let gamepanels = fs.get("gamepanels");
+        let gamepanels = btGamepanels.get();
         for (const id in gamepanels) {
             this.updateGamePanel(id);
         }

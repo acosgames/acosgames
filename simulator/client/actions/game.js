@@ -2,11 +2,22 @@ import ENCODER from "acos-json-encoder";
 import ACOSDictionary from "shared/acos-dictionary.json";
 ENCODER.createDefaultDict(ACOSDictionary);
 
-import fs from "flatstore";
-
 import GamePanelService from "../services/GamePanelService";
 import { wsSend } from "./websocket";
 import GameStateService from "../services/GameStateService";
+import {
+    btAutoJoin,
+    btFakePlayers,
+    btGameStatus,
+    btReplayStats,
+    btSocketUser,
+    btTeamInfo,
+    btTimeleft,
+    btTimeleftUpdated,
+    btWebsocketStatus,
+} from "./buckets";
+
+export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 var timerHandle = 0;
 export function timerLoop(cb) {
@@ -47,15 +58,15 @@ export function updateTimeleft() {
         elapsed = 0;
     }
 
-    fs.set("timeleft", elapsed);
-    fs.set("timeleftUpdated", Date.now());
+    btTimeleft.set(elapsed);
+    btTimeleftUpdated.set(Date.now());
 }
 
 export function leaveGame(message) {
-    let socketUser = fs.get("socketUser");
+    let socketUser = btSocketUser.get();
     let user = { id: socketUser.id, name: socketUser.name };
     wsSend("action", { type: "leave", user });
-    fs.set("gameStatus", "none");
+    btGameStatus.set("none");
 }
 
 export function replayNext() {
@@ -71,7 +82,7 @@ export function replayJump(index) {
 }
 
 export function joinGame(team_slug) {
-    let socketUser = fs.get("socketUser");
+    let socketUser = btSocketUser.get();
     let user = { id: socketUser.id, name: socketUser.name, team_slug };
     wsSend("action", { type: "join", user });
 }
@@ -81,27 +92,38 @@ export function playerReady(user) {
 }
 
 export function startGame(message) {
-    let socketUser = fs.get("socketUser");
+    let socketUser = btSocketUser.get();
     let user = { id: socketUser.id, name: socketUser.name };
     wsSend("action", { type: "gamestart", user });
 }
 
-export function newGame(message) {
-    let socketUser = fs.get("socketUser");
+export async function newGame(message) {
+    let socketUser = btSocketUser.get();
     let user = { id: socketUser.id, name: socketUser.name };
     wsSend("action", { type: "newgame", user });
-    fs.set("gameStatus", "none");
+    btGameStatus.set("none");
+
+    let autojoin = btAutoJoin.get();
+    if (autojoin) {
+        await sleep(300);
+        joinGame();
+        await sleep(300);
+        let fakePlayers = btFakePlayers.get() || {};
+        for (let id in fakePlayers) {
+            joinFakePlayer(fakePlayers[id]);
+            await sleep(300);
+        }
+    }
 }
 
 export function skip(message) {
-    let socketUser = fs.get("socketUser");
+    let socketUser = btSocketUser.get();
     let user = { id: socketUser.id, name: socketUser.name };
     wsSend("action", { type: "skip", user });
-    // fs.set('gameStatus', 'none');
 }
 
 export function spawnFakePlayers(message) {
-    let socketUser = fs.get("socketUser");
+    let socketUser = btSocketUser.get();
     let user = { id: socketUser.id, name: socketUser.name };
     wsSend("fakeplayer", { type: "create", user, payload: 1 });
 }
@@ -112,7 +134,7 @@ export function joinFakePlayer(fakePlayer, team_slug) {
 }
 
 export function leaveFakePlayer(fakePlayer) {
-    let socketUser = fs.get("socketUser");
+    let socketUser = btSocketUser.get();
     let user = {
         id: fakePlayer.id,
         name: fakePlayer.name,
@@ -122,7 +144,7 @@ export function leaveFakePlayer(fakePlayer) {
 }
 
 export function removeFakePlayer(fakePlayer) {
-    let socketUser = fs.get("socketUser");
+    let socketUser = btSocketUser.get();
     let user = {
         id: fakePlayer.id,
         name: fakePlayer.name,
@@ -133,8 +155,8 @@ export function removeFakePlayer(fakePlayer) {
 
 export function onLeave(message) {
     try {
-        fs.set("wsStatus", "connected");
-        fs.set("gameStatus", "none");
+        btWebsocketStatus.set("connected");
+        btGameStatus.set("none");
     } catch (e) {
         console.error(e);
     }
@@ -146,7 +168,7 @@ export function onReplayStats(message) {
         // console.log("REPLAY STATS: ", message);
         if (!message) return;
 
-        fs.set("replayStats", message);
+        btReplayStats.set(message);
     } catch (e) {
         console.error(e);
     }
@@ -161,7 +183,7 @@ export function onReplay(message) {
         GameStateService.updateState(message.current, message.prev);
 
         updateTimeleft();
-        fs.set("gameStatus", message?.current?.room?.status || "none");
+        btGameStatus.set(message?.current?.room?.status || "none");
     } catch (e) {
         console.error(e);
     }
@@ -173,7 +195,7 @@ export function onTeamInfo(message) {
         // console.log("TEAMINFO UPDATE: ", message);
         if (!message) return;
 
-        fs.set("teaminfo", message);
+        btTeamInfo.set(message);
     } catch (e) {
         console.error(e);
     }
@@ -187,7 +209,7 @@ export function onGameUpdate(message) {
 
         GameStateService.updateState(message);
 
-        fs.set("gameStatus", message?.room?.status || "none");
+        btGameStatus.set(message?.room?.status || "none");
     } catch (e) {
         console.error(e);
     }
@@ -202,10 +224,10 @@ export function onJoin(message) {
         GameStateService.updateState(message);
 
         if (message?.room?.status) {
-            fs.set("gameStatus", message.room.status);
+            btGameStatus.set(message.room.status);
         }
 
-        fs.set("wsStatus", "ingame");
+        btWebsocketStatus.set("ingame");
     } catch (e) {
         console.error(e);
     }
@@ -218,7 +240,7 @@ export function onFakePlayer(message) {
     // console.log("FAKEPLAYER: ", message);
     if (!message || typeof message.type === "undefined") return;
 
-    let fakePlayers = fs.get("fakePlayers") || {};
+    let fakePlayers = btFakePlayers.get() || {};
 
     if (message.type == "created") {
         let newFakePlayers = message.payload;
@@ -228,7 +250,12 @@ export function onFakePlayer(message) {
         for (const fakePlayer of newFakePlayers) {
             GamePanelService.createGamePanel(fakePlayer.id);
         }
-        fs.set("fakePlayers", fakePlayers);
+        if (newFakePlayers.length == 0) {
+            let socketUser = btSocketUser.get();
+            GamePanelService.removeAllButUserGamePanel(socketUser.id);
+
+            btFakePlayers.set({});
+        } else btFakePlayers.set(fakePlayers);
     } else if (message.type == "join") {
     } else if (message.type == "leave") {
     } else if (message.type == "removed") {
@@ -240,7 +267,7 @@ export function onFakePlayer(message) {
 
             delete fakePlayers[id];
             GamePanelService.removeGamePanel(id);
-            fs.set("fakePlayers", fakePlayers);
+            btFakePlayers.set(fakePlayers);
         }
     }
 }

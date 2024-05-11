@@ -8,18 +8,32 @@ import {
     Card,
     CardHeader,
     CardBody,
+    Switch,
 } from "@chakra-ui/react";
-import fs from "flatstore";
 import {
+    joinFakePlayer,
+    joinGame,
     leaveGame,
     newGame,
     replayNext,
     replayPrev,
     skip,
+    sleep,
     startGame,
 } from "../actions/game";
 import { ReplayControls } from "./StateViewer.jsx";
 import GameStateService from "../services/GameStateService";
+import { useBucket } from "react-bucketjs";
+import {
+    btAutoJoin,
+    btFakePlayers,
+    btGamepanelLayout,
+    btGameSettings,
+    btGameState,
+    btGameStatus,
+    btSocketUser,
+    btWebsocketStatus,
+} from "../actions/buckets";
 
 export function ActionPanel(props) {
     return (
@@ -30,12 +44,12 @@ export function ActionPanel(props) {
 }
 
 function GameActionsCompact(props) {
-    let [socketUser] = fs.useWatch("socketUser");
-    let [wsStatus] = fs.useWatch("wsStatus");
-    let [gameStatus] = fs.useWatch("gameStatus");
-    let [gamePanelLayout] = fs.useWatch("gamePanelLayout");
-    let [gameState] = fs.useWatch("gameState");
-    let [gameSettings] = fs.useWatch("gameSettings");
+    let socketUser = useBucket(btSocketUser);
+    let wsStatus = useBucket(btWebsocketStatus);
+    let gameStatus = useBucket(btGameStatus);
+    let gamePanelLayout = useBucket(btGamepanelLayout);
+    let gameState = useBucket(btGameState);
+    let gameSettings = useBucket(btGameSettings);
 
     // gamePanelLayout = gamePanelLayout || 'compact';
 
@@ -78,16 +92,19 @@ function GameActionsCompact(props) {
                     Join Game
                 </Button>
             </HStack> */}
+            <ReplayControls hideTitle={true} />
+            <Box w="2rem"></Box>
+
             <HStack
             // display={isInGame ? "flex" : "none"}
             >
                 <Button
-                    fontSize={"xxs"}
-                    bgColor={"gray.700"}
-                    color="gray.30"
+                    fontSize={"1.4rem"}
+                    bgColor={"gray.300"}
+                    color="gray.20"
                     onClick={newGame}
                 >
-                    {isGameRunning || isGameOver ? "Reset Game" : "New Game"}
+                    Reset
                 </Button>
             </HStack>
             {/* <HStack display={gameStatus == "gamestart" ? "flex" : "none"}>
@@ -108,50 +125,36 @@ function GameActionsCompact(props) {
                 }
             >
                 <HStack
-                    display={
-                        isPregame && !totalSlotsRemaining ? "flex" : "none"
+                    visibility={
+                        isPregame && !totalSlotsRemaining ? "visible" : "hidden"
                     }
                 >
                     <Button
                         disabled={playerList.length < gameSettings.minplayers}
-                        fontSize={"xxs"}
+                        fontSize={"1.4rem"}
                         bgColor={"green.500"}
                         _hover={{ bgColor: "brand.500" }}
                         onClick={startGame}
                     >
-                        {"Start Game"}
+                        {"Start"}
                     </Button>
                 </HStack>
             </Tooltip>
-            <Box w="2rem"></Box>
-            <ReplayControls hideTitle={true} />
 
             <Box w="2rem"></Box>
-            {/* <HStack display={isGameRunning ? 'flex' : 'none'}>
-                <Button
-                    fontSize={'xxs'}
-                    bgColor={'green.800'}
-                    onClick={() => {
-                        if (gamePanelLayout == 'compact') {
-                            fs.set('gamePanelLayout', 'expanded');
-                        } else {
-                            fs.set('gamePanelLayout', 'compact');
-                        }
-                    }}>
-                    Simulator Layout ({gamePanelLayout})
-                </Button>
-
-            </HStack> */}
         </HStack>
     );
 }
 
 export function GameActionsExpanded(props) {
-    let [socketUser] = fs.useWatch("socketUser");
-    let [wsStatus] = fs.useWatch("wsStatus");
-    let [gameStatus] = fs.useWatch("gameStatus");
-    let [gamePanelLayout] = fs.useWatch("gamePanelLayout");
-    let [gameState] = fs.useWatch("gameState");
+    let socketUser = useBucket(btSocketUser);
+    let wsStatus = useBucket(btWebsocketStatus);
+    let gameStatus = useBucket(btGameStatus);
+    let gamePanelLayout = useBucket(btGamepanelLayout);
+    let gameState = useBucket(btGameState);
+    let gameSettings = useBucket(btGameSettings);
+    let autojoin = useBucket(btAutoJoin);
+
     // gamePanelLayout = gamePanelLayout || 'compact';
 
     if (wsStatus == "disconnected") {
@@ -185,67 +188,90 @@ export function GameActionsExpanded(props) {
                             <ReplayControls />
                         </Box>
                         <Box flex="1"></Box>
-                        <HStack
-                        //  display={isInGame ? "flex" : "none"}
-                        >
-                            <Button
-                                fontSize={"xxs"}
-                                bgColor={"gray.700"}
-                                color="gray.30"
-                                onClick={newGame}
-                            >
-                                {isGameRunning || isGameOver
-                                    ? "Reset Game"
-                                    : "New Game"}
-                            </Button>
-                        </HStack>
-                        <HStack
-                            display={
-                                gameStatus == "gamestart" ? "flex" : "none"
-                            }
-                        >
-                            <Button
-                                fontSize={"xxs"}
-                                color="gray.1200"
-                                bgColor={"brand.700"}
-                                onClick={skip}
-                            >
-                                Skip
-                            </Button>
-                        </HStack>
-                        <HStack
-                            display={
-                                isPregame && !totalSlotsRemaining
-                                    ? "flex"
-                                    : "none"
-                            }
-                        >
-                            <Button
-                                fontSize={"xxs"}
-                                bgColor={"green.500"}
-                                _hover={{ bgColor: "brand.500" }}
-                                onClick={startGame}
-                            >
-                                {"Start Game"}
-                            </Button>
-                        </HStack>
+                        <VStack gap="1rem">
+                            <HStack>
+                                <HStack
+                                    visibility={
+                                        gameStatus == "gamestart"
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                >
+                                    <Button
+                                        fontSize={"1.4rem"}
+                                        fontWeight="600"
+                                        color="gray.0"
+                                        bgColor={"orange.500"}
+                                        onClick={skip}
+                                    >
+                                        Skip
+                                    </Button>
+                                </HStack>
+                                <HStack
+                                //  display={isInGame ? "flex" : "none"}
+                                >
+                                    <Button
+                                        fontSize={"1.4rem"}
+                                        bgColor={"gray.300"}
+                                        color="gray.20"
+                                        onClick={newGame}
+                                    >
+                                        Reset
+                                    </Button>
+                                </HStack>
+
+                                <HStack
+                                    visibility={
+                                        isPregame && !totalSlotsRemaining
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                >
+                                    <Button
+                                        fontSize={"1.4rem"}
+                                        bgColor={"green.500"}
+                                        _hover={{ bgColor: "brand.500" }}
+                                        onClick={startGame}
+                                    >
+                                        {"Start"}
+                                    </Button>
+                                </HStack>
+                            </HStack>
+                            <HStack>
+                                <Text
+                                    display={
+                                        props.hideTitle
+                                            ? "none"
+                                            : "inline-block"
+                                    }
+                                    as="span"
+                                    fontSize="1rem"
+                                    color="gray.10"
+                                    fontWeight={"500"}
+                                >
+                                    Auto Join?
+                                </Text>
+                                <Switch
+                                    value={autojoin}
+                                    onChange={async (e) => {
+                                        btAutoJoin.set(e.target.checked);
+                                        if (e.target.checked == true) {
+                                            joinGame();
+                                            await sleep(300);
+                                            let fakePlayers =
+                                                btFakePlayers.get() || {};
+                                            for (let id in fakePlayers) {
+                                                joinFakePlayer(fakePlayers[id]);
+                                                await sleep(300);
+                                            }
+                                        }
+                                    }}
+                                ></Switch>
+                            </HStack>
+                        </VStack>
+
                         <Box pr="1rem"></Box>
                     </HStack>
-                    {/* <HStack display={isGameRunning ? 'flex' : 'none'}>
-                <Button
-                    fontSize={'xxs'}
-                    bgColor={'green.800'}
-                    onClick={() => {
-                        if (gamePanelLayout == 'compact') {
-                            fs.set('gamePanelLayout', 'expanded');
-                        } else {
-                            fs.set('gamePanelLayout', 'compact');
-                        }
-                    }}>
-                    Simulator Layout ({gamePanelLayout})
-                </Button>
-
-            </HStack> */}
                 </VStack>
             </CardBody>
         </Card>

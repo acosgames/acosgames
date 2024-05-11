@@ -110,7 +110,7 @@ function onConnect(socket) {
     if (room.hasPlayer(user.id)) onAction({ type: "join", user }, true);
 
     let fakePlayers = UserManager.getFakePlayersByParent(user.id);
-    if (fakePlayers?.length > 0) {
+    if (fakePlayers?.length >= 0) {
         socket.emit(
             "fakeplayer",
             encode({ type: "created", payload: fakePlayers })

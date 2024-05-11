@@ -328,7 +328,8 @@ const components = {
                     letterSpacing: "0px",
                     fontWeight: "bold",
                     textTransform: "uppercase",
-                    fontSize: ["1.2rem", "1.2rem", "1.4rem"],
+                    padding: ["1rem", "1rem", "0.5rem", "1rem"],
+                    fontSize: ["1.2rem", "1.2rem", "1.3rem", "1.4rem"],
                 },
             },
             brand: {

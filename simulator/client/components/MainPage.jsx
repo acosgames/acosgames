@@ -3,28 +3,35 @@ import { Component, useEffect, useRef } from "react";
 // import { withRouter } from "react-router-dom";
 // import GameList from "./games/GameList";
 
-import fs from "flatstore";
-
 import { Scrollbars } from "react-custom-scrollbars-2";
 import { Box, HStack, IconButton, Input, Text, VStack } from "@chakra-ui/react";
-import MainMenuChakra from "./MainMenuChakra.jsx";
+import MainHeader from "./MainHeader.jsx";
 import SidePanel from "./SidePanel.jsx";
 import GamePanelList from "./GamePanelList.jsx";
 
 import { IoSend } from "react-icons/io5";
 import { connect } from "../actions/websocket";
+import {
+    btDisplayMode,
+    btIsMobile,
+    btMainPageRef,
+    btPrimaryCanvasRef,
+    btUsername,
+    btWebsocketStatus,
+} from "../actions/buckets.js";
+import { useBucket } from "react-bucketjs";
 
 function MainPage(props) {
-    let [isMobile] = fs.useWatch("isMobile");
-    let [displayMode] = fs.useWatch("displayMode");
+    let isMobile = useBucket(btIsMobile);
+    let displayMode = useBucket(btDisplayMode);
 
     const mainPageRef = useRef();
     const primaryCanvasRef = useRef();
 
     useEffect(() => {
-        fs.set("primaryCanvasRef", primaryCanvasRef);
+        btPrimaryCanvasRef.set(primaryCanvasRef);
 
-        fs.set("mainPageRef", mainPageRef);
+        btMainPageRef.set(mainPageRef);
     });
 
     useEffect(() => {
@@ -64,7 +71,7 @@ function MainPage(props) {
                     px={["0.5rem", "1rem", "5rem"]}
                     bg={"gray.975"}
                 >
-                    <MainMenuChakra />
+                    <MainHeader />
                 </HStack>
 
                 <Box
@@ -128,14 +135,14 @@ function MainPage(props) {
 }
 
 function ChoosePlayerName(props) {
-    let [username] = fs.useWatch("username");
-    let [isMobile] = fs.useWatch("isMobile");
+    let username = useBucket(btUsername);
+    let isMobile = useBucket(btIsMobile);
 
     const inputChange = (e) => {
         let name = e.target.name;
         let value = e.target.value;
 
-        fs.set("username", value);
+        btUsername.set(value);
     };
 
     const onSubmit = async (e) => {
@@ -146,11 +153,11 @@ function ChoosePlayerName(props) {
     useEffect(() => {
         let savedUsername = localStorage.getItem("username");
         if (savedUsername) {
-            fs.set("username", savedUsername);
+            btUsername.set(savedUsername);
         }
     }, []);
 
-    let [wsStatus] = fs.useWatch("wsStatus");
+    let wsStatus = useBucket(btWebsocketStatus);
     if (wsStatus == "connected" || wsStatus == "ingame") {
         return <></>;
     }

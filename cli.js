@@ -53,6 +53,9 @@ function onExit() {
 process.on("SIGINT", onExit);
 process.on("SIGQUIT", onExit);
 process.on("SIGTERM", onExit);
+process.on("SIGUSR1", onExit);
+process.on("SIGUSR2", onExit);
+process.on("uncaughtException", onExit);
 
 function runScript(dirPath, command, callback, options) {
     options = (options && Object.assign({ async: true }, options)) || {
@@ -80,12 +83,12 @@ function runScript(dirPath, command, callback, options) {
     });
 
     child.on("error", (err) => {
-        console.error("[SIMULATOR ERROR", err);
+        console.error("[SIMULATOR ERROR]", err);
         callback(err);
     });
 
     child.on("close", (code, signal) => {
-        console.error("[SIMULATOR CLOSING", code, signal);
+        console.error("[SIMULATOR CLOSING]", code, signal);
         callback(null, { code, signal });
         // child.exit();
     });

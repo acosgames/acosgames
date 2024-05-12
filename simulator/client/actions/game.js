@@ -8,6 +8,8 @@ import GameStateService from "../services/GameStateService";
 import {
     btAutoJoin,
     btFakePlayers,
+    btGameSettings,
+    btGameState,
     btGameStatus,
     btReplayStats,
     btSocketUser,
@@ -97,6 +99,22 @@ export function startGame(message) {
     wsSend("action", { type: "gamestart", user });
 }
 
+export async function autoJoin() {
+    await sleep(300);
+    joinGame();
+    await sleep(300);
+    let gameSettings = btGameSettings.get();
+    let gameState = btGameState.get();
+    let playerList = Object.keys(gameState?.players);
+    let fakePlayers = btFakePlayers.get() || {};
+    for (let id in fakePlayers) {
+        if (playerList.length >= gameSettings.maxplayers) break;
+        joinFakePlayer(fakePlayers[id]);
+        await sleep(300);
+        gameState = btGameState.get();
+        playerList = Object.keys(gameState?.players);
+    }
+}
 export async function newGame(message) {
     let socketUser = btSocketUser.get();
     let user = { id: socketUser.id, name: socketUser.name };
@@ -105,14 +123,7 @@ export async function newGame(message) {
 
     let autojoin = btAutoJoin.get();
     if (autojoin) {
-        await sleep(300);
-        joinGame();
-        await sleep(300);
-        let fakePlayers = btFakePlayers.get() || {};
-        for (let id in fakePlayers) {
-            joinFakePlayer(fakePlayers[id]);
-            await sleep(300);
-        }
+        autoJoin();
     }
 }
 

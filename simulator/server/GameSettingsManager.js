@@ -98,7 +98,8 @@ class GameSettingsManager {
         if (!("teams" in s) || !Array.isArray(s.teams)) {
             s.teams = [];
             dirty = true;
-        } else if (s.maxteams > 0 && s.teams.length < s.maxteams) {
+        }
+        if (s.maxteams > 0 && s.teams.length < s.maxteams) {
             let missingCount = s.maxteams - s.teams.length;
             for (let i = 0; i < missingCount; i++) {
                 s.teams.push({
@@ -111,16 +112,39 @@ class GameSettingsManager {
                 });
                 dirty = true;
             }
-        } else if (s.teams.length > s.maxteams) {
+            console.log("added missing teams: ", missingCount);
+        }
+        if (s.teams.length > s.maxteams) {
             let overCount = s.teams.length - s.maxteams;
             for (let i = 0; i < overCount; i++) {
                 s.teams.pop();
                 dirty = true;
             }
+            console.log("removed overflow teams: ", overCount);
         }
 
         let teamMaxPlayers = 0;
 
+        if ("stats" in s) {
+            for (let stat of s.stats) {
+                let prev = stat.valueTYPE;
+                try {
+                    stat.valueTYPE = Number.parseInt(stat.valueTYPE);
+                } catch (e) {
+                    stat.valueTYPE = 0;
+                }
+                if (prev != stat.valueTYPE) dirty = true;
+
+                if (!stat.stat_desc) {
+                    stat.stat_desc = "";
+                    dirty = true;
+                }
+            }
+
+            s.stats.sort((a, b) => {
+                return a.order - b.order;
+            });
+        }
         if ("teams" in s) {
             if (s.teams.length > 0) {
                 for (let team of s.teams) {
@@ -157,6 +181,10 @@ class GameSettingsManager {
                     dirty = true;
                 }
             }
+
+            s.teams.sort((a, b) => {
+                return a.team_order - b.team_order;
+            });
         }
 
         if (!("screentype" in s) || !Number.isInteger(s.screentype)) {
@@ -204,7 +232,7 @@ class GameSettingsManager {
             let json = JSON.parse(jsonStr);
             fs.writeFileSync(this.settingsPath, jsonStr, "utf-8");
 
-            this.validateSettings();
+            // this.validateSettings();
         } catch (e) {
             console.error(
                 "Invalid JSON for updateGameSettings: ",

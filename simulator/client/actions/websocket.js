@@ -101,7 +101,6 @@ export function wsSend(type, payload) {
 export function updateGameSettings(newSettings) {
     btPrevGameSettings.set(btGameSettings.get());
     btGameSettings.set(newSettings);
-    let socket = btSocket.get();
     wsSend("gameSettings", newSettings);
 }
 

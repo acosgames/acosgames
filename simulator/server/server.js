@@ -44,15 +44,15 @@ RoomManager.setSettings(settings);
 function onGameSettingsReloaded() {
     // let user = UserManager.actionUser(newUser);
 
-    let room = RoomManager.create();
+    let room = RoomManager.current(); //.create();
     let gamestate = room.getGameState();
     // onAction({ type: 'newgame' }, true);
-    worker.postMessage({
-        action: { type: "newgame" },
-        room: room.json(),
-        gamestate,
-        gameSettings: settings.get(),
-    });
+    // worker.postMessage({
+    //     action: { type: "newgame" },
+    //     room: room.json(),
+    //     gamestate,
+    //     gameSettings: settings.get(),
+    // });
     io.emit("teaminfo", encode(room.getTeamInfo()));
     io.emit(
         "gameSettings",

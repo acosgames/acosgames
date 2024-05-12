@@ -44,6 +44,7 @@ import {
     btIsMobile,
     btLocalGameSettings,
 } from "../actions/buckets";
+import { GameStats } from "./GameStats";
 // import Scoreboard from "./Scoreboard.jsx";
 
 function SidePanel(props) {
@@ -88,21 +89,13 @@ function SidePanel(props) {
             spacing="0"
             m="0"
             p="0"
-            bgColor={"gray.925"}
+            bgColor={"gray.900"}
             position={"relative"}
             flexGrow="1 !important"
             height={!isMobile ? "100%" : toggle ? "20rem" : "0"}
             transition="width 0.3s ease, height 0.3s ease"
             zIndex={30}
-            width={
-                isMobile
-                    ? "100%"
-                    : toggle
-                    ? ["44.0rem", "44rem", "28.0rem", "48.0rem"]
-                    : "0"
-            }
-            borderLeft="2px solid var(--chakra-colors-gray-975)"
-            boxShadow="inset 0 0 4px rgba(25,25,25,.9)"
+            width={isMobile ? "100%" : toggle ? ["48.0rem"] : "0"}
             role="group"
         >
             <Box
@@ -163,10 +156,15 @@ function SidePanel(props) {
                         <Tab _focus={{ outline: "none" }}>Players</Tab>
                         <Tab _focus={{ outline: "none" }}>JSON</Tab>
                         <Tab _focus={{ outline: "none" }}>Settings</Tab>
-                        <Tab _focus={{ outline: "none" }}>Stats</Tab>
                     </TabList>
 
-                    <TabPanels h="100%" p="0" pl="0.5rem">
+                    <TabPanels
+                        h="100%"
+                        p="0"
+                        pl="0.5rem"
+                        borderLeft="2px solid var(--chakra-colors-gray-925)"
+                        boxShadow="inset 0 0 6px rgba(0,0,0,.6)"
+                    >
                         <TabPanel
                             h="100%"
                             overflow="hidden"
@@ -202,17 +200,41 @@ function SidePanel(props) {
                             p="0"
                             pr="0.5rem"
                         >
-                            <VStack
-                                justifyContent={"flex-start"}
-                                spacing="2rem"
-                                pb={"4rem"}
-                                px="0"
-                                pt="2rem"
-                            >
-                                <Settings />
-                            </VStack>
+                            <Tabs variant={"subtabs"}>
+                                <TabList justifyContent={"center"}>
+                                    <Tab _selected={{ color: "brand.900" }}>
+                                        Game
+                                    </Tab>
+                                    <Tab _selected={{ color: "brand.900" }}>
+                                        Stats
+                                    </Tab>
+                                </TabList>
+                                <TabPanels>
+                                    <TabPanel>
+                                        <VStack
+                                            justifyContent={"flex-start"}
+                                            spacing="2rem"
+                                            pb={"4rem"}
+                                            px="0"
+                                            pt="2rem"
+                                        >
+                                            <Settings />
+                                        </VStack>
+                                    </TabPanel>
+                                    <TabPanel>
+                                        <VStack
+                                            justifyContent={"flex-start"}
+                                            spacing="2rem"
+                                            pb={"4rem"}
+                                            px="0"
+                                            pt="2rem"
+                                        >
+                                            <GameStats />
+                                        </VStack>
+                                    </TabPanel>
+                                </TabPanels>
+                            </Tabs>
                         </TabPanel>
-                        <TabPanel></TabPanel>
                     </TabPanels>
                 </Tabs>
             </VStack>

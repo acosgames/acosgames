@@ -1,6 +1,7 @@
 import { useBucket } from "react-bucketjs";
 import { btGameSettings } from "../actions/buckets";
 import {
+    Box,
     HStack,
     Input,
     NumberDecrementStepper,
@@ -8,107 +9,215 @@ import {
     NumberInput,
     NumberInputField,
     NumberInputStepper,
+    Select,
+    Switch,
     Text,
     VStack,
 } from "@chakra-ui/react";
 import { updateGameSettings } from "../actions/websocket";
 import { useEffect, useState } from "react";
 
-export function SettingTextInput(props) {
-    let id = props.id;
+export function SettingTextInput({
+    id,
+    title,
+    width,
+    textWidth,
+    placeholder,
+    helperText,
+    maxLength,
+    uppercase,
+    regex,
+    onChange,
+    useTarget,
+    useValue,
+    useValidation,
+}) {
     let gameSettings = useBucket(btGameSettings);
-    let currentValue = id in gameSettings ? gameSettings[id] : 0;
-
-    let isTeamId = "team_order" in props;
-    let team_order = -1;
-    if (isTeamId && gameSettings.teams && gameSettings.teams.length > 0) {
-        team_order = Number.parseInt(props.team_order || 0);
-        currentValue = gameSettings.teams[team_order][id];
-    }
+    let currentValue = useValue
+        ? useValue(gameSettings, id)
+        : gameSettings[id] || 0;
 
     return (
         <HStack
             key={"setting-" + id}
             id={"setting-" + id}
             display={gameSettings?.screentype == 1 ? "none" : "flex"}
-            alignItems={"center"}
+            alignItems={"flex-start"}
             width="100%"
             spacing="0"
         >
             <Text
                 fontWeight={"bold"}
                 as="label"
-                w={props.textWidth || "100%"}
-                display={props.title ? "inline-block" : "none"}
+                w={textWidth || "100%"}
+                display={title ? "inline-block" : "none"}
                 pr="0.5rem"
+                pt="0.5rem"
                 color="gray.50"
-                fontSize="xs"
+                fontSize="1.4rem"
                 htmlFor={id}
             >
-                {props.title}
+                {title}
             </Text>
-            <Input
-                className=""
-                id={id}
-                fontSize="xs"
-                bgColor="gray.950"
-                aria-describedby=""
-                placeholder={props.placeholder}
-                onChange={(e) => {
-                    let value = e.target.value;
-
-                    if (props.onChange) props.onChange(id, value);
-
-                    let gameSettings = btGameSettings.get();
-                    if (!isTeamId && id in gameSettings) {
-                        gameSettings[id] = value;
-                    } else if (isTeamId && gameSettings.teams[team_order]) {
-                        gameSettings.teams[team_order][id] = value;
-                    }
-                    updateGameSettings(gameSettings);
-                    // e.target.focus();
-                }}
-                // value={currentValue || ""}
-                defaultValue={currentValue || ""}
-                w={props.width || "100%"}
-            />
+            <VStack>
+                <Input
+                    className=""
+                    id={id}
+                    fontSize="1.4rem"
+                    bgColor="gray.950"
+                    aria-describedby=""
+                    placeholder={placeholder}
+                    maxLength={maxLength || 255}
+                    onChange={(e) => {
+                        let value = e.target.value;
+                        if (uppercase) value = value.toUpperCase();
+                        if (regex) value = value.replace(regex, "");
+                        if (onChange) onChange(id, value);
+                        let gameSettings = btGameSettings.get();
+                        if (useTarget) {
+                            let shouldUpdate = useTarget(
+                                gameSettings,
+                                id,
+                                value
+                            );
+                            if (shouldUpdate) updateGameSettings(gameSettings);
+                        }
+                    }}
+                    value={currentValue || ""}
+                    w={width || "100%"}
+                />
+                {helperText && (
+                    <Text
+                        fontWeight={"light"}
+                        as="label"
+                        display={"inline-block"}
+                        pr="0.5rem"
+                        color="gray.50"
+                        fontSize="1.2rem"
+                    >
+                        {helperText}
+                    </Text>
+                )}
+            </VStack>
         </HStack>
     );
 }
 
-export function SettingNumberInput(props) {
-    let id = props.id;
+export function SettingSelectInput({
+    id,
+    title,
+    options,
+    width,
+    textWidth,
+    useValue,
+    useTarget,
+    onChange,
+    helperText,
+}) {
     let gameSettings = useBucket(btGameSettings);
+    let currentValue = useValue
+        ? useValue(gameSettings, id)
+        : gameSettings[id] || 0;
 
-    let currentValue =
-        id in gameSettings ? Number.parseInt(gameSettings[id]) : 0;
+    return (
+        <HStack
+            w="100%"
+            key={"setting-" + id}
+            id={"setting-" + id}
+            display={gameSettings?.screentype == 1 ? "none" : "flex"}
+            alignItems={"flex-start"}
+            width="100%"
+            spacing="0"
+        >
+            {title && (
+                <Text
+                    fontWeight={"bold"}
+                    as="label"
+                    w={textWidth || "100%"}
+                    display={title ? "inline-block" : "none"}
+                    pr="0.5rem"
+                    pt="0.5rem"
+                    color="gray.50"
+                    fontSize="1.4rem"
+                    htmlFor={id}
+                >
+                    {title}
+                </Text>
+            )}
+            <Select
+                fontSize="1.4rem"
+                bgColor="gray.950"
+                value={currentValue || 0}
+                w={width || "20rem"}
+                onChange={(e) => {
+                    let value = e.target.value;
+                    if (onChange) onChange(id, value);
+                    let gameSettings = btGameSettings.get();
 
-    let [numberValue, setNumberValue] = useState(currentValue);
+                    if (useTarget) {
+                        let shouldUpdate = useTarget(gameSettings, id, value);
+                        if (shouldUpdate) updateGameSettings(gameSettings);
+                    }
+                }}
+            >
+                {options.map((option) => (
+                    <option
+                        key={"select-" + option.text + option.value}
+                        fontSize={"1rem"}
+                        value={option.value}
+                    >
+                        {option.text}
+                    </option>
+                ))}
+            </Select>
+            {helperText && (
+                <Text
+                    fontWeight={"light"}
+                    as="label"
+                    display={"inline-block"}
+                    pr="0.5rem"
+                    color="gray.50"
+                    fontSize="1.2rem"
+                >
+                    {helperText}
+                </Text>
+            )}
+        </HStack>
+    );
+}
 
-    let isTeamId = "team_order" in props;
-    let team_order = -1;
-    if (isTeamId && gameSettings.teams && gameSettings.teams.length > 0) {
-        team_order = Number.parseInt(props.team_order || 0);
-        currentValue = Number.parseInt(gameSettings.teams[team_order][id]);
-    }
-
-    useEffect(() => {
-        if (currentValue != numberValue) {
-            setNumberValue(currentValue);
-        }
-    });
+export function SettingNumberInput({
+    id,
+    title,
+    helperText,
+    defaultValue,
+    readOnly,
+    placeholder,
+    width,
+    textWidth,
+    onChange,
+    useTarget,
+    useValue,
+}) {
+    let gameSettings = useBucket(btGameSettings);
+    let currentValue = useValue
+        ? useValue(gameSettings, id)
+        : gameSettings[id] || 0;
 
     return (
         <VStack key={"setting-" + id} id={"setting-" + id}>
             <Text
+                fontWeight={"500"}
                 as="label"
-                display={"inline-block"}
+                w={textWidth || "100%"}
+                display={title ? "inline-block" : "none"}
                 pr="0.5rem"
                 color="gray.50"
                 fontSize="1.2rem"
+                textAlign={"center"}
                 htmlFor={id}
             >
-                {props.title}
+                {title}
             </Text>
             <NumberInput
                 className=""
@@ -116,34 +225,27 @@ export function SettingNumberInput(props) {
                 fontSize="1.4rem"
                 bgColor="gray.950"
                 aria-describedby=""
-                readOnly={props.readOnly || false}
-                isDisabled={props.readOnly || false}
-                placeholder={props.placeholder}
+                readOnly={readOnly || false}
+                isDisabled={readOnly || false}
+                placeholder={placeholder}
                 onChange={(value) => {
-                    // let value = e.target.value;
-
                     try {
                         value = Number.parseInt(value) || 0;
                     } catch (e) {
                         value = 0;
                     }
 
-                    if (props.onChange) props.onChange(id, value);
-
-                    setNumberValue(value);
+                    if (onChange) onChange(id, value);
 
                     let gameSettings = btGameSettings.get();
-                    if (!isTeamId && id in gameSettings) {
-                        gameSettings[id] = value;
-                    } else if (isTeamId && gameSettings.teams[team_order]) {
-                        gameSettings.teams[team_order][id] = value;
-                    }
 
-                    updateGameSettings(gameSettings);
+                    if (useTarget) {
+                        let shouldUpdate = useTarget(gameSettings, id, value);
+                        if (shouldUpdate) updateGameSettings(gameSettings);
+                    }
                 }}
-                defaultValue={currentValue || 0}
-                value={numberValue || 0}
-                w={props.width || "100%"}
+                value={currentValue || 0}
+                w={width || "100%"}
             >
                 <NumberInputField fontSize="1.4rem" />
                 <NumberInputStepper>
@@ -151,6 +253,110 @@ export function SettingNumberInput(props) {
                     <NumberDecrementStepper />
                 </NumberInputStepper>
             </NumberInput>
+            {helperText && (
+                <Text
+                    fontWeight={"light"}
+                    as="label"
+                    display={"inline-block"}
+                    pr="0.5rem"
+                    color="gray.50"
+                    fontSize="1.2rem"
+                >
+                    {helperText}
+                </Text>
+            )}
         </VStack>
+    );
+}
+
+export function SettingSwitchInput({
+    id,
+    title,
+    helperText,
+    defaultValue,
+    readOnly,
+    placeholder,
+    width,
+    textWidth,
+    onChange,
+    useTarget,
+    useValue,
+}) {
+    let gameSettings = useBucket(btGameSettings);
+    let currentValue = useValue
+        ? useValue(gameSettings, id)
+        : gameSettings[id] || 0;
+
+    return (
+        <HStack
+            w="100%"
+            justifyContent={"flex-start"}
+            alignItems={"flex-start"}
+        >
+            {title && (
+                <Text
+                    fontWeight={"bold"}
+                    as="label"
+                    w={textWidth || "100%"}
+                    display={title ? "inline-block" : "none"}
+                    pr="0.5rem"
+                    pt="1rem"
+                    color="gray.50"
+                    fontSize="1.4rem"
+                    htmlFor={id}
+                >
+                    {title}
+                </Text>
+            )}
+            <VStack
+                key={"setting-" + id}
+                id={"setting-" + id}
+                w="100%"
+                justifyContent={"center"}
+                pt="1rem"
+            >
+                <Box justifySelf={"center"}>
+                    <Switch
+                        className=""
+                        id={id}
+                        size={"lg"}
+                        // fontSize="1.4rem"
+                        // bgColor="gray.950"
+                        aria-describedby=""
+                        readOnly={readOnly || false}
+                        isDisabled={readOnly || false}
+                        placeholder={placeholder}
+                        onChange={(e) => {
+                            let value = e.target.checked;
+                            if (onChange) onChange(id, value);
+                            let gameSettings = btGameSettings.get();
+                            if (useTarget) {
+                                let shouldUpdate = useTarget(
+                                    gameSettings,
+                                    id,
+                                    value
+                                );
+                                if (shouldUpdate)
+                                    updateGameSettings(gameSettings);
+                            }
+                        }}
+                        value={currentValue || 0}
+                        w={width || "100%"}
+                    />
+                </Box>
+                {helperText && (
+                    <Text
+                        fontWeight={"light"}
+                        as="label"
+                        display={"inline-block"}
+                        pr="0.5rem"
+                        color="gray.50"
+                        fontSize="1.2rem"
+                    >
+                        {helperText}
+                    </Text>
+                )}
+            </VStack>
+        </HStack>
     );
 }

@@ -3,7 +3,10 @@ declare global {
         state: { [key: string]: any };
         players: { [key: string]: any };
         teams: { [key: string]: any };
-        next: { id: string | string[]; action: string | string[] };
+        next: {
+            id: string | string[];
+            action?: string | string[] | any;
+        };
         events: { [key: string]: any };
         timer: { [key: string]: any };
         room: { [key: string]: any };

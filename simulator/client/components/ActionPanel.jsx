@@ -11,6 +11,7 @@ import {
     Switch,
 } from "@chakra-ui/react";
 import {
+    autoJoin,
     joinFakePlayer,
     joinGame,
     leaveGame,
@@ -176,6 +177,12 @@ export function GameActionsExpanded(props) {
         }
     }
 
+    const onAutoJoin = async (e) => {
+        btAutoJoin.set(e.target.checked);
+        if (e.target.checked == true) {
+            autoJoin();
+        }
+    };
     return (
         <Card>
             {/* <CardHeader>
@@ -253,19 +260,7 @@ export function GameActionsExpanded(props) {
                                 </Text>
                                 <Switch
                                     value={autojoin}
-                                    onChange={async (e) => {
-                                        btAutoJoin.set(e.target.checked);
-                                        if (e.target.checked == true) {
-                                            joinGame();
-                                            await sleep(300);
-                                            let fakePlayers =
-                                                btFakePlayers.get() || {};
-                                            for (let id in fakePlayers) {
-                                                joinFakePlayer(fakePlayers[id]);
-                                                await sleep(300);
-                                            }
-                                        }
-                                    }}
+                                    onChange={onAutoJoin}
                                 ></Switch>
                             </HStack>
                         </VStack>

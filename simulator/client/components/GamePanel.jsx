@@ -157,8 +157,8 @@ function GameIFrame(props) {
         //     // bgHeight -= 2;
         // }
         if (screentype == 3) {
-            gamescreenRef.current.style.width = bgWidth + "px";
-            gamescreenRef.current.style.height = bgHeight + "px";
+            gamescreenRef.current.style.width = bgWidth + 4 + "px";
+            gamescreenRef.current.style.height = bgHeight + 4 + "px";
             scale = bgWidth / screenwidth;
 
             iframeRef.current.style.transform = `scale(${scale})`;
@@ -175,8 +175,8 @@ function GameIFrame(props) {
             //         `; transform-origin: left top; width:${screenwidth}px; height:${screenheight}px; ${frameBorder}`
             // );
         } else if (screentype == 2) {
-            gamescreenRef.current.style.width = bgWidth + "px";
-            gamescreenRef.current.style.height = bgHeight + "px";
+            gamescreenRef.current.style.width = bgWidth + 4 + "px";
+            gamescreenRef.current.style.height = bgHeight + 4 + "px";
             iframeRef.current.style.width = "100%";
             iframeRef.current.style.height = "100%";
             // iframeRef.current.setAttribute(
@@ -184,8 +184,8 @@ function GameIFrame(props) {
             //     "width:100%; height:100%;" + frameBorder
             // );
         } else if (screentype == 1) {
-            gamescreenRef.current.style.width = windowWidth + "px";
-            gamescreenRef.current.style.height = windowHeight + "px";
+            gamescreenRef.current.style.width = windowWidth + 4 + "px";
+            gamescreenRef.current.style.height = windowHeight + 4 + "px";
             iframeRef.current.style.width = "100%";
             iframeRef.current.style.height = "100%";
             // iframeRef.current.setAttribute(
@@ -284,7 +284,10 @@ function GameIFrame(props) {
                     // visibility={gamepanel?.iframe?.current ? "visible" : "hidden"}
                     // boxSizing="content-box"
 
-                    // border="2px solid var(--chakra-colors-gray-700)"
+                    border="2px solid var(--chakra-colors-gray-700)"
+                    boxShadow={
+                        "0 19px 38px rgba(0,0,0,0.50), 0 15px 12px rgba(0,0,0,0.4)"
+                    }
                 >
                     <iframe
                         className="gamescreen"
@@ -295,10 +298,10 @@ function GameIFrame(props) {
 
                             gamepanel.iframe = iframeRef;
                             iframeRef.current.style.visibility = "visible";
-                            iframeRef.current.style.border =
-                                "2px solid var(--chakra-colors-gray-800)";
-                            iframeRef.current.style["box-shadow"] =
-                                "0 0 5px var(--chakra-colors-gray-1000), 0 0 10px var(--chakra-colors-gray-1000)";
+                            // iframeRef.current.style.border =
+                            //     "3px solid var(--chakra-colors-gray-800)";
+                            // iframeRef.current.style["box-shadow"] =
+                            //     "0 0 5px var(--chakra-colors-gray-1000), 0 0 10px var(--chakra-colors-gray-1000)";
                             onResize();
 
                             setTimeout(() => {

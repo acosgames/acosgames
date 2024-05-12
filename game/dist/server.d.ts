@@ -11,6 +11,7 @@ declare global {
         };
         next: {
             id: string | string[];
+            action?: string | string[] | any;
         };
         events: {
             [key: string]: any;

@@ -14,6 +14,7 @@ export function getCountryFlag(countrycode) {
     return "" + countrycode;
 }
 const onMessage = (callback) => (evt) => {
+    var _a, _b;
     // console.log("MESSAGE EVENT CALLED #1");
     let message = evt.data;
     let origin = evt.origin;
@@ -24,11 +25,24 @@ const onMessage = (callback) => (evt) => {
         callback(message);
     }
     gamestate = message;
+    if (((_a = gamestate === null || gamestate === void 0 ? void 0 : gamestate.room) === null || _a === void 0 ? void 0 : _a.status) != roomStatus) {
+        lastRoomStatus = roomStatus;
+        roomStatus = (_b = gamestate === null || gamestate === void 0 ? void 0 : gamestate.room) === null || _b === void 0 ? void 0 : _b.status;
+        if (isGameover && roomStatus != "gameover") {
+            isGameover = false;
+            timerLoop(timerLoopCallback);
+        }
+    }
 };
+let isGameover = false;
+let roomStatus = "none";
+let lastRoomStatus = "none";
 let gamestate = null;
 let timeleft = 0;
 let timerHandle = 0;
+let timerLoopCallback = null;
 export function timerLoop(cb) {
+    timerLoopCallback = cb;
     timerHandle = setTimeout(() => {
         timerLoop(cb);
     }, 100);
@@ -49,6 +63,7 @@ export function timerLoop(cb) {
     let room = gamestate === null || gamestate === void 0 ? void 0 : gamestate.room;
     if ((room === null || room === void 0 ? void 0 : room.status) == "gameover") {
         clearTimeout(timerHandle);
+        isGameover = true;
         return;
     }
 }

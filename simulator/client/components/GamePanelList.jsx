@@ -24,6 +24,7 @@ import {
     btFakePlayers,
     btGamepanelLayout,
     btGamepanels,
+    btGameSettings,
     btGameState,
     btPrimaryGamePanel,
     btSocketUser,
@@ -59,26 +60,81 @@ function GamePanelList(props) {
         let panelWidth = width;
         let panelHeight = height;
 
+        let gameSettings = btGameSettings.get();
+
+        let isWide =
+            gameSettings.screentype != 1 &&
+            gameSettings.resow > gameSettings.resoh;
+
         if (fakePlayers) {
             let fakePlayerCount = Object.keys(fakePlayers).length;
-            if (fakePlayerCount == 0) {
-                panelWidth = 100;
-                panelHeight = 100;
-            } else if (fakePlayerCount < 2) {
-                panelWidth = 50;
-                panelHeight = 100;
-            } else if (fakePlayerCount < 3) {
-                panelWidth = 33;
-                panelHeight = 100;
-            } else if (fakePlayerCount < 4) {
-                panelWidth = 25;
-                panelHeight = 100;
-            } else if (fakePlayerCount < 8) {
-                panelWidth = 25;
-                panelHeight = 50;
+
+            if (isWide) {
+                if (fakePlayerCount == 0) {
+                    panelWidth = 100;
+                    panelHeight = 100;
+                } else if (fakePlayerCount < 2) {
+                    panelWidth = 50;
+                    panelHeight = 100;
+                } else if (fakePlayerCount < 3) {
+                    panelWidth = 33;
+                    panelHeight = 100;
+                } else if (fakePlayerCount < 4) {
+                    panelWidth = 50;
+                    panelHeight = 50;
+                } else if (fakePlayerCount < 6) {
+                    panelWidth = 33;
+                    panelHeight = 50;
+                } else if (fakePlayerCount < 8) {
+                    panelWidth = 25;
+                    panelHeight = 50;
+                } else if (fakePlayerCount < 10) {
+                    panelWidth = 20;
+                    panelHeight = 50;
+                } else if (fakePlayerCount < 15) {
+                    panelWidth = 20;
+                    panelHeight = 33;
+                } else {
+                    panelWidth = 12.5; //
+                    panelHeight = 33;
+                }
             } else {
-                panelWidth = 12.5; //
-                panelHeight = 33;
+                if (fakePlayerCount == 0) {
+                    panelWidth = 100;
+                    panelHeight = 100;
+                } else if (fakePlayerCount < 2) {
+                    panelWidth = 50;
+                    panelHeight = 100;
+                } else if (fakePlayerCount < 3) {
+                    panelWidth = 33;
+                    panelHeight = 100;
+                } else if (fakePlayerCount < 4) {
+                    panelWidth = 25;
+                    panelHeight = 100;
+                } else if (fakePlayerCount < 5) {
+                    panelWidth = 19.9;
+                    panelHeight = 100;
+                } else if (fakePlayerCount < 10) {
+                    panelWidth = 20;
+                    panelHeight = 50;
+                }
+                // else if (fakePlayerCount < 8) {
+                //     panelWidth = 25;
+                //     panelHeight = 50;
+                // } else if (fakePlayerCount < 10) {
+                //     panelWidth = 20;
+                //     panelHeight = 50;
+                // }
+                else if (fakePlayerCount < 12) {
+                    panelWidth = 16;
+                    panelHeight = 50;
+                } else if (fakePlayerCount < 16) {
+                    panelWidth = 12.5;
+                    panelHeight = 50;
+                } else {
+                    panelWidth = 12.5; //
+                    panelHeight = 33;
+                }
             }
         } else {
             panelWidth = 100;

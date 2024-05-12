@@ -15,7 +15,7 @@ const styles = {
         },
         "html, body": {
             //color: mode('gray.800', 'whiteAlpha.900')(props),
-            bg: "gray.925",
+            bg: "gray.850",
             color: "gray.10",
             fontWeight: 500,
         },
@@ -190,7 +190,7 @@ const components = {
                     height: "100%",
                     clipPath:
                         "polygon(100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%, 0 0)",
-                    bgColor: "gray.900",
+                    bgColor: "gray.700",
                     borderRadius: "8px",
                     zIndex: -1,
                 },
@@ -258,6 +258,29 @@ const components = {
         //     variant: "base",
         // },
     },
+    Modal: {
+        baseStyle: {
+            header: { fontSize: "2rem" },
+            dialogContainer: {},
+            dialog: { bgColor: "gray.800", borderRadius: "2rem" },
+            closeButton: { bgColor: "red.500" },
+            body: {},
+            footer: {},
+        },
+        variants: {
+            sidepanel: {
+                header: {},
+                dialogContainer: {
+                    justifyContent: "flex-end",
+                    alignItems: "flex-end",
+                },
+                dialog: { bgColor: "gray.800" },
+                closeButton: { bgColor: "red.500" },
+                body: {},
+                footer: {},
+            },
+        },
+    },
     Tabs: {
         baseStyle: {
             tab: {
@@ -324,6 +347,7 @@ const components = {
                         cursor: "auto",
                         color: "brand.300",
                     },
+                    _focus: { outline: "none" },
                     as: "span",
                     letterSpacing: "0px",
                     fontWeight: "bold",
@@ -459,7 +483,7 @@ const components = {
             track: {
                 //  width: "50px", height: "20px"
                 _checked: {
-                    bgColor: "brand.50",
+                    bgColor: "brand.500",
                 },
             },
         },

@@ -67,6 +67,11 @@ export function Settings(props) {
 }
 
 export function ChooseGameSettings(props) {
+    const useGameTarget = (gameSettings, id, value) => {
+        gameSettings[id] = value;
+        return true;
+    };
+    const useGameValue = (gameSettings, id) => gameSettings[id];
     return (
         <Card>
             <CardHeader>
@@ -74,7 +79,10 @@ export function ChooseGameSettings(props) {
             </CardHeader>
             <CardBody pt="0">
                 <VStack>
-                    <VStack bgColor="gray.900" px="2rem">
+                    <VStack
+                        //  bgColor="gray.900"
+                        px="2rem"
+                    >
                         <HStack spacing="1rem" alignItems={"flex-end"}>
                             <Text w="6rem" color="gray.50" fontWeight={"600"}>
                                 Players
@@ -83,11 +91,15 @@ export function ChooseGameSettings(props) {
                                 id="minplayers"
                                 title="Min"
                                 placeholder="0"
+                                useTarget={useGameTarget}
+                                useValue={useGameValue}
                             />
                             <SettingNumberInput
                                 id="maxplayers"
                                 title="Max"
                                 placeholder="0"
+                                useTarget={useGameTarget}
+                                useValue={useGameValue}
                             />
                         </HStack>
                         <HStack spacing="1rem" alignItems={"flex-end"}>
@@ -98,26 +110,15 @@ export function ChooseGameSettings(props) {
                                 id="minteams"
                                 title="Min"
                                 placeholder="0"
+                                useTarget={useGameTarget}
+                                useValue={useGameValue}
                             />
                             <SettingNumberInput
                                 id="maxteams"
                                 title="Max"
                                 placeholder="0"
-                                onChange={(id, value) => {
-                                    let teamSettingsRef =
-                                        btTeamSettingsRef.get();
-                                    let gameSettings = btPrevGameSettings.get();
-                                    if (
-                                        teamSettingsRef &&
-                                        gameSettings.maxteams == 0 &&
-                                        value == 1
-                                    ) {
-                                        setTimeout(() => {
-                                            teamSettingsRef.current.parentNode.parentNode.scrollTop =
-                                                teamSettingsRef.current.parentNode.scrollHeight; //({ behavior: 'smooth', block: "nearest", inline: "nearest" });
-                                        }, 100);
-                                    }
-                                }}
+                                useTarget={useGameTarget}
+                                useValue={useGameValue}
                             />
                         </HStack>
                     </VStack>
@@ -139,9 +140,9 @@ export function ChooseTeamSettings(props) {
         }
 
         // let teamList = Object.keys(teams);
-        teams.sort((a, b) => {
-            return b.team_order - a.team_order;
-        });
+        // teams.sort((a, b) => {
+        //     return a.team_order - b.team_order;
+        // });
         let elems = [];
         for (let i = 0; i < teams.length; i++) {
             // let team_slug = teamList[i];
@@ -186,44 +187,18 @@ export function ChooseTeamSettings(props) {
 }
 
 function TeamSettings(props) {
-    const teamRef = useRef();
-    // let [offset, setOffset] = useState(null);
     let [active, setActive] = useState(false);
-
-    const arraymove = (arr, fromIndex, toIndex) => {
-        var element = arr[fromIndex];
-        arr.splice(fromIndex, 1);
-        arr.splice(toIndex, 0, element);
-    };
-
-    // const getOffset = (el) => {
-    //     const rect = el.getBoundingClientRect();
-    //     return {
-    //         left: rect.left + window.scrollX,
-    //         top: rect.top + window.scrollY,
-    //     };
-    // };
 
     const onChangeOrder = (dir) => {
         let gameSettings = btGameSettings.get();
         let teams = gameSettings.teams;
 
-        // let newIndex = props.team_order + dir;
-        // if (newIndex < 0) return;
-        // if (newIndex >= teams.length) return;
-
-        // arraymove(teams, props.team_order, newIndex);
-        // let teamList = Object.keys(teams);
         teams.sort((a, b) => {
             return a.team_order - b.team_order;
         });
 
-        // let index = teamList.indexOf(props.team_order);
-        // let activeTeamSlug = teamList[index];
-        // let otherTeamSlug = teamList[index + dir];
         let activeTeam = teams[props.team_order];
         let otherTeam = teams[props.team_order + dir];
-
         let otherTeamOrder = otherTeam.team_order;
         let activeTeamOrder = activeTeam.team_order;
         otherTeam.team_order = activeTeamOrder;
@@ -232,11 +207,6 @@ function TeamSettings(props) {
         teams.sort((a, b) => {
             return a.team_order - b.team_order;
         });
-        // for (let i = 0; i < teams.length; i++) {
-        //     if (teams[i].team_order != i) {
-        //         teams[i].team_order = i;
-        //     }
-        // }
 
         updateGameSettings(gameSettings);
         setActive(true);
@@ -245,43 +215,39 @@ function TeamSettings(props) {
         }, 1000);
     };
 
-    // useEffect(() => {
-    //     setOffset(getOffset(teamRef.current));
-    // }, []);
-
-    // useEffect(() => {
-    //     if (active) {
-    //         let newOffset = getOffset(teamRef.current);
-    //         let yDiff = newOffset.top - offset.top;
-
-    //         // teamRef.current.scrollIntoView();
-
-    //         if (newOffset.top != offset.top) {
-    //             setOffset(newOffset);
-    //         }
-    //     }
-    // });
-
     let gameSettings = btGameSettings.get();
     let teams = gameSettings.teams;
 
     let isUpActive = teams && props.team_order > 0;
     let isDownActive = teams && props.team_order < teams.length - 1;
 
+    const useTeamTarget = (gameSettings, id, value) => {
+        let teams = gameSettings.teams;
+        if (!teams) return false;
+        let team = teams[props.team_order];
+        if (!team) return false;
+        team[id] = value;
+        return true;
+    };
+
+    const useTeamValue = (gameSettings, id) => {
+        let teams = gameSettings.teams;
+        if (!teams) return;
+        let team = teams[props.team_order];
+        if (!team) return;
+        return team[id];
+    };
     return (
         <MotionBox
             layout
             transition={{ duration: 1 }}
-            // ref={teamRef}
             pt="2rem"
             pb="2rem"
-            // transition={"background 0.3s ease"}
-            bgColor={active ? "gray.850" : "gray.850"}
-            _hover={{ bgColor: "gray.825" }}
+            // bgColor={active ? "gray.750" : "gray.775"}
+            _hover={{ bgColor: "gray.600" }}
             borderTop={"1px solid"}
             borderTopColor={"gray.600"}
         >
-            {/* <Grid templateColumns='80% 20%' bgColor={props.isOdd ? 'gray.900' : ''} w="100%" > */}
             <HStack spacing="2rem">
                 <VStack
                     spacing="1rem"
@@ -344,6 +310,8 @@ function TeamSettings(props) {
                         title="Name"
                         textWidth="6rem"
                         team_order={props.team_order}
+                        useTarget={useTeamTarget}
+                        useValue={useTeamValue}
                     />
                     <VStack w="100%" spacing="0">
                         <SettingTextInput
@@ -351,6 +319,8 @@ function TeamSettings(props) {
                             title="Slug"
                             textWidth="6rem"
                             team_order={props.team_order}
+                            useTarget={useTeamTarget}
+                            useValue={useTeamValue}
                         />
 
                         <HStack w="100%" pt="1rem">
@@ -358,11 +328,15 @@ function TeamSettings(props) {
                                 id="minplayers"
                                 title="Min Players"
                                 team_order={props.team_order}
+                                useTarget={useTeamTarget}
+                                useValue={useTeamValue}
                             />
                             <SettingNumberInput
                                 id="maxplayers"
                                 title="Max Players"
                                 team_order={props.team_order}
+                                useTarget={useTeamTarget}
+                                useValue={useTeamValue}
                             />
                         </HStack>
                     </VStack>
@@ -371,6 +345,8 @@ function TeamSettings(props) {
                             id="color"
                             title=""
                             team_order={props.team_order}
+                            useTarget={useTeamTarget}
+                            useValue={useTeamValue}
                         />
                     </Box>
                 </VStack>
@@ -386,7 +362,6 @@ function SettingColorInput(props) {
     let gameSettings = btGameSettings.get();
 
     let currentValue = id in gameSettings ? gameSettings[id] : 0;
-    // let [colorValue, setColorValue] = useState(currentValue);
 
     const [color, setColor] = useColor("#123123");
 
@@ -414,11 +389,6 @@ function SettingColorInput(props) {
             updateGameSettings(gameSettings);
         }
     }, []);
-
-    let timeoutHandle = 0;
-    let lastUpdate = Date.now();
-
-    // let value = (props.group && props[props.group]) || colorValue;
 
     return (
         <VStack h="100%" flex="1">
@@ -465,13 +435,6 @@ function SettingColorInput(props) {
                         bgColor={"transparent"}
                         width="100%"
                     >
-                        {/* <Saturation
-                            height={100}
-                            color={color}
-                            onChange={setColor}
-                        /> */}
-                        {/* <Hue height={100} color={color} onChange={setColor} /> */}
-
                         <ColorPicker
                             color={color || "#f00"}
                             onChange={(c1) => {
@@ -502,9 +465,15 @@ function SettingColorInput(props) {
 export function ChooseScreenSettings(props) {
     try {
         let gameSettings = useBucket(btGameSettings);
-        let [saved, setSaved] = useState(false);
+
+        const useGameTarget = (gameSettings, id, value) => {
+            gameSettings[id] = value;
+            return true;
+        };
+        const useGameValue = (gameSettings, id) => gameSettings[id];
 
         if (!gameSettings) return <></>;
+
         return (
             <Card>
                 <CardHeader>
@@ -514,7 +483,7 @@ export function ChooseScreenSettings(props) {
                     <VStack w="100%">
                         <VStack
                             w="100%"
-                            bgColor="gray.900"
+                            // bgColor="gray.900"
                             alignItems={"flex-start"}
                             px="2rem"
                         >
@@ -598,6 +567,8 @@ export function ChooseScreenSettings(props) {
                                         id="resow"
                                         title=""
                                         placeholder="4"
+                                        useTarget={useGameTarget}
+                                        useValue={useGameValue}
                                     />
                                     <Text
                                         as="span"
@@ -610,6 +581,8 @@ export function ChooseScreenSettings(props) {
                                         id="resoh"
                                         title=""
                                         placeholder="3"
+                                        useTarget={useGameTarget}
+                                        useValue={useGameValue}
                                     />
                                 </HStack>
                             </Box>
@@ -642,6 +615,8 @@ export function ChooseScreenSettings(props) {
                                         id="screenwidth"
                                         title="Width (px)"
                                         placeholder="800"
+                                        useTarget={useGameTarget}
+                                        useValue={useGameValue}
                                     />
                                     <Text
                                         as="span"
@@ -655,6 +630,8 @@ export function ChooseScreenSettings(props) {
                                         title="Height"
                                         placeholder="600"
                                         readOnly={true}
+                                        useTarget={useGameTarget}
+                                        useValue={useGameValue}
                                     />
                                 </HStack>
                             </Box>

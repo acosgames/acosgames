@@ -45,6 +45,7 @@ import {
     btLocalGameSettings,
 } from "../actions/buckets";
 import { GameStats } from "./GameStats";
+import { GameItems } from "./GameItems";
 // import Scoreboard from "./Scoreboard.jsx";
 
 function SidePanel(props) {
@@ -201,12 +202,15 @@ function SidePanel(props) {
                             pr="0.5rem"
                         >
                             <Tabs variant={"subtabs"}>
-                                <TabList justifyContent={"center"}>
+                                <TabList justifyContent={"center"} pt="1rem">
                                     <Tab _selected={{ color: "brand.900" }}>
                                         Game
                                     </Tab>
                                     <Tab _selected={{ color: "brand.900" }}>
                                         Stats
+                                    </Tab>
+                                    <Tab _selected={{ color: "brand.900" }}>
+                                        Items
                                     </Tab>
                                 </TabList>
                                 <TabPanels>
@@ -216,7 +220,7 @@ function SidePanel(props) {
                                             spacing="2rem"
                                             pb={"4rem"}
                                             px="0"
-                                            pt="2rem"
+                                            pt="1rem"
                                         >
                                             <Settings />
                                         </VStack>
@@ -230,6 +234,17 @@ function SidePanel(props) {
                                             pt="2rem"
                                         >
                                             <GameStats />
+                                        </VStack>
+                                    </TabPanel>
+                                    <TabPanel>
+                                        <VStack
+                                            justifyContent={"flex-start"}
+                                            spacing="2rem"
+                                            pb={"4rem"}
+                                            px="0"
+                                            pt="2rem"
+                                        >
+                                            <GameItems />
                                         </VStack>
                                     </TabPanel>
                                 </TabPanels>

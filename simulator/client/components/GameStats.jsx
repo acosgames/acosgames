@@ -59,7 +59,7 @@ export function GameStats({}) {
             <AddStat />
 
             {stats?.length > 0 && (
-                <Table my="4rem">
+                <Table mt="2rem" mb="4rem">
                     <Thead>
                         <Tr>
                             <Td fontWeight="600">Abbr</Td>

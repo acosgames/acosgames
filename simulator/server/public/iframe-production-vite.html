@@ -7,65 +7,20 @@
     <meta name="description" content="ACOS Client Simulator" />
     <meta name="author" content="A Cup Of Skill" />
     <meta http-equiv="Content-Security-Policy"
-        content="default-src https://assets.acos.games ws://*:3301 http://*:3301 http://*:3201 ws://*:3201 http://*:3200 ws://*:3200 ws://localhost:3201 http://localhost:3201 https://fonts.gstatic.com https://fonts.googleapis.com 'self' 'unsafe-inline' data:" />
+        content="default-src https://assets.acos.games ws://*:3301 ws://*:5173 http://*:5173 http://*:3301 http://*:3201 ws://*:3201 http://*:3200 ws://*:3200 ws://localhost:3201 http://localhost:3201 https://fonts.gstatic.com https://fonts.googleapis.com 'self' 'unsafe-inline' data:" />
     <meta name="color-scheme" content="light dark">
 </head>
 
 <body>
     <div id="root"></div>
-    <script>
-        function loadJS(url) {
-            loadScript(url, function (path, status) {
-                if (status == 'ok')
-                    setTimeout(() => {
-                        window.parent.postMessage({ type: 'loaded' }, '*')
-                    }, 1)
-            });
-        }
-        function loadScript(path, callback) {
-            var done = false
-            let mainScript = document.createElement('script')
-            mainScript.onload = handleLoad
-            mainScript.onreadystatechange = handleReadyStateChange
-            mainScript.onerror = handleError
-            mainScript.src = path
-            document.body.appendChild(mainScript)
-            function handleLoad() {
-                if (!done) {
-                    done = true
-                    callback(path, "ok")
-                }
-            }
-            function handleReadyStateChange() {
-                var state;
-                if (!done) {
-                    state = mainScript.readyState
-                    if (state === "complete") {
-                        handleLoad()
-                    }
-                }
-            }
-            function handleError() {
-                if (!done) {
-                    done = true
-                    callback(path, "error")
-                }
-            }
-        }
-
-        // loadJS('/client.bundle.dev.js');
-
-    </script>
-
     <script type="module">
-        import RefreshRuntime from 'http://localhost:3280/@react-refresh'
+        import RefreshRuntime from 'http://localhost:5173/@react-refresh'
         RefreshRuntime.injectIntoGlobalHook(window)
         window.$RefreshReg$ = () => { }
         window.$RefreshSig$ = () => (type) => type
         window.__vite_plugin_react_preamble_installed__ = true
     </script>
-    <script type="module" src="http://localhost:3280/game-client/index.jsx"></script>
-    <!-- <script src="/client.bundle.dev.js"></script>  -->
+    <script type="module" src="http://localhost:5173/game-client/index.jsx"></script>
 </body>
 
 </html>

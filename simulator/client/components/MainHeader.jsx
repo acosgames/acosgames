@@ -19,6 +19,7 @@ import {
     btActionToggle,
     btGameStatus,
     btIsMobile,
+    btReplayStats,
 } from "../actions/buckets.js";
 // import GameActions from './games/GameDisplay/GameActions';
 
@@ -26,6 +27,7 @@ export default function MainHeader(props) {
     let isMobile = useBucket(btIsMobile);
     let actionToggle = useBucket(btActionToggle);
     let gameStatus = useBucket(btGameStatus);
+    let replayStats = useBucket(btReplayStats);
 
     let statusColor = "white";
     if (gameStatus == "pregame") statusColor = "yellow.200";
@@ -36,6 +38,9 @@ export default function MainHeader(props) {
     } else if (gameStatus == "none") {
         gameStatus = "waiting";
     }
+    let isGameActive =
+        replayStats?.position >= replayStats?.total &&
+        gameStatus == "gamestart";
     return (
         <Box
             zIndex="20"
@@ -57,7 +62,7 @@ export default function MainHeader(props) {
                 <HStack
                     spacing={["2rem", "2rem", "4rem"]}
                     justifyContent={"center"}
-                    opacity={gameStatus == "gamestart" ? "0.1" : "1"}
+                    opacity={isGameActive ? "0.1" : "1"}
                 >
                     <Box>
                         <Link to="/" className="">
@@ -93,7 +98,7 @@ export default function MainHeader(props) {
                     height="100%"
                     flex="1"
                     display={["none", "none", "flex"]}
-                    opacity={gameStatus == "gamestart" ? "0.1" : "1"}
+                    opacity={isGameActive ? "0.1" : "1"}
                 >
                     <Stack direction={"row"} spacing={0} height="100%">
                         <Box w="30rem">

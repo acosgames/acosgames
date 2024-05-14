@@ -145,6 +145,34 @@ class GameSettingsManager {
                 return a.order - b.order;
             });
         }
+
+        if ("items" in s) {
+            for (let item of s.items) {
+                let prevUses = item.max_uses;
+                let prevExpire = item.expire_days;
+                try {
+                    item.max_uses = Number.parseInt(item.max_uses);
+                } catch (e) {
+                    item.max_uses = 0;
+                }
+                try {
+                    item.expire_days = Number.parseInt(item.expire_days);
+                } catch (e) {
+                    item.expire_days = 0;
+                }
+                if (prevUses != item.max_uses) dirty = true;
+                if (prevExpire != item.expire_days) dirty = true;
+
+                if (!item.item_desc) {
+                    item.item_desc = "";
+                    dirty = true;
+                }
+            }
+
+            s.items.sort((a, b) => {
+                return a.order - b.order;
+            });
+        }
         if ("teams" in s) {
             if (s.teams.length > 0) {
                 for (let team of s.teams) {

@@ -707,13 +707,18 @@ app.get("/", function (req, res) {
 });
 
 let assetPath = path.join(process.argv[2], "./builds/assets");
-app.use("/assets/", (req, res, next) => {
+app.use("/assets/*", (req, res, next) => {
     res.sendFile(path.join(assetPath, req.path));
     console.log(req.path);
 });
 
+app.use("/game-client/assets/*", (req, res, next) => {
+    res.sendFile(path.join(process.argv[2], req.baseUrl));
+    console.log(req.path);
+});
+
 app.get("/routes", function (req, res) {
-    if (process.argv[4] == "webpack") {
+    if (process.argv[4] == "webpack" || process.argv[4] == "bundle") {
         res.json({
             iframe: "//localhost:3300/iframe.html",
         });
@@ -732,7 +737,7 @@ app.get("/iframe.html", function (req, res) {
                 "./public/iframe-" + process.argv[3] + "-vite.html"
             )
         );
-    } else if (process.argv[4] == "webpack") {
+    } else if (process.argv[4] == "webpack" || process.argv[4] == "bundle") {
         res.sendFile(
             path.join(
                 __dirname,

@@ -37,7 +37,11 @@ function onExit() {
     // if (serverApp) {
     //     serverApp.send('quit');
     // }
-
+    if (process.platform == "win32") {
+        shelljs.exec("taskkill /t", {
+            async: true,
+        });
+    }
     for (var i = 0; i < children.length; i++) {
         let child = children[i];
         if (child) {
@@ -48,6 +52,7 @@ function onExit() {
             console.log("[ACOS] Killing child process: ", i);
         }
     }
+
     process.exit();
 }
 process.on("SIGINT", onExit);
@@ -129,7 +134,7 @@ function runServer(isDev) {
                 "../../node_modules/.bin/nodemon"
             );
         }
-        const cmd = `${nodemonPath} --inspect --delay 2 --enable-source-maps --watch ./simulator/server --ignore ./simulator/server/public ./simulator/server/server.js "${cwd}" ${
+        const cmd = `${nodemonPath} --inspect --enable-source-maps --watch ./simulator/server --ignore ./simulator/server/public ./simulator/server/server.js "${cwd}" ${
             isDev ? "development" : "production"
         } "${acosClientType}"`;
         // console.log("STARTING ACOSGAMES SIMULATOR >>>>>>>\n", cmd);
@@ -164,8 +169,8 @@ function runServer(isDev) {
                 // console.log("Finished loading ACOS Simulator.");
 
                 rs(true);
-            },
-            { silent: !isDev }
+            }
+            // { silent: !isDev }
         );
 
         let buildPath = path.join(cwd, "/builds");
@@ -355,16 +360,20 @@ function processACOSCommand() {
     // console.log("[ACOS] Command: ", argv);
     if (acosCommand == "dev") {
         runServer(true);
-        runClient(true);
+        setTimeout(() => {
+            runClient(true);
+        }, 100);
         // runBrowserSync(true);
-        if (acosClientType == "webpack") runBrowserSync(false);
+        if (acosClientType == "webpack" || acosClientType == "bundle")
+            runBrowserSync(false);
         // runBrowserOpenDevTools();
     } else if (acosCommand == "deploy") {
         runDeploy();
     } else {
         runServer(false);
         // runClient();
-        if (acosClientType == "webpack") runBrowserSync(false);
+        if (acosClientType == "webpack" || acosClientType == "bundle")
+            runBrowserSync(false);
         // runBrowserOpen();
     }
 }

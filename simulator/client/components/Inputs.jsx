@@ -196,6 +196,7 @@ export function SettingNumberInput({
     width,
     textWidth,
     onChange,
+    theme,
     useTarget,
     useValue,
 }) {
@@ -204,6 +205,88 @@ export function SettingNumberInput({
         ? useValue(gameSettings, id)
         : gameSettings[id] || 0;
 
+    if (theme == "row") {
+        return (
+            <HStack
+                w="100%"
+                key={"setting-" + id}
+                id={"setting-" + id}
+                display={gameSettings?.screentype == 1 ? "none" : "flex"}
+                alignItems={"flex-start"}
+                width="100%"
+                spacing="0"
+            >
+                {title && (
+                    <Text
+                        fontWeight={"bold"}
+                        as="label"
+                        w={textWidth || "100%"}
+                        display={title ? "inline-block" : "none"}
+                        pr="0.5rem"
+                        pt="0.5rem"
+                        color="gray.50"
+                        fontSize="1.4rem"
+                        htmlFor={id}
+                    >
+                        {title}
+                    </Text>
+                )}
+                <VStack>
+                    <NumberInput
+                        className=""
+                        id={id}
+                        fontSize="1.4rem"
+                        bgColor="gray.950"
+                        aria-describedby=""
+                        readOnly={readOnly || false}
+                        isDisabled={readOnly || false}
+                        placeholder={placeholder}
+                        onChange={(value) => {
+                            try {
+                                value = Number.parseInt(value) || 0;
+                            } catch (e) {
+                                value = 0;
+                            }
+
+                            if (onChange) onChange(id, value);
+
+                            let gameSettings = btGameSettings.get();
+
+                            if (useTarget) {
+                                let shouldUpdate = useTarget(
+                                    gameSettings,
+                                    id,
+                                    value
+                                );
+                                if (shouldUpdate)
+                                    updateGameSettings(gameSettings);
+                            }
+                        }}
+                        value={currentValue || 0}
+                        w={width || "100%"}
+                    >
+                        <NumberInputField fontSize="1.4rem" />
+                        <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                        </NumberInputStepper>
+                    </NumberInput>
+                    {helperText && (
+                        <Text
+                            fontWeight={"light"}
+                            as="label"
+                            display={"inline-block"}
+                            pr="0.5rem"
+                            color="gray.50"
+                            fontSize="1.2rem"
+                        >
+                            {helperText}
+                        </Text>
+                    )}
+                </VStack>
+            </HStack>
+        );
+    }
     return (
         <VStack key={"setting-" + id} id={"setting-" + id}>
             <Text

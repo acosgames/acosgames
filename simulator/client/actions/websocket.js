@@ -139,7 +139,6 @@ const onConnected = (message) => {
 
         let socketUser = message.user;
         let gameSettings = message.gameSettings;
-        ping();
 
         btLocalGameSettings.set(gameSettings);
         btPrevGameSettings.set(btGameSettings.get());
@@ -149,6 +148,10 @@ const onConnected = (message) => {
         btWebsocketStatus.set("connected");
 
         GamePanelService.createGamePanel(socketUser.id);
+
+        setTimeout(() => {
+            ping();
+        }, 200);
     } catch (e) {
         console.error(e);
     }

@@ -33,7 +33,7 @@
         "openskill": "^1.4.1",
         "seedrandom": "^3.0.5",
         "shelljs": "^0.8.5",
-        "socket.io": "^4.5.3",
+        "socket.io": "^4.7.5",
         "vlq": "^2.0.4",
         "wait-on": "^7.2.0",
         "ws": "^8.13.0",

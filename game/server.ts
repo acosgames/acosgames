@@ -36,240 +36,239 @@ declare global {
     var ignore: () => void;
     // }
 }
+class ACOSServer {
+    // let userActions: Action[];
+    // let originalState: GameState;
+    gameState: GameState;
+    currentAction: Action | null;
+    // let isNewGame: boolean;
+    defaultSeconds: number;
+    kickedPlayers: string[];
 
-// class ACOSG {
-// let userActions: Action[];
-// let originalState: GameState;
-var gameState: GameState;
-var currentAction: Action | null;
-// let isNewGame: boolean;
-var defaultSeconds: number;
-var kickedPlayers: string[];
+    init = () => {
+        // try {
+        //     userActions = JSON.parse(JSON.stringify(actions()));
+        // } catch (e) {
+        //     error("Failed to load actions");
+        //     return;
+        // }
+        // try {
+        //     originalState = JSON.parse(JSON.stringify(game()));
+        // } catch (e) {
+        //     error("Failed to load originalState");
+        //     return;
+        // }
+        try {
+            this.gameState = JSON.parse(JSON.stringify(game()));
+        } catch (e) {
+            this.error("Failed to load gameState");
+            return;
+        }
 
-const init = () => {
-    // try {
-    //     userActions = JSON.parse(JSON.stringify(actions()));
-    // } catch (e) {
-    //     error("Failed to load actions");
-    //     return;
-    // }
-    // try {
-    //     originalState = JSON.parse(JSON.stringify(game()));
-    // } catch (e) {
-    //     error("Failed to load originalState");
-    //     return;
-    // }
-    try {
-        gameState = JSON.parse(JSON.stringify(game()));
-    } catch (e) {
-        error("Failed to load gameState");
-        return;
-    }
+        this.currentAction = null;
 
-    currentAction = null;
+        // isNewGame = false;
+        // markedForDelete = false;
+        // defaultSeconds = 15;
+        // nextTimeLimit = -1;
+        this.kickedPlayers = [];
+    };
 
-    // isNewGame = false;
-    // markedForDelete = false;
-    // defaultSeconds = 15;
-    // nextTimeLimit = -1;
-    kickedPlayers = [];
-};
+    on = (type: string, cb: (action: Action) => boolean): void => {
+        // if (type == 'newgame') {
+        //     //if (isNewGame) {
+        //     currentAction = actions[0];
+        //     if (currentAction.type == '')
+        //         cb(actions[0]);
+        //     isNewGame = false;
+        //     //}
 
-const on = (type: string, cb: (action: Action) => boolean): void => {
-    // if (type == 'newgame') {
-    //     //if (isNewGame) {
-    //     currentAction = actions[0];
-    //     if (currentAction.type == '')
-    //         cb(actions[0]);
-    //     isNewGame = false;
-    //     //}
+        //     return;
+        // }
 
-    //     return;
-    // }
-
-    let userActions = actions();
-    for (var i = 0; i < userActions.length; i++) {
-        if (userActions[i].type == type) {
-            currentAction = userActions[i];
-            let result = cb(currentAction);
-            if (typeof result == "boolean" && !result) {
-                ignore();
-                break;
+        let userActions = actions();
+        for (var i = 0; i < userActions.length; i++) {
+            if (userActions[i].type == type) {
+                this.currentAction = userActions[i];
+                let result = cb(this.currentAction);
+                if (typeof result == "boolean" && !result) {
+                    ignore();
+                    break;
+                }
             }
         }
-    }
-};
+    };
 
-// function ignore(): void {
-//     ignore();
-// }
+    // function ignore(): void {
+    //     ignore();
+    // }
 
-const setGame = (game: GameState): void => {
-    for (var id in gameState.players) {
-        let player = gameState.players[id];
-        game.players[id] = player;
-    }
-    gameState = game;
-};
+    setGame = (game: GameState): void => {
+        for (var id in this.gameState.players) {
+            let player = this.gameState.players[id];
+            game.players[id] = player;
+        }
+        this.gameState = game;
+    };
 
-const commit = (): void => {
-    // if (kickedPlayers.length > 0)
-    //     gameState.kick = kickedPlayers;
+    commit = (): void => {
+        // if (kickedPlayers.length > 0)
+        //     gameState.kick = kickedPlayers;
 
-    save(gameState);
-};
+        save(this.gameState);
+    };
 
-const gameover = (payload: any): void => {
-    event("gameover", payload);
-};
+    gameover = (payload: any): void => {
+        this.event("gameover", payload);
+    };
 
-const log = (...msg: any[]): void => {
-    gamelog(...msg);
-};
-const error = (...msg: any[]): void => {
-    gameerror(...msg);
-};
+    log = (...msg: any[]): void => {
+        gamelog(...msg);
+    };
+    error = (...msg: any[]): void => {
+        gameerror(...msg);
+    };
 
-const kickPlayer = (id: string): void => {
-    kickedPlayers.push(id);
-};
+    kickPlayer = (id: string): void => {
+        this.kickedPlayers.push(id);
+    };
 
-// const random():number {
-//     return random();
-// }
+    // const random():number {
+    //     return random();
+    // }
 
-const randomInt = (min, max): number => {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
-};
+    randomInt = (min, max): number => {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
+    };
 
-// const database(): any {
-//     return database();
-// }
+    // const database(): any {
+    //     return database();
+    // }
 
-const action = (): Action | null => {
-    return currentAction;
-};
+    action = (): Action | null => {
+        return this.currentAction;
+    };
 
-const gamestate = (): GameState | null => {
-    return gameState;
-};
+    gamestate = (): GameState | null => {
+        return this.gameState;
+    };
 
-const room = (key: string, value: string | number): any => {
-    if (typeof key === "undefined") return gameState.room;
-    if (typeof value === "undefined") return gameState.room[key];
+    room = (key: string, value: string | number): any => {
+        if (typeof key === "undefined") return this.gameState.room;
+        if (typeof value === "undefined") return this.gameState.room[key];
 
-    gameState.room[key] = value;
-    return value;
-};
+        this.gameState.room[key] = value;
+        return value;
+    };
 
-const state = (key: string, value: string | number): any => {
-    if (typeof key === "undefined") return gameState.state;
-    if (typeof value === "undefined") return gameState.state[key];
+    state = (key: string, value: string | number): any => {
+        if (typeof key === "undefined") return this.gameState.state;
+        if (typeof value === "undefined") return this.gameState.state[key];
 
-    gameState.state[key] = value;
-    return value;
-};
+        this.gameState.state[key] = value;
+        return value;
+    };
 
-const playerList = (): string[] => {
-    return Object.keys(gameState.players);
-};
-const playerCount = (): number => {
-    return Object.keys(gameState.players).length;
-};
+    playerList = (): string[] => {
+        return Object.keys(this.gameState.players);
+    };
+    playerCount = (): number => {
+        return Object.keys(this.gameState.players).length;
+    };
 
-const players = (userid: string, value: any): any => {
-    if (typeof userid === "undefined") return gameState.players;
-    if (typeof value === "undefined") return gameState.players[userid];
+    players = (userid: string, value: any): any => {
+        if (typeof userid === "undefined") return this.gameState.players;
+        if (typeof value === "undefined") return this.gameState.players[userid];
 
-    gameState.players[userid] = value;
-    return value;
-};
+        this.gameState.players[userid] = value;
+        return value;
+    };
 
-const teams = (teamid: string, value: any): any => {
-    if (typeof teamid === "undefined") return gameState.teams;
-    if (typeof value === "undefined") return gameState.teams[teamid];
+    teams = (teamid: string, value: any): any => {
+        if (typeof teamid === "undefined") return this.gameState.teams;
+        if (typeof value === "undefined") return this.gameState.teams[teamid];
 
-    gameState.teams[teamid] = value;
-};
+        this.gameState.teams[teamid] = value;
+    };
 
-// rules(rule, value) {
-//     if (typeof rule === 'undefined')
-//         return gameState.rules;
-//     if (typeof value === 'undefined')
-//         return gameState.rules[rule];
+    // rules(rule, value) {
+    //     if (typeof rule === 'undefined')
+    //         return gameState.rules;
+    //     if (typeof value === 'undefined')
+    //         return gameState.rules[rule];
 
-//     gameState.rules[rule] = value;
-// }
+    //     gameState.rules[rule] = value;
+    // }
 
-// prev(obj) {
-//     if (typeof obj === 'object') {
-//         gameState.prev = obj;
-//     }
-//     return gameState.prev;
-// }
+    // prev(obj) {
+    //     if (typeof obj === 'object') {
+    //         gameState.prev = obj;
+    //     }
+    //     return gameState.prev;
+    // }
 
-const next = (obj: {
-    id: string | string[];
-}): {
-    id: string | string[];
-} => {
-    if (typeof obj === "object") {
-        gameState.next = obj;
-    }
-    return gameState.next;
-};
+    next = (obj: {
+        id: string | string[];
+    }): {
+        id: string | string[];
+    } => {
+        if (typeof obj === "object") {
+            this.gameState.next = obj;
+        }
+        return this.gameState.next;
+    };
 
-const setTimelimit = (seconds: number): void => {
-    seconds = seconds || 15;
-    if (!gameState.timer) gameState.timer = {};
-    gameState.timer.set = seconds; //Math.min(60, Math.max(10, seconds));
-};
+    setTimelimit = (seconds: number): void => {
+        seconds = seconds || 15;
+        if (!this.gameState.timer) this.gameState.timer = {};
+        this.gameState.timer.set = seconds; //Math.min(60, Math.max(10, seconds));
+    };
 
-const reachedTimelimit = (action: Action): boolean => {
-    if (typeof action.timeleft == "undefined") return false;
-    return action.timeleft <= 0;
-};
+    reachedTimelimit = (action: Action): boolean => {
+        if (typeof action.timeleft == "undefined") return false;
+        return action.timeleft <= 0;
+    };
 
-const event = (name: string, payload: any): any | void => {
-    if (!payload) return gameState.events[name];
+    event = (name: string, payload: any): any | void => {
+        if (!payload) return this.gameState.events[name];
 
-    gameState.events[name] = payload || {};
-};
+        this.gameState.events[name] = payload || {};
+    };
 
-const clearEvents = (): void => {
-    gameState.events = {};
-};
-// events(name) {
-//     if (typeof name === 'undefined')
-//         return gameState.events;
-//     gameState.events.push(name);
-// }
-// }
-export default {
-    log: log,
-    error: error,
-    init: init,
-    on: on,
-    setGame: setGame,
-    commit: commit,
-    gameover: gameover,
-    kickPlayer: kickPlayer,
-    randomInt: randomInt,
-    action: action,
-    gamestate: gamestate,
-    room: room,
-    state: state,
-    playerList: playerList,
-    playerCount: playerCount,
-    players: players,
-    teams: teams,
-    next: next,
-    setTimelimit: setTimelimit,
-    reachedTimelimit: reachedTimelimit,
-    event: event,
-    clearEvents: clearEvents,
-};
+    clearEvents = (): void => {
+        this.gameState.events = {};
+    };
+    // events(name) {
+    //     if (typeof name === 'undefined')
+    //         return gameState.events;
+    //     gameState.events.push(name);
+    // }
+}
+// export default {
+//     log: log,
+//     error: error,
+//     init: init,
+//     on: on,
+//     setGame: setGame,
+//     commit: commit,
+//     gameover: gameover,
+//     kickPlayer: kickPlayer,
+//     randomInt: randomInt,
+//     action: action,
+//     gamestate: gamestate,
+//     room: room,
+//     state: state,
+//     playerList: playerList,
+//     playerCount: playerCount,
+//     players: players,
+//     teams: teams,
+//     next: next,
+//     setTimelimit: setTimelimit,
+//     reachedTimelimit: reachedTimelimit,
+//     event: event,
+//     clearEvents: clearEvents,
+// };
 
-// export default new ACOSG();
+export default new ACOSServer();

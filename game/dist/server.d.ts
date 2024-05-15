@@ -45,18 +45,22 @@ declare global {
     var database: () => any;
     var ignore: () => void;
 }
-declare const _default: {
-    log: (...msg: any[]) => void;
-    error: (...msg: any[]) => void;
+declare class ACOSServer {
+    gameState: GameState;
+    currentAction: Action | null;
+    defaultSeconds: number;
+    kickedPlayers: string[];
     init: () => void;
     on: (type: string, cb: (action: Action) => boolean) => void;
     setGame: (game: GameState) => void;
     commit: () => void;
     gameover: (payload: any) => void;
+    log: (...msg: any[]) => void;
+    error: (...msg: any[]) => void;
     kickPlayer: (id: string) => void;
     randomInt: (min: any, max: any) => number;
-    action: () => Action;
-    gamestate: () => GameState;
+    action: () => Action | null;
+    gamestate: () => GameState | null;
     room: (key: string, value: string | number) => any;
     state: (key: string, value: string | number) => any;
     playerList: () => string[];
@@ -70,7 +74,8 @@ declare const _default: {
     };
     setTimelimit: (seconds: number) => void;
     reachedTimelimit: (action: Action) => boolean;
-    event: (name: string, payload: any) => any;
+    event: (name: string, payload: any) => any | void;
     clearEvents: () => void;
-};
+}
+declare const _default: ACOSServer;
 export default _default;

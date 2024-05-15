@@ -21,24 +21,23 @@ const onMessage = (callback) => (evt) => {
     let source = evt.source;
     if (!message || message.length == 0)
         return;
-    if (callback) {
-        callback(message);
-    }
+    let newStatus = false;
     gamestate = message;
     if (((_a = gamestate === null || gamestate === void 0 ? void 0 : gamestate.room) === null || _a === void 0 ? void 0 : _a.status) != roomStatus) {
-        lastRoomStatus = roomStatus;
         roomStatus = (_b = gamestate === null || gamestate === void 0 ? void 0 : gamestate.room) === null || _b === void 0 ? void 0 : _b.status;
+        newStatus = true;
         if (isGameover && roomStatus != "gameover") {
             isGameover = false;
             timerLoop(timerLoopCallback);
         }
     }
+    if (callback) {
+        callback(message, newStatus);
+    }
 };
 let isGameover = false;
 let roomStatus = "none";
-let lastRoomStatus = "none";
 let gamestate = null;
-let timeleft = 0;
 let timerHandle = 0;
 let timerLoopCallback = null;
 export function timerLoop(cb) {
@@ -57,7 +56,6 @@ export function timerLoop(cb) {
     if (elapsed <= 0) {
         elapsed = 0;
     }
-    timeleft = elapsed;
     if (cb)
         cb(elapsed);
     let room = gamestate === null || gamestate === void 0 ? void 0 : gamestate.room;

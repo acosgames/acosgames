@@ -5,7 +5,7 @@ const { hideBin } = require("yargs/helpers");
 const fs = require("fs");
 // var FormDataEncoder = require('form-data-encoder');
 const argv = yargs(hideBin(process.argv)).argv;
-const { Readable } = require("stream");
+const { Readable, PassThrough } = require("stream");
 const { Transform } = require("node:stream");
 
 let screentype = argv.screentype || 1;
@@ -63,6 +63,30 @@ function setFormData(formData, filename, fileStream) {
     });
 }
 
+const mergeStreams = (...streams) => {
+    let pass = new PassThrough();
+    for (let stream of streams) {
+        const end = stream == streams.at(-1);
+        pass = stream.pipe(pass, { end });
+    }
+    return pass;
+};
+
+async function pipe(tap, sink) {
+    return new Promise((resolve, reject) => {
+        tap.pipe(sink, { end: false });
+        tap.on("end", resolve);
+        tap.on("error", reject);
+    });
+}
+
+const removeNewLine = new Transform({
+    transform(chunk, encoding, callback) {
+        this.push(chunk.toString().replace(/\n|\r\n/g, ""));
+        callback();
+    },
+});
+
 async function deployAll(got, FormData, FormDataEncoder) {
     let game_slug = "";
     let apikeyParts = apikey.split(".");
@@ -84,21 +108,104 @@ async function deployAll(got, FormData, FormDataEncoder) {
 
     let filesizes = "";
 
+    //combine all css files to inject into client.bundle.js
+    let cssStreams = [];
+    let cssStreamLengths = [];
+
+    //VALIDATE ASSETS FOLDER IS FLATTENED
+    try {
+        let assetFolderPath = path.join(buildPath, "/assets");
+        const assetDirectory = fs.opendirSync(assetFolderPath);
+        let assetFile;
+        while ((assetFile = assetDirectory.readSync()) !== null) {
+            let isDir = fs
+                .lstatSync(path.join(assetFolderPath, assetFile.name))
+                .isDirectory();
+
+            if (isDir) {
+                console.log(assetFile);
+                throw "[ERROR] [ACOS] Your builds/assets folder has directories.  Assets should only be in the '/builds/assets' root folder.";
+            }
+            // console.log(assetFile.name, assetFile.isDirectory())
+        }
+        assetDirectory.closeSync();
+
+        //UPLOAD ASSETS
+        let assetNames = {};
+        const assetDirectory2 = fs.opendirSync(assetFolderPath);
+        let assetFile2;
+        let assetData = {};
+
+        while ((assetFile2 = assetDirectory2.readSync()) !== null) {
+            let filename = assetFile2.name;
+            if (filename.endsWith(".js") || filename == "database.json")
+                continue;
+
+            let assetFilePath = path.join(assetFolderPath, filename);
+
+            if (filename.endsWith(".css")) {
+                let fileRawData = fs.readFileSync(assetFilePath, "utf-8");
+                // cssString += fileRawData;
+                cssStreamLengths.push(fs.statSync(assetFilePath).size);
+                cssStreams.push(fs.createReadStream(assetFilePath));
+                continue;
+            }
+
+            let assetFileSize = fs.statSync(assetFilePath).size;
+            var assetFileContent = fs.createReadStream(assetFilePath);
+            contentLength += assetFileSize;
+            assetNames[filename] = assetFileSize;
+            filesizes += filename + "=" + assetFileSize + ";";
+            assetFileSize = (assetFileSize / 1000).toFixed(2);
+
+            setFormData(form_data, filename, assetFileContent);
+
+            // console.log(assetFile.name, assetFile.isDirectory())
+        }
+        assetDirectory2.closeSync();
+    } catch (e) {
+        console.log("[ACOS] No assets found.");
+    }
+
     //UPLOAD CLIENT
     console.log("[ACOS] current working directory: ", buildPath);
-    let clientFilePath = path.join(buildPath, "/client/client.bundle.js");
+    let clientFilePath = path.join(buildPath, "/client.bundle.js");
     var clientFile = fs.createReadStream(clientFilePath);
     let clientFileSize = fs.statSync(clientFilePath).size;
     contentLength += clientFileSize;
     filesizes += "client.bundle.js=" + clientFileSize + ";";
     clientFileSize = (clientFileSize / 1000).toFixed(2);
+
+    const passthrough = new PassThrough();
+
+    //inject css files if exists at top of file
+    if (cssStreams.length > 0) {
+        const cssPrefixString = `(function(){"use strict";try{if(typeof document<"u"){var e=document.createElement("style");e.appendChild(document.createTextNode('`;
+        const cssPrefix = Readable.from(cssPrefixString);
+        const cssSuffixString = `')),document.head.appendChild(e)}}catch(o){console.error("[ACOS] CSS Injection failed to client.bundle.js",o)}})();\n`;
+        const cssSuffix = Readable.from(cssSuffixString);
+        clientFileSize += Buffer.byteLength(cssPrefixString, "utf8");
+        clientFileSize += Buffer.byteLength(cssSuffixString, "utf8");
+        await pipe(cssPrefix, passthrough);
+        for (let i = 0; i < cssStreams.length; i++) {
+            clientFileSize += cssStreamLengths[i];
+            await pipe(cssStreams[i].pipe(removeNewLine), passthrough);
+        }
+        await pipe(cssSuffix, passthrough);
+    }
+
+    // await pipe(clientFile, passthrough);
+    clientFile.pipe(passthrough);
+
+    // passthrough.emit("end");
+
     form_data.set("client", {
         type: "application/javascript",
         name: "client.bundle.js",
         // size: clientFileSize,
         [Symbol.toStringTag]: "File",
         stream() {
-            return clientFile;
+            return passthrough;
         },
     });
 
@@ -109,7 +216,7 @@ async function deployAll(got, FormData, FormDataEncoder) {
         let dbFilePath = path.join(buildPath, "../game-server/database.json");
         if (!fs.existsSync(dbFilePath)) {
             console.warn(
-                "[ACOS] No database exists. It is optional, but this is a reminder just incase you forgot it.  Format should be `./game-server/database.json`"
+                "[ACOS] No database exists. It is optional, but this is a reminder just incase you forgot it.  File should be at `./game-server/database.json`"
             );
         } else {
             dbFileSize = fs.statSync(dbFilePath).size;
@@ -135,7 +242,7 @@ async function deployAll(got, FormData, FormDataEncoder) {
     }
 
     //UPLOAD SERVER
-    let serverFilePath = path.join(buildPath, "/server/server.bundle.js");
+    let serverFilePath = path.join(buildPath, "/server.bundle.js");
     let serverFileSize = fs.statSync(serverFilePath).size;
     var serverFile = fs.createReadStream(serverFilePath);
     contentLength += serverFileSize;
@@ -150,58 +257,6 @@ async function deployAll(got, FormData, FormDataEncoder) {
             return serverFile;
         },
     });
-
-    //VALIDATE ASSETS FOLDER IS FLATTENED
-
-    try {
-        let assetFolderPath = path.join(buildPath, "/client/assets");
-        const assetDirectory = fs.opendirSync(assetFolderPath);
-        let assetFile;
-        while ((assetFile = assetDirectory.readSync()) !== null) {
-            let isDir = fs
-                .lstatSync(path.join(assetFolderPath, assetFile.name))
-                .isDirectory();
-
-            if (isDir) {
-                console.log(assetFile);
-                throw "[ERROR] [ACOS] Your assets folder has directories.  Assets should only be in the '/builds/assets' root folder.";
-            }
-            // console.log(assetFile.name, assetFile.isDirectory())
-        }
-        assetDirectory.closeSync();
-
-        //UPLOAD ASSETS
-        let assetNames = {};
-        const assetDirectory2 = fs.opendirSync(assetFolderPath);
-        let assetFile2;
-        let assetData = {};
-
-        while ((assetFile2 = assetDirectory2.readSync()) !== null) {
-            let filename = assetFile2.name;
-            if (
-                filename.endsWith(".js") ||
-                filename == "client" ||
-                filename == "server" ||
-                filename == "db"
-            )
-                continue;
-
-            let assetFilePath = path.join(assetFolderPath, assetFile2.name);
-            let assetFileSize = fs.statSync(assetFilePath).size;
-            var assetFileContent = fs.createReadStream(assetFilePath);
-            contentLength += assetFileSize;
-            assetNames[assetFile2.name] = assetFileSize;
-            filesizes += assetFile2.name + "=" + assetFileSize + ";";
-            assetFileSize = (assetFileSize / 1000).toFixed(2);
-
-            setFormData(form_data, assetFile2.name, assetFileContent);
-
-            // console.log(assetFile.name, assetFile.isDirectory())
-        }
-        assetDirectory2.closeSync();
-    } catch (e) {
-        console.log("[ACOS] No assets found.");
-    }
 
     //BUILD HEADERS
     let encoder = new FormDataEncoder(form_data);

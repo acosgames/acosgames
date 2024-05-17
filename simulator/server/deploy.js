@@ -112,6 +112,7 @@ async function deployAll(got, FormData, FormDataEncoder) {
     let cssStreams = [];
     let cssStreamLengths = [];
 
+    let hasCSS = false;
     //VALIDATE ASSETS FOLDER IS FLATTENED
     try {
         let assetFolderPath = path.join(buildPath, "/assets");
@@ -135,7 +136,6 @@ async function deployAll(got, FormData, FormDataEncoder) {
         const assetDirectory2 = fs.opendirSync(assetFolderPath);
         let assetFile2;
         let assetData = {};
-
         while ((assetFile2 = assetDirectory2.readSync()) !== null) {
             let filename = assetFile2.name;
             if (filename.endsWith(".js") || filename == "database.json")
@@ -144,11 +144,12 @@ async function deployAll(got, FormData, FormDataEncoder) {
             let assetFilePath = path.join(assetFolderPath, filename);
 
             if (filename.endsWith(".css")) {
-                let fileRawData = fs.readFileSync(assetFilePath, "utf-8");
-                // cssString += fileRawData;
-                cssStreamLengths.push(fs.statSync(assetFilePath).size);
-                cssStreams.push(fs.createReadStream(assetFilePath));
-                continue;
+                hasCSS = true;
+                //     let fileRawData = fs.readFileSync(assetFilePath, "utf-8");
+                //     // cssString += fileRawData;
+                //     cssStreamLengths.push(fs.statSync(assetFilePath).size);
+                //     cssStreams.push(fs.createReadStream(assetFilePath));
+                //     continue;
             }
 
             let assetFileSize = fs.statSync(assetFilePath).size;
@@ -179,20 +180,20 @@ async function deployAll(got, FormData, FormDataEncoder) {
     const passthrough = new PassThrough();
 
     //inject css files if exists at top of file
-    if (cssStreams.length > 0) {
-        const cssPrefixString = `(function(){"use strict";try{if(typeof document<"u"){var e=document.createElement("style");e.appendChild(document.createTextNode('`;
-        const cssPrefix = Readable.from(cssPrefixString);
-        const cssSuffixString = `')),document.head.appendChild(e)}}catch(o){console.error("[ACOS] CSS Injection failed to client.bundle.js",o)}})();\n`;
-        const cssSuffix = Readable.from(cssSuffixString);
-        clientFileSize += Buffer.byteLength(cssPrefixString, "utf8");
-        clientFileSize += Buffer.byteLength(cssSuffixString, "utf8");
-        await pipe(cssPrefix, passthrough);
-        for (let i = 0; i < cssStreams.length; i++) {
-            clientFileSize += cssStreamLengths[i];
-            await pipe(cssStreams[i].pipe(removeNewLine), passthrough);
-        }
-        await pipe(cssSuffix, passthrough);
-    }
+    // if (cssStreams.length > 0) {
+    //     const cssPrefixString = `(function(){"use strict";try{if(typeof document<"u"){var e=document.createElement("style");e.appendChild(document.createTextNode('`;
+    //     const cssPrefix = Readable.from(cssPrefixString);
+    //     const cssSuffixString = `')),document.head.appendChild(e)}}catch(o){console.error("[ACOS] CSS Injection failed to client.bundle.js",o)}})();\n`;
+    //     const cssSuffix = Readable.from(cssSuffixString);
+    //     clientFileSize += Buffer.byteLength(cssPrefixString, "utf8");
+    //     clientFileSize += Buffer.byteLength(cssSuffixString, "utf8");
+    //     await pipe(cssPrefix, passthrough);
+    //     for (let i = 0; i < cssStreams.length; i++) {
+    //         clientFileSize += cssStreamLengths[i];
+    //         await pipe(cssStreams[i].pipe(removeNewLine), passthrough);
+    //     }
+    //     await pipe(cssSuffix, passthrough);
+    // }
 
     // await pipe(clientFile, passthrough);
     clientFile.pipe(passthrough);
@@ -206,6 +207,23 @@ async function deployAll(got, FormData, FormDataEncoder) {
         [Symbol.toStringTag]: "File",
         stream() {
             return passthrough;
+        },
+    });
+
+    //UPLOAD Client Sourcemap
+    let clientSourcemapFilePath = path.join(buildPath, "/client.bundle.js.map");
+    let clientSourcemapFileSize = fs.statSync(clientSourcemapFilePath).size;
+    var clientSourcemapFile = fs.createReadStream(clientSourcemapFilePath);
+    contentLength += clientSourcemapFileSize;
+    filesizes += "client.bundle.js.map=" + clientSourcemapFileSize + ";";
+    clientSourcemapFileSize = (clientSourcemapFileSize / 1000).toFixed(2);
+    form_data.set("clientmap", {
+        type: "application/javascript",
+        name: "client.bundle.js.map",
+        // size: serverFileSize,
+        [Symbol.toStringTag]: "File",
+        stream() {
+            return clientSourcemapFile;
         },
     });
 
@@ -283,6 +301,9 @@ async function deployAll(got, FormData, FormDataEncoder) {
 
     //HAS DATABASE HEADER
     headers["X-GAME-HASDB"] = hasDb ? "yes" : "no";
+
+    //HAS CSS HEADER
+    headers["X-GAME-HASCSS"] = hasCSS ? "yes" : "no";
 
     headers["X-GAME-FILESIZES"] = filesizes;
 

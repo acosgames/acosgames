@@ -65,7 +65,7 @@ export function StateViewer(props) {
         copy.private = {};
         copy.local = {};
 
-        for (let id in copy.players) delete copy.players[id].portrait;
+        for (let shortid in copy.players) delete copy.players[shortid].portrait;
 
         gameState = copy;
     } else if (scope == "spectator") {
@@ -75,8 +75,8 @@ export function StateViewer(props) {
         copy.private = {};
         copy.local = {};
         gameState = copy;
-        if (gameState?.action?.user?.id)
-            gameState.action.user = gameState.action.user.id;
+        if (gameState?.action?.user?.shortid)
+            gameState.action.user = gameState.action.user.shortid;
 
         if (gameState?.action && "timeseq" in gameState.action)
             delete gameState.action.timeseq;
@@ -86,7 +86,8 @@ export function StateViewer(props) {
     } else if (scope == "packet") {
         let delta = btDeltaState.copy();
         delta.local = {};
-        for (let id in delta.players) delete delta.players[id].portrait;
+        for (let shortid in delta.players)
+            delete delta.players[shortid].portrait;
         gameState = delta;
     } else {
         let copy = GameStateService.getGameState();
@@ -114,8 +115,8 @@ export function StateViewer(props) {
         gameState.action = {};
         // delete gameState.action;
 
-        // if (gameState?.action?.user?.id)
-        //     gameState.action.user = gameState.action.user.id;
+        // if (gameState?.action?.user?.shortid)
+        //     gameState.action.user = gameState.action.user.shortid;
 
         // if (gameState?.action && 'timeseq' in gameState.action)
         //     delete gameState.action.timeseq;
@@ -168,11 +169,11 @@ export function StateViewer(props) {
                                     </option>
                                     {playerList.map((p) => (
                                         <option
-                                            key={"scope-" + p.id}
+                                            key={"scope-" + p.shortid}
                                             fontSize="1rem"
-                                            value={p.id}
+                                            value={p.shortid}
                                         >
-                                            {p.name}
+                                            {p.displayname}
                                         </option>
                                     ))}
                                 </Select>

@@ -4,8 +4,7 @@ var Profiler;
 module.exports = Profiler = {
     debug: true,
 
-    constructor: function () {
-    },
+    constructor: function () {},
 
     log: function () {
         if (!this.debug) return;
@@ -33,8 +32,8 @@ module.exports = Profiler = {
         const milliseconds = number / 1000000;
         const seconds = number / 1000000000;
         const fixedMs = Number(milliseconds).toFixed(4);
-        if (typeof msWarn == 'undefined' || milliseconds < msWarn)
-            this.log('[ACOS] ' + name + ` Time: ${fixedMs} ms`,);
+        if (typeof msWarn == "undefined" || milliseconds < msWarn)
+            this.log("[ACOS] " + name + ` Time: ${fixedMs} ms`);
         else {
             let msElapsed = milliseconds;
             if (msElapsed >= 100) {
@@ -44,14 +43,19 @@ module.exports = Profiler = {
             } else {
                 msElapsed = milliseconds.toFixed(4);
             }
-            let elapsed = '!WARNING! ' + name + ' Time: ' + msElapsed + ' ms is over limit of ' + msWarn + ' ms.'
-            this.log('[ACOS] ' + '\x1b[33m%s\x1b[0m', elapsed);
+            let elapsed =
+                "!WARNING! " +
+                name +
+                " Time: " +
+                msElapsed +
+                " ms is over limit of " +
+                msWarn +
+                " ms.";
+            this.log("[ACOS] " + "\x1b[33m%s\x1b[0m", elapsed);
         }
-
     },
 
     StartLog: function (name) {
-
         profiles[name] = process.hrtime();
     },
 
@@ -62,7 +66,7 @@ module.exports = Profiler = {
         let hrend = process.hrtime(profiles[name]);
         let seconds = hrend[0];
         let ms = hrend[1] / 1000000;
-        this.info('[ACOS] ' + name + ` Time: ${seconds}s ${ms.toFixed(2)} ms`);
+        this.info("[ACOS] " + name + ` Time: ${seconds}s ${ms.toFixed(2)} ms`);
     },
 
     Memory: function (name) {
@@ -70,9 +74,9 @@ module.exports = Profiler = {
         //Calculate memory usage
         const used = process.memoryUsage().heapUsed / 1024 / 1024;
         this.log(
-            '[ACOS] ' + `Memory Usage: ${Math.round(used * 100) / 100} MB`
+            "[ACOS] " + `Memory Usage: ${Math.round(used * 100) / 100} MB`
         );
-    }
+    },
 };
 
 Profiler.constructor();

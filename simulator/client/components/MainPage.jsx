@@ -135,7 +135,7 @@ function MainPage(props) {
 }
 
 function ChoosePlayerName(props) {
-    let username = useBucket(btUsername);
+    let displayname = useBucket(btUsername);
     let isMobile = useBucket(btIsMobile);
 
     const inputChange = (e) => {
@@ -146,12 +146,12 @@ function ChoosePlayerName(props) {
     };
 
     const onSubmit = async (e) => {
-        localStorage.setItem("username", username);
-        connect(username);
+        localStorage.setItem("displayname", displayname);
+        connect(displayname);
     };
 
     useEffect(() => {
-        let savedUsername = localStorage.getItem("username");
+        let savedUsername = localStorage.getItem("displayname");
         if (savedUsername) {
             btUsername.set(savedUsername);
         }
@@ -179,13 +179,13 @@ function ChoosePlayerName(props) {
                 px="2rem"
             >
                 <Input
-                    name="name"
-                    id="name"
+                    name="displayname"
+                    id="displayname"
                     title=""
                     maxLength="120"
                     height="3rem"
                     autoComplete="off"
-                    value={username || ""}
+                    value={displayname || ""}
                     onChange={inputChange}
                     onKeyUp={(e) => {
                         if (e.key === "Enter") {

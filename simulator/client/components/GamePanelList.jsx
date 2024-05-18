@@ -144,10 +144,10 @@ function GamePanelList(props) {
         let lastMessage = btGameState.get();
         let gamepanels = btGamepanels.get();
 
-        for (const id in gamepanels) {
-            let gamepanel = gamepanels[id];
+        for (const shortid in gamepanels) {
+            let gamepanel = gamepanels[shortid];
 
-            let user = fakePlayers && fakePlayers[id];
+            let user = fakePlayers && fakePlayers[shortid];
             if (!user) {
                 user = btSocketUser.get();
                 if (!user) continue;
@@ -156,14 +156,14 @@ function GamePanelList(props) {
             let isPrimary = gamepanel == primaryGamePanel;
             if (!isPrimary) cnt++;
 
-            let isInGame = user.id in (lastMessage?.players || {});
+            let isInGame = user.shortid in (lastMessage?.players || {});
 
             if (layout == "expanded") {
                 elems.push(
                     <ExpandedLayout
-                        key={"gamepanel-" + id}
-                        id={id}
-                        name={user.name}
+                        key={"gamepanel-" + shortid}
+                        shortid={shortid}
+                        displayname={user.displayname}
                         isPrimary={isPrimary}
                         isInGame={isInGame}
                         cnt={cnt}
@@ -172,9 +172,9 @@ function GamePanelList(props) {
             } else if (layout == "compact") {
                 elems.push(
                     <CompactLayout
-                        key={"gamepanel-" + id}
-                        id={id}
-                        name={user.name}
+                        key={"gamepanel-" + shortid}
+                        shortid={shortid}
+                        displayname={user.displayname}
                         isPrimary={isPrimary}
                         isInGame={isInGame}
                         panelWidth={panelWidth}
@@ -252,7 +252,7 @@ function CompactLayout(props) {
                 {/* } */}
                 {/* <Box height="3rem" w="100%"></Box> */}
 
-                <GamePanel id={props.id} />
+                <GamePanel shortid={props.shortid} />
             </VStack>
         </Box>
     );
@@ -261,7 +261,7 @@ function CompactLayout(props) {
 function ExpandedLayout(props) {
     return (
         <VStack
-            // onClick={(e) => { onClickOverlay(e, props.id) }}
+            // onClick={(e) => { onClickOverlay(e, props.shortid) }}
             display={!props.isPrimary ? "none" : "flex"}
             spacing="2rem"
             w={"100%"}
@@ -270,7 +270,7 @@ function ExpandedLayout(props) {
             left={"0"}
             top={"0"}
         >
-            <GamePanel id={props.id} />
+            <GamePanel shortid={props.shortid} />
         </VStack>
     );
 }

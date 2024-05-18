@@ -1,30 +1,94 @@
 declare global {
     interface GameState {
-        state: { [key: string]: any };
-        players: { [key: string]: any };
-        teams: { [key: string]: any };
-        next: {
-            id: string | string[];
-            action?: string | string[] | any;
-        };
-        events: { [key: string]: any };
-        timer: { [key: string]: any };
-        room: { [key: string]: any };
+        state: State;
+        players: Players;
+        teams: Teams;
+        next: Next;
+        events: Events;
+        timer: Timer;
+        room: Room;
+    }
+
+    interface State {
+        [custom: string]: any;
+    }
+
+    interface Stats {
+        [abbreviation: string]: number | string;
+    }
+
+    interface Player {
+        shortid: string;
+        displayname: string;
+        portraitid: number;
+        countrycode: string;
+        rating: number;
+        rank: number;
+        score: number;
+        teamid?: string;
+        stats?: Stats;
+        [custom: string]: any;
+    }
+
+    interface Players {
+        [shortid: string]: Player;
+    }
+
+    interface Team {
+        name: string;
+        color: string;
+        order: number;
+        players: string[];
+        rank: number;
+        score: number;
+        [custom: string]: any;
+    }
+
+    interface Teams {
+        [teamid: string]: Team;
+    }
+
+    interface Next {
+        id: string | string[];
+        action?: string | string[] | any;
+    }
+
+    interface Room {
+        room_slug: string;
+        status: "waiting" | "pregame" | "starting" | "gamestart" | "gameover";
+        sequence: number;
+        starttime: number;
+        endtime: number;
+        updated: number;
+        isreplay?: boolean;
+    }
+
+    interface Timer {
+        set?: number;
+        sequence: number;
+        seconds?: number;
+        end?: number;
+    }
+
+    interface Events {
+        [eventName: string]: any;
+    }
+
+    interface User {
+        shortid: string;
+        displayname: string;
+        portraitid: number;
+        countrycode: string;
     }
 
     interface Action {
         type: string;
         payload: any;
-        user: {
-            shortid: string;
-            displayname: string;
-            portraitid: number;
-            countrycode: string;
-        };
+        user: User;
         timeleft: number;
         timeseq: number;
     }
-    // interface Global {
+
     var gamelog: (...msg: any[]) => void;
     var gameerror: (...msg: any[]) => void;
     var save: (gamestate: GameState) => void;
@@ -34,30 +98,15 @@ declare global {
     var killGame: () => void;
     var database: () => any;
     var ignore: () => void;
-    // }
 }
+
 class ACOSServer {
-    // let userActions: Action[];
-    // let originalState: GameState;
     gameState: GameState;
     currentAction: Action | null;
-    // let isNewGame: boolean;
     defaultSeconds: number;
     kickedPlayers: string[];
 
     init = () => {
-        // try {
-        //     userActions = JSON.parse(JSON.stringify(actions()));
-        // } catch (e) {
-        //     error("Failed to load actions");
-        //     return;
-        // }
-        // try {
-        //     originalState = JSON.parse(JSON.stringify(game()));
-        // } catch (e) {
-        //     error("Failed to load originalState");
-        //     return;
-        // }
         try {
             this.gameState = JSON.parse(JSON.stringify(game()));
         } catch (e) {
@@ -66,26 +115,10 @@ class ACOSServer {
         }
 
         this.currentAction = null;
-
-        // isNewGame = false;
-        // markedForDelete = false;
-        // defaultSeconds = 15;
-        // nextTimeLimit = -1;
         this.kickedPlayers = [];
     };
 
     on = (type: string, cb: (action: Action) => boolean): void => {
-        // if (type == 'newgame') {
-        //     //if (isNewGame) {
-        //     currentAction = actions[0];
-        //     if (currentAction.type == '')
-        //         cb(actions[0]);
-        //     isNewGame = false;
-        //     //}
-
-        //     return;
-        // }
-
         let userActions = actions();
         for (var i = 0; i < userActions.length; i++) {
             if (userActions[i].type == type) {
@@ -99,9 +132,9 @@ class ACOSServer {
         }
     };
 
-    // function ignore(): void {
-    //     ignore();
-    // }
+    ignore(): void {
+        ignore();
+    }
 
     setGame = (game: GameState): void => {
         for (var id in this.gameState.players) {
@@ -112,14 +145,14 @@ class ACOSServer {
     };
 
     commit = (): void => {
-        // if (kickedPlayers.length > 0)
-        //     gameState.kick = kickedPlayers;
-
         save(this.gameState);
     };
 
     gameover = (payload: any): void => {
-        this.event("gameover", payload);
+        this.events(
+            "gameover",
+            typeof payload === "undefined" ? true : payload
+        );
     };
 
     log = (...msg: any[]): void => {
@@ -133,19 +166,19 @@ class ACOSServer {
         this.kickedPlayers.push(id);
     };
 
-    // const random():number {
-    //     return random();
-    // }
+    random(): number {
+        return random();
+    }
 
     randomInt = (min, max): number => {
         min = Math.ceil(min);
         max = Math.floor(max);
-        return Math.floor(random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
+        return Math.floor(random() * (max - min) + min);
     };
 
-    // const database(): any {
-    //     return database();
-    // }
+    database(): any {
+        return database();
+    }
 
     action = (): Action | null => {
         return this.currentAction;
@@ -155,75 +188,86 @@ class ACOSServer {
         return this.gameState;
     };
 
-    room = (key: string, value: string | number): any => {
+    room(): Room;
+    room(key: string): any;
+    room(key: string, value: string | number): any;
+    room(key?: string, value?: string | number): any {
         if (typeof key === "undefined") return this.gameState.room;
         if (typeof value === "undefined") return this.gameState.room[key];
 
         this.gameState.room[key] = value;
         return value;
-    };
+    }
 
-    state = (key: string, value: string | number): any => {
+    state(): State;
+    state(key: string): any;
+    state(key: string, value: any): any;
+    state(key?: string, value?: any): any {
         if (typeof key === "undefined") return this.gameState.state;
         if (typeof value === "undefined") return this.gameState.state[key];
 
         this.gameState.state[key] = value;
         return value;
-    };
+    }
 
-    playerList = (): string[] => {
-        return Object.keys(this.gameState.players);
-    };
-    playerCount = (): number => {
-        return Object.keys(this.gameState.players).length;
-    };
+    players(): Players;
+    players(shortid: string): Player;
+    players(shortid: string, value: any): any;
+    players(shortid?: string, value?: any): any {
+        if (typeof shortid === "undefined") return this.gameState.players;
+        if (typeof value === "undefined")
+            return this.gameState.players[shortid];
 
-    players = (userid: string, value: any): any => {
-        if (typeof userid === "undefined") return this.gameState.players;
-        if (typeof value === "undefined") return this.gameState.players[userid];
-
-        this.gameState.players[userid] = value;
+        this.gameState.players[shortid] = value;
         return value;
-    };
+    }
 
-    teams = (teamid: string, value: any): any => {
+    stats(shortid: string, abbreviation: string): number | string;
+    stats(
+        shortid: string,
+        abbreviation: string,
+        value: number | string
+    ): number | string;
+    stats(
+        shortid: string,
+        abbreviation: string,
+        value?: number | string
+    ): number | string {
+        let player = this.players(shortid);
+        if (typeof value === "undefined") return player.stats[abbreviation];
+        player.stats[abbreviation] = value;
+        return player.stats[abbreviation];
+    }
+
+    playerList = (): string[] => Object.keys(this.gameState.players);
+    playerCount = (): number => Object.keys(this.gameState.players).length;
+
+    teams(): Teams;
+    teams(teamid: string): Team;
+    teams(teamid: string, value: any): any;
+    teams(teamid?: string, value?: any): any {
         if (typeof teamid === "undefined") return this.gameState.teams;
         if (typeof value === "undefined") return this.gameState.teams[teamid];
 
         this.gameState.teams[teamid] = value;
-    };
+    }
 
-    // rules(rule, value) {
-    //     if (typeof rule === 'undefined')
-    //         return gameState.rules;
-    //     if (typeof value === 'undefined')
-    //         return gameState.rules[rule];
-
-    //     gameState.rules[rule] = value;
-    // }
-
-    // prev(obj) {
-    //     if (typeof obj === 'object') {
-    //         gameState.prev = obj;
-    //     }
-    //     return gameState.prev;
-    // }
-
-    next = (obj: {
-        id: string | string[];
-    }): {
-        id: string | string[];
-    } => {
-        if (typeof obj === "object") {
-            this.gameState.next = obj;
+    next(): Next;
+    next(id: string, action: string | string[]): Next;
+    next(id?: string, action?: string | string[]): Next {
+        if (typeof id !== "undefined") {
+            this.gameState.next = { id, action };
         }
         return this.gameState.next;
-    };
+    }
+
+    timer(): Timer {
+        return this.gameState.timer;
+    }
 
     setTimelimit = (seconds: number): void => {
         seconds = seconds || 15;
-        if (!this.gameState.timer) this.gameState.timer = {};
-        this.gameState.timer.set = seconds; //Math.min(60, Math.max(10, seconds));
+        this.gameState.timer.set = seconds;
     };
 
     reachedTimelimit = (action: Action): boolean => {
@@ -231,44 +275,21 @@ class ACOSServer {
         return action.timeleft <= 0;
     };
 
-    event = (name: string, payload: any): any | void => {
-        if (!payload) return this.gameState.events[name];
+    events(): Events;
+    events(name: string): any;
+    events(name: string, payload: any): Events | any;
+    events(name?: string, payload?: any): Events | any {
+        if (typeof name === "undefined") return this.gameState.events as Events;
+        if (typeof payload === "undefined")
+            return this.gameState.events[name] as any;
 
-        this.gameState.events[name] = payload || {};
-    };
+        this.gameState.events[name] = payload;
+        return this.gameState.events[name] as any;
+    }
 
     clearEvents = (): void => {
         this.gameState.events = {};
     };
-    // events(name) {
-    //     if (typeof name === 'undefined')
-    //         return gameState.events;
-    //     gameState.events.push(name);
-    // }
 }
-// export default {
-//     log: log,
-//     error: error,
-//     init: init,
-//     on: on,
-//     setGame: setGame,
-//     commit: commit,
-//     gameover: gameover,
-//     kickPlayer: kickPlayer,
-//     randomInt: randomInt,
-//     action: action,
-//     gamestate: gamestate,
-//     room: room,
-//     state: state,
-//     playerList: playerList,
-//     playerCount: playerCount,
-//     players: players,
-//     teams: teams,
-//     next: next,
-//     setTimelimit: setTimelimit,
-//     reachedTimelimit: reachedTimelimit,
-//     event: event,
-//     clearEvents: clearEvents,
-// };
 
 export default new ACOSServer();

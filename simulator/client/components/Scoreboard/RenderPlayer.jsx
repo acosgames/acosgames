@@ -30,7 +30,7 @@ function IsNextIndicator({ gamepanelid, shortid }) {
 export default function RenderPlayer({
     gamepanelid,
     shortid,
-    name,
+    displayname,
     portraitid,
     rating,
     countrycode,
@@ -43,7 +43,7 @@ export default function RenderPlayer({
     let filename = `assorted-${portraitid || 1}-medium.webp`;
     return (
         <HStackMotion
-            key={"motion-" + name}
+            key={"motion-" + displayname}
             position="relative"
             bgColor="gray.950"
             w="100%"
@@ -101,7 +101,7 @@ export default function RenderPlayer({
                             textOverflow={"ellipsis"}
                             py="0.5rem"
                         >
-                            {name}
+                            {displayname}
                         </Text>
                         <Image
                             src={`https://assets.acos.games/images/country/US.svg`}

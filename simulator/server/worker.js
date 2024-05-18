@@ -244,6 +244,7 @@ class FSGWorker {
         globalGame.next = {};
         globalGame.teams = {};
         globalGame.players = {};
+        globalGame.timer = {};
         if (gameSettings) {
             for (const team of gameSettings.teams) {
                 globalGame.teams[team.team_slug] = {
@@ -262,7 +263,7 @@ class FSGWorker {
         // for (var id in players) {
         //     let player = players[id];
         //     newPlayers[id] = {
-        //         name: player.name
+        //         name: player.displayname
         //     }
         // }
         // globalGame.players = newPlayers;
@@ -307,8 +308,8 @@ class FSGWorker {
 
             //pre process actions
             if (action.type == "join") {
-                let shortid = action.user.id;
-                let username = action.user.name;
+                let shortid = action.user.shortid;
+                let username = action.user.displayname;
 
                 if (!shortid) {
                     console.error("Invalid player: " + shortid);
@@ -328,8 +329,8 @@ class FSGWorker {
                 //add player into the game
                 if (!(shortid in globalGame.players))
                     globalGame.players[shortid] = {};
-                globalGame.players[shortid].name = username;
-                globalGame.players[shortid].id = shortid;
+                globalGame.players[shortid].displayname = username;
+                globalGame.players[shortid].shortid = shortid;
                 globalGame.players[shortid].portraitid =
                     this.generatePortrait();
 
@@ -344,13 +345,13 @@ class FSGWorker {
                     }
                 }
             } else if (action.type == "leave") {
-                let shortid = action.user.id;
+                let shortid = action.user.shortid;
                 globalGame.players[shortid].ingame = false;
             } else if (action.type == "reset" || action.type == "newgame") {
                 this.makeGame(gameSettings);
             } else if (action.type == "ready") {
                 if (room.status != "pregame") return;
-                let shortid = action.user.id;
+                let shortid = action.user.shortid;
                 if (
                     typeof action.payload === "boolean" ||
                     typeof action.payload === "undefined"
@@ -410,7 +411,7 @@ class FSGWorker {
             else {
                 //post process actions
                 if (action.type == "join") {
-                    let shortid = action.user.id;
+                    let shortid = action.user.shortid;
 
                     if (
                         !globalResult?.events?.join ||
@@ -422,7 +423,7 @@ class FSGWorker {
                     globalResult.events.join.push(shortid);
                 }
                 if (action.type == "leave") {
-                    let shortid = action.user.id;
+                    let shortid = action.user.shortid;
 
                     if (!globalResult?.events?.leave) {
                         if (!globalResult?.events) globalResult.events = {};
@@ -467,26 +468,30 @@ class FSGWorker {
     processPlayerRatings(players, teams) {
         //add saved ratings to players
         let playerRatings = {};
-        for (var id in players) {
-            let player = players[id];
+        for (var shortid in players) {
+            let player = players[shortid];
 
-            if (!(id in globalRatings)) {
+            if (!(shortid in globalRatings)) {
                 continue;
             }
             if (typeof player.rank === "undefined") {
                 console.error(
-                    "Player [" + id + "] (" + player.name + ") is missing rank"
+                    "Player [" +
+                        shortid +
+                        "] (" +
+                        player.displayname +
+                        ") is missing rank"
                 );
                 return;
             }
             // if ((typeof player.score === 'undefined')) {
-            //     console.error("Player [" + id + "] (" + player.name + ") is missing score")
+            //     console.error("Player [" + id + "] (" + player.displayname + ") is missing score")
             //     return;
             // }
-            let playerRating = globalRatings[id];
+            let playerRating = globalRatings[shortid];
             playerRating.rank = player.rank;
             //playerRating.score = player.score;
-            playerRatings[id] = playerRating;
+            playerRatings[shortid] = playerRating;
         }
 
         console.log("[ACOS] Before Rating: ", playerRatings);
@@ -495,13 +500,13 @@ class FSGWorker {
         rank.calculateRanks(playerRatings, teams);
 
         //update player ratings
-        for (var id in players) {
-            let player = players[id];
+        for (var shortid in players) {
+            let player = players[shortid];
 
-            if (!(id in playerRatings)) {
+            if (!(shortid in playerRatings)) {
                 continue;
             }
-            let rating = playerRatings[id];
+            let rating = playerRatings[shortid];
             player.rating = rating.rating;
         }
 

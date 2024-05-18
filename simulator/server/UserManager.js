@@ -9,29 +9,30 @@ class UserManager {
         this.fakePlayerCounter = 0;
     }
 
-    register(socket, name, parentid) {
+    register(socket, displayname, parentid) {
         let shortid = null;
-        if (name in this.users) {
-            shortid = this.users[name].shortid;
+        if (displayname in this.users) {
+            shortid = this.users[displayname].shortid;
         } else {
             shortid = nanoid(6);
         }
 
-        this.users[name] = {
+        console.log("Registering...", shortid, displayname);
+        this.users[displayname] = {
             shortid,
-            name,
+            displayname,
             socket,
             socketid: socket.id,
             parentid,
         };
 
-        return this.users[name];
+        return this.users[displayname];
     }
 
     remove(socketid) {
         let user = this.getUserBySocketId(socketid);
         if (user) {
-            delete this.users[user.name];
+            delete this.users[user.displayname];
         }
     }
 
@@ -47,18 +48,18 @@ class UserManager {
         // let offset = Object.keys(this.allFakePlayers).length;
 
         for (let i = 1; i <= count; i++) {
-            let id = nanoid(6);
+            let shortid = nanoid(6);
             //avoid duplicate collisions
-            while (id in this.allFakePlayers) {
-                id = nanoid(6);
+            while (shortid in this.allFakePlayers) {
+                shortid = nanoid(6);
             }
             let fakeplayer = {
-                id,
-                name: "Player_" + (this.fakePlayerCounter + i),
+                shortid,
+                displayname: "Player_" + (this.fakePlayerCounter + i),
                 clientid,
             };
-            this.allFakePlayers[id] = fakeplayer;
-            this.fakePlayerNames[fakeplayer.name] = fakeplayer;
+            this.allFakePlayers[shortid] = fakeplayer;
+            this.fakePlayerNames[fakeplayer.displayname] = fakeplayer;
 
             fakeplayers.push(fakeplayer);
 
@@ -87,8 +88,8 @@ class UserManager {
         let fakePlayer = this.allFakePlayers[shortid];
         if (!fakePlayer) return;
         return {
-            id: fakePlayer.id,
-            name: fakePlayer.name,
+            shortid: fakePlayer.shortid,
+            displayname: fakePlayer.displayname,
             clientid: fakePlayer.clientid,
         };
     }
@@ -97,14 +98,14 @@ class UserManager {
         if (shortid in this.allFakePlayers) {
             let fakeplayer = this.allFakePlayers[shortid];
             delete this.allFakePlayers[shortid];
-            delete this.fakePlayerNames[fakeplayer.name];
+            delete this.fakePlayerNames[fakeplayer.displayname];
         }
     }
 
-    setSpectator(id) {
-        let user = this.getUserByShortid(id);
-        if (!user && this.allFakePlayers[id]) {
-            user = this.allFakePlayers[id];
+    setSpectator(shortid) {
+        let user = this.getUserByShortid(shortid);
+        if (!user && this.allFakePlayers[shortid]) {
+            user = this.allFakePlayers[shortid];
         }
 
         if (user) {
@@ -124,7 +125,7 @@ class UserManager {
     }
 
     actionUser(user) {
-        return { id: user.shortid, name: user.name };
+        return { shortid: user.shortid, displayname: user.displayname };
     }
     // setSocket(name, socket) {
     //     if (name in this.users)

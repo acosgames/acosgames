@@ -1,12 +1,14 @@
 #!/usr/bin/env node
+// const kill = require("kill-port");
 const shelljs = require("shelljs");
 const path = require("path");
 let { spawn } = require("child_process");
 
 const fs = require("fs");
-
 const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
+const terminate = require("terminate");
+const killPort = require("kill-port");
 const argv = yargs(hideBin(process.argv)).argv;
 
 var oldSpawn = spawn;
@@ -31,29 +33,69 @@ const acosClientType = argv.client || "vite";
 const acosCommand = argv._[0]; // getCommand(process.argv);
 let serverApp = null;
 
-function onExit() {
-    console.log("[ACOS] SIGINT");
+function terminateAsync(port) {
+    return new Promise((rs, rj) => {
+        killPort(port, "tcp")
+            .then((obj) => {
+                // console.log(obj);
+                rs(true);
+            })
+            .catch((e) => {
+                // console.error(e);
+                rj(e);
+            });
+        // terminate(pid, (err) => {
+        //     if (err) {
+        //         console.error("terminate error:", err);
+        //         rj(err);
+        //     } else {
+        //         console.log("Killed pid");
+        //         rs(true);
+        //     }
+        // });
+    });
+}
+async function onExit(e) {
+    // console.log("[ACOS] SIGINT: ", e);
 
     // if (serverApp) {
     //     serverApp.send('quit');
     // }
-    if (process.platform == "win32") {
-        shelljs.exec("taskkill /t", {
-            async: true,
-        });
-    }
+    // if (process.platform == "win32") {
+    //     shelljs.exec("taskkill /t", {
+    //         async: true,
+    //     });
+    // }
     for (var i = 0; i < children.length; i++) {
         let child = children[i];
-        if (child) {
-            if (child.send) {
-                child.send("quit");
+        if (child.processed) continue;
+
+        let process = child?.process;
+        if (process) {
+            child.processed = true;
+            // console.log("\n[ACOS] Killing child process: ", i);
+            if (child.name == "vite") {
+                // console.log("terminating: ", process.pid);
+                process.kill();
+                await terminateAsync(3250);
+            } else {
+                // if (process.send) {
+                //     process.send("quit");
+                //     console.log("sent quit");
+                // }
+                process.kill();
             }
-            child.kill();
-            console.log("[ACOS] Killing child process: ", i);
         }
     }
 
-    process.exit();
+    // try {
+    //     let response = await kill(3250, "tcp");
+    //     console.log(response);
+    // } catch (e) {
+    //     console.error(e);
+    // }
+
+    process.exit(0);
 }
 process.on("SIGINT", onExit);
 process.on("SIGQUIT", onExit);
@@ -62,7 +104,7 @@ process.on("SIGUSR1", onExit);
 process.on("SIGUSR2", onExit);
 process.on("uncaughtException", onExit);
 
-function runScript(dirPath, command, callback, options) {
+function runScript(name, dirPath, command, callback, options) {
     options = (options && Object.assign({ async: true }, options)) || {
         async: true,
     };
@@ -93,7 +135,7 @@ function runScript(dirPath, command, callback, options) {
     });
 
     child.on("close", (code, signal) => {
-        console.error("[SIMULATOR CLOSING]", code, signal);
+        console.error("[SIMULATOR SHUTTING DOWN]");
         callback(null, { code, signal });
         // child.exit();
     });
@@ -102,7 +144,8 @@ function runScript(dirPath, command, callback, options) {
         callback("disconnected");
     });
 
-    children.push(child);
+    // console.log(child.stdin);
+    children.push({ name, process: child });
     // // keep track of whether callback has been invoked to prevent multiple invocations
     // var invoked = false;
     // args = args || [];
@@ -158,6 +201,7 @@ function runServer(isDev) {
 
         // rs(serverApp);
         runScript(
+            "nodemon",
             cd,
             cmd,
             async (err, sigint) => {
@@ -212,7 +256,7 @@ function runClient(isDev) {
         const cmd = `cd ./simulator/client && npm start`;
         // console.log("STARTING ACOSGAMES SIMULATOR >>>>>>>\n", cmd);
 
-        runScript(cd, cmd, async (err, sigint) => {
+        runScript("vite", cd, cmd, async (err, sigint) => {
             if (err) {
                 console.error(err);
                 rj(err);
@@ -267,6 +311,7 @@ function runBrowserSync(isDev) {
         // console.log("Running command: ", cmd);
         // console.log("Running BrowserSync: ", cmd);
         runScript(
+            "browserSync",
             cd,
             cmd,
             (err) => {
@@ -291,7 +336,7 @@ function runBrowserOpen() {
         let cmd = `npx wait-on ${url} && start ${url}`;
 
         // console.log("Running BrowserSync: ", cmd);
-        runScript(cd, cmd, (err) => {
+        runScript("browserOpen", cd, cmd, (err) => {
             if (err) {
                 console.error(err);
                 rj(err);
@@ -315,7 +360,7 @@ function runBrowserOpenDevTools() {
         // require('child_process').exec(cmd);
 
         // console.log("Running BrowserSync: ", cmd);
-        runScript(cd, cmd, (err) => {
+        runScript("browserDevTools", cd, cmd, (err) => {
             if (err) {
                 console.error(err);
                 rj(err);
@@ -342,7 +387,7 @@ function runDeploy(isDev) {
             " --settings=" +
             gameSettings;
         // console.log("Running Deploy: ", cmd + ' ' + argsStr);
-        runScript(cd, cmd + " " + argsStr, (err) => {
+        runScript("deploy", cd, cmd + " " + argsStr, (err) => {
             if (err) {
                 console.error(err);
                 rj(err);

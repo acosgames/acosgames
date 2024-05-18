@@ -67,7 +67,7 @@ export function DisplayGamePlayers(props) {
         for (const player of playerList) {
             let teaminfo = gameSettings?.teams
                 ? gameSettings.teams.find(
-                      (t) => t.team_slug == playerTeams[player.id]
+                      (t) => t.team_slug == playerTeams[player.shortid]
                   )
                 : null;
             player.teamColor = "rgba(0,0,0,0)";
@@ -87,16 +87,16 @@ export function DisplayGamePlayers(props) {
             if (a?.rank && b?.rank) return b.rank - a.rank;
             if (a?.score && b?.score) return b.score - a.score;
 
-            return a.name.localeCompare(b.name);
+            return a.displayname.localeCompare(b.displayname);
         });
 
         let elems = [];
         for (const player of playerList) {
-            let isUserNext = GameStateService.validateNextUser(player.id);
+            let isUserNext = GameStateService.validateNextUser(player.shortid);
 
             elems.push(
                 <Tr
-                    key={"ingameplayers-" + player.id}
+                    key={"ingameplayers-" + player.shortid}
                     //pb="2rem"
                     px="1rem"
                     bgColor={"gray.900"}
@@ -131,8 +131,8 @@ export function DisplayGamePlayers(props) {
                                 </Box>
                             </Tooltip>
 
-                            <Tooltip label={player.id} placement="top">
-                                <Text>{player.name}</Text>
+                            <Tooltip label={player.shortid} placement="top">
+                                <Text>{player.displayname}</Text>
                             </Tooltip>
                         </HStack>
                     </Td>
@@ -149,7 +149,7 @@ export function DisplayGamePlayers(props) {
                     </Td>
                     <Td px="0" py="1rem">
                         <DisplayUserActions
-                            id={player.id}
+                            shortid={player.shortid}
                             from={"playerlist"}
                         />
                     </Td>
@@ -244,7 +244,7 @@ export function JoinButton(props) {
                     onClick={() => {
                         if (props.isFakePlayer) {
                             let fakePlayer = GamePanelService.getUserById(
-                                props.id
+                                props.shortid
                             );
                             joinFakePlayer(fakePlayer);
                             return;
@@ -276,7 +276,7 @@ export function JoinButton(props) {
                                 return (
                                     <div
                                         key={
-                                            props.id +
+                                            props.shortid +
                                             "-" +
                                             props.from +
                                             "team-" +
@@ -289,7 +289,7 @@ export function JoinButton(props) {
                                     borderLeft={"5px solid"}
                                     borderLeftColor={t.color}
                                     key={
-                                        props.id +
+                                        props.shortid +
                                         "-" +
                                         props.from +
                                         "team-" +
@@ -300,7 +300,7 @@ export function JoinButton(props) {
                                         if (props.isFakePlayer) {
                                             let fakePlayer =
                                                 GamePanelService.getUserById(
-                                                    props.id
+                                                    props.shortid
                                                 );
                                             joinFakePlayer(
                                                 fakePlayer,
@@ -326,10 +326,10 @@ export function DisplayUserActions(props) {
     let gameState = useBucket(btGameState);
     let gameSettings = useBucket(btGameSettings);
 
-    let user = GamePanelService.getUserById(props.id);
+    let user = GamePanelService.getUserById(props.shortid);
     let isFakePlayer = "clientid" in user;
 
-    let player = GameStateService.getPlayer(props.id);
+    let player = GameStateService.getPlayer(props.shortid);
     let isInRoom = player != null;
     let hasVacancy = GameStateService.hasVacancy();
 
@@ -344,7 +344,7 @@ export function DisplayUserActions(props) {
         <HStack spacing="0.25rem">
             <JoinButton
                 from={props.from}
-                id={props.id}
+                shortid={props.shortid}
                 isFakePlayer={isFakePlayer}
                 isJoinAllowed={isJoinAllowed}
             />
@@ -356,7 +356,9 @@ export function DisplayUserActions(props) {
                 bgColor={"gray.500"}
                 onClick={(e) => {
                     if (isFakePlayer) {
-                        let fakePlayer = GamePanelService.getUserById(props.id);
+                        let fakePlayer = GamePanelService.getUserById(
+                            props.shortid
+                        );
                         leaveFakePlayer(fakePlayer);
                         return false;
                     }
@@ -408,7 +410,7 @@ export function DisplayMyPlayers(props) {
         for (const player of playerList) {
             let teaminfo = gameSettings?.teams
                 ? gameSettings.teams.find(
-                      (t) => t.team_slug == playerTeams[player.id]
+                      (t) => t.team_slug == playerTeams[player.shortid]
                   )
                 : null;
             player.teamColor = "rgba(0,0,0,0)";
@@ -422,15 +424,15 @@ export function DisplayMyPlayers(props) {
 
         for (const p of myplayers) {
             // let fakePlayer = fakePlayers[shortid];
-            if (!p || !p.id) continue;
+            if (!p || !p.shortid) continue;
 
-            let isInGame = p.id in players;
+            let isInGame = p.shortid in players;
             // if (isInGame)
             //     continue;
 
             gamepanels = btGamepanels.get();
-            let gamepanel = gamepanels[p.id];
-            let isUserNext = GameStateService.validateNextUser(p.id);
+            let gamepanel = gamepanels[p.shortid];
+            let isUserNext = GameStateService.validateNextUser(p.shortid);
             primaryGamePanel = btPrimaryGamePanel.get();
             let color = "white";
             if (!isInGame || !isUserNext) color = "#aaa";
@@ -440,14 +442,14 @@ export function DisplayMyPlayers(props) {
                     bgColor={
                         gamepanel == primaryGamePanel ? "gray.800" : "gray.900"
                     }
-                    key={"myplayers-" + p.id}
+                    key={"myplayers-" + p.shortid}
                 >
                     <Td
                         cursor="pointer"
                         borderBottomColor="gray.975"
                         onClick={() => {
                             let gps = btGamepanels.get();
-                            let gp = gps[p.id];
+                            let gp = gps[p.shortid];
                             if (gp) {
                                 primaryGamePanel = btPrimaryGamePanel.get();
 
@@ -489,16 +491,16 @@ export function DisplayMyPlayers(props) {
                                     />
                                 </Text>
                             </Tooltip>
-                            <Tooltip label={p.id} placement="top">
+                            <Tooltip label={p.shortid} placement="top">
                                 <Text color={color} fontSize="1.4rem">
-                                    {p.name}
+                                    {p.displayname}
                                 </Text>
                             </Tooltip>
                         </HStack>
                     </Td>
                     <Td borderBottomColor="gray.975">
                         <HStack justifyContent={"flex-end"} alignItems="right">
-                            <DisplayUserActions id={p.id} />
+                            <DisplayUserActions shortid={p.shortid} />
 
                             {/* <IconButton
                         fontSize={'2rem'}

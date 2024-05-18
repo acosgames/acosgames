@@ -58,7 +58,7 @@ function GamePanel(props) {
 
     return (
         <Box w="100%" h="100%" position="relative">
-            <GameIFrame id={props.id} />
+            <GameIFrame shortid={props.shortid} />
         </Box>
     );
 }
@@ -146,7 +146,7 @@ function GameIFrame(props) {
         bgWidth = steps * resow;
         bgHeight = steps * resoh;
 
-        // let isUserNext = GameStateService.validateNextUser(props.id);
+        // let isUserNext = GameStateService.validateNextUser(props.shortid);
         let frameBorder = "";
         //  isUserNext
         //     ? "border: 2px solid var(--chakra-colors-brand-50)"
@@ -216,7 +216,7 @@ function GameIFrame(props) {
         document.addEventListener("fullscreenchange", onFullScreenChange);
 
         let gamepanels = btGamepanels.get();
-        let gamepanel = gamepanels[props.id];
+        let gamepanel = gamepanels[props.shortid];
         if (gamepanel) {
             gamepanel.iframe = iframeRef;
         }
@@ -243,9 +243,9 @@ function GameIFrame(props) {
     let lastMessage = btGameState.get();
     let players = lastMessage?.players || {};
 
-    let isSpectator = !(props.id in players);
+    let isSpectator = !(props.shortid in players);
 
-    // let user = GamePanelService.getUserById(props.id);
+    // let user = GamePanelService.getUserById(props.shortid);
 
     return (
         <VStack
@@ -294,7 +294,7 @@ function GameIFrame(props) {
                         ref={iframeRef}
                         onLoad={() => {
                             let gamepanels = btGamepanels.get();
-                            let gamepanel = gamepanels[props.id];
+                            let gamepanel = gamepanels[props.shortid];
 
                             gamepanel.iframe = iframeRef;
                             iframeRef.current.style.visibility = "visible";
@@ -305,7 +305,7 @@ function GameIFrame(props) {
                             onResize();
 
                             setTimeout(() => {
-                                GameStateService.updateGamePanel(props.id);
+                                GameStateService.updateGamePanel(props.shortid);
                             }, 100);
                         }}
                         src={
@@ -323,7 +323,7 @@ function GameIFrame(props) {
                         height="3rem"
                         width="100%"
                     >
-                        <DisplayUserInfo id={props.id} iframeRef={iframeRef} />
+                        <DisplayUserInfo shortid={props.shortid} iframeRef={iframeRef} />
                     </HStack> */}
                 </Box>
             </VStack>
@@ -362,13 +362,13 @@ function DisplayUserInfo(props) {
 
     let isInGame = false;
     let players = lastMessage?.players;
-    if (players && props.id in players) {
+    if (players && props.shortid in players) {
         isInGame = true;
     }
 
-    let user = GamePanelService.getUserById(props.id);
+    let user = GamePanelService.getUserById(props.shortid);
 
-    let isUserNext = GameStateService.validateNextUser(props.id);
+    let isUserNext = GameStateService.validateNextUser(props.shortid);
 
     let color = "gray.400";
     if (isInGame) {
@@ -404,7 +404,7 @@ function DisplayUserInfo(props) {
                     let fakePlayers = btFakePlayers.get();
                     let fakePlayerList = Object.keys(fakePlayers || {}) || [];
                     let gamepanels = btGamepanels.get();
-                    let gamepanel = gamepanels[props.id];
+                    let gamepanel = gamepanels[props.shortid];
                     if (gamepanel) {
                         let primaryGamePanel = btPrimaryGamePanel.get();
 
@@ -442,7 +442,7 @@ function DisplayUserInfo(props) {
                         />
                     </Text>
                 </Tooltip>
-                <Tooltip label={user.id} placement="bottom">
+                <Tooltip label={user.shortid} placement="bottom">
                     <Text
                         // lineHeight={"3.4rem"}
                         // height="3rem"
@@ -464,7 +464,10 @@ function DisplayUserInfo(props) {
                 transform="translateY(-50%)"
                 display={fakePlayerList.length < 8 ? "block" : "none"}
             >
-                <DisplayUserActions id={props.id} from={"gamepanel"} />
+                <DisplayUserActions
+                    shortid={props.shortid}
+                    from={"gamepanel"}
+                />
             </Box>
         </HStack>
     );

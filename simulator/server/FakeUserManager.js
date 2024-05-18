@@ -1,10 +1,5 @@
-
 class FakePlayerManager {
-    constructor() {
-
-    }
-
-
+    constructor() {}
 }
 
 module.exports = new FakePlayerManager();

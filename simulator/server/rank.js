@@ -1,14 +1,17 @@
-var { rating, rate, ordinal } = require('openskill');
+var { rating, rate, ordinal } = require("openskill");
 
 class Rank {
-    constructor() { }
+    constructor() {}
 
     isObject(x) {
-        return x != null && (typeof x === 'object' || typeof x === 'function') && !Array.isArray(x);
+        return (
+            x != null &&
+            (typeof x === "object" || typeof x === "function") &&
+            !Array.isArray(x)
+        );
     }
 
     calculateRanks(players, teams) {
-
         if (this.isObject(teams) && Object.keys(teams).length > 0)
             return this.calculateTeams(players, teams);
 
@@ -16,31 +19,26 @@ class Rank {
     }
 
     calculateTeams(players, teams) {
-
         let teamRatingGroup = [];
         let teamPlayerIdsGroup = [];
         let teamRanks = [];
         let teamScores = [];
 
-        if (!players)
-            return false;
+        if (!players) return false;
 
         try {
-
             for (var teamid in teams) {
-
-                //teams must have a players array list that holds the ids of players on this team 
+                //teams must have a players array list that holds the ids of players on this team
                 let team = teams[teamid];
                 if (!team || !team.players || !Array.isArray(team.players))
                     return this.calculateFFA(players);
-
 
                 //move players into an array list
                 let playerList = [];
                 for (var i = 0; i < team.players.length; i++) {
                     let playerid = team.players[i];
                     let player = players[playerid];
-                    player.id = playerid;
+                    player.shortid = playerid;
                     playerList.push(player);
                 }
 
@@ -54,16 +52,19 @@ class Rank {
                         return bscore - ascore;
                     }
                     return arank - brank;
-                })
+                });
 
                 //build the player ratings required by OpenSkill
                 let teamRatings = [];
                 let teamIds = [];
                 for (var i = 0; i < playerList.length; i++) {
                     let player = playerList[i];
-                    let playerRating = rating({ mu: player.mu, sigma: player.sigma })
+                    let playerRating = rating({
+                        mu: player.mu,
+                        sigma: player.sigma,
+                    });
                     teamRatings.push(playerRating);
-                    teamIds.push(player.id);
+                    teamIds.push(player.shortid);
                 }
 
                 //move the ratings and ids into the team group
@@ -73,24 +74,19 @@ class Rank {
                 //capture the team rank or score for choosing the winning team
                 if (Number.isInteger(team.rank)) {
                     teamRanks.push(team.rank);
-                }
-                else if (Number.isInteger(team.score)) {
+                } else if (Number.isInteger(team.score)) {
                     teamScores.push(team.score);
-                }
-                else {
+                } else {
                     //no rank or score exists, reject and fallback to FFA
                     return this.calculateFFA(players);
                 }
             }
 
-
-            //calculate the results 
+            //calculate the results
             let results = null;
             if (teamRanks.length > teamScores.length)
                 results = rate(teamPlayerIdsGroup, { rank: teamRanks });
-            else
-                results = rate(teamPlayerIdsGroup, { score: teamScores });
-
+            else results = rate(teamPlayerIdsGroup, { score: teamScores });
 
             //update player ratings for saving to storage
             for (var i = 0; i < teamPlayerIdsGroup.length; i++) {
@@ -106,13 +102,11 @@ class Rank {
             }
 
             return true;
-        }
-        catch (e) {
+        } catch (e) {
             console.error(e);
             return false;
         }
     }
-
 
     calculateFFA(players) {
         let rank = [];
@@ -120,23 +114,24 @@ class Rank {
         let ratings = [];
         let teams = [];
 
-        if (!players)
-            return false;
+        if (!players) return false;
 
         try {
             //create the arrays required by openskill library
             //sync teams and players list to match with the ratings list
             for (var id in players) {
                 let player = players[id];
-                let playerRating = rating({ mu: player.mu, sigma: player.sigma });
+                let playerRating = rating({
+                    mu: player.mu,
+                    sigma: player.sigma,
+                });
                 ratings.push([playerRating]);
                 teams.push([id]);
                 rank.push(player.rank);
-                if (player.score)
-                    score.push(player.score);
+                if (player.score) score.push(player.score);
             }
 
-            //calculate the results 
+            //calculate the results
             let results = null;
             if (score.length != rank.length) {
                 results = rate(ratings, { rank });
@@ -158,8 +153,7 @@ class Rank {
             }
 
             return true;
-        }
-        catch (e) {
+        } catch (e) {
             console.error(e);
             return false;
         }

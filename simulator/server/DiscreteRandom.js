@@ -1,4 +1,4 @@
-const seedrandom = require('seedrandom');
+const seedrandom = require("seedrandom");
 
 class DiscreteRandom {
     constructor() {
@@ -70,7 +70,6 @@ class DiscreteRandom {
     //         return (t >>> 0) / 4294967296;
     //     }
     // }
-
 }
 
 module.exports = new DiscreteRandom();

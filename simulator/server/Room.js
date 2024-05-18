@@ -256,11 +256,14 @@ class Room {
 
     removeSpectator(user) {
         if (Array.isArray(this.spectators))
-            this.spectators = this.spectators.filter((u) => u.id != user.id);
+            this.spectators = this.spectators.filter(
+                (u) => u.shortid != user.shortid
+            );
     }
 
     addSpectator(user) {
-        if (!this.spectators.includes(user.id)) this.spectators.push(user.id);
+        if (!this.spectators.includes(user.shortid))
+            this.spectators.push(user.shortid);
     }
 
     setSettings(settings) {

@@ -37,7 +37,7 @@ const defaultGameSettings = {}; // { minplayers: 1, maxplayers: 1, minteams: 0, 
 //--------------------------------------------------
 //WebSockets Connection / Management
 //--------------------------------------------------
-export function connect(username) {
+export function connect(displayname) {
     // note.textContent = 'Status: connecting...';
     let socket = btSocket.get();
 
@@ -46,9 +46,9 @@ export function connect(username) {
         return;
     }
 
-    username = username || "Player " + Math.floor(Math.random() * 1000);
+    displayname = displayname || "Player " + Math.floor(Math.random() * 1000);
 
-    btUsername.set(username);
+    btUsername.set(displayname);
 
     let host = window.location.host;
     console.log(host);
@@ -56,7 +56,7 @@ export function connect(username) {
         // jsonp: false,
         transports: ["websocket"],
         // upgrade: true,
-        query: "username=" + username,
+        query: "displayname=" + displayname,
     });
 
     // Global events are bound against socket
@@ -147,7 +147,7 @@ const onConnected = (message) => {
         btSocketUser.set(socketUser);
         btWebsocketStatus.set("connected");
 
-        GamePanelService.createGamePanel(socketUser.id);
+        GamePanelService.createGamePanel(socketUser.shortid);
 
         setTimeout(() => {
             ping();
@@ -211,7 +211,7 @@ const onDisconnect = (e) => {
         btWebsocketStatus.set("disconnected");
         btGameStatus.set("none");
         let socket = btSocket.get();
-        console.log(socket.id + " disconnect", e, socket.io.engine);
+        console.log(socket.shortid + " disconnect", e, socket.io.engine);
     } catch (e) {
         console.error(e);
     }

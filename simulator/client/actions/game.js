@@ -66,7 +66,10 @@ export function updateTimeleft() {
 
 export function leaveGame(message) {
     let socketUser = btSocketUser.get();
-    let user = { id: socketUser.id, name: socketUser.name };
+    let user = {
+        shortid: socketUser.shortid,
+        displayname: socketUser.displayname,
+    };
     wsSend("action", { type: "leave", user });
     btGameStatus.set("none");
 }
@@ -85,7 +88,11 @@ export function replayJump(index) {
 
 export function joinGame(team_slug) {
     let socketUser = btSocketUser.get();
-    let user = { id: socketUser.id, name: socketUser.name, team_slug };
+    let user = {
+        shortid: socketUser.shortid,
+        displayname: socketUser.displayname,
+        team_slug,
+    };
     wsSend("action", { type: "join", user });
 }
 
@@ -95,7 +102,10 @@ export function playerReady(user) {
 
 export function startGame(message) {
     let socketUser = btSocketUser.get();
-    let user = { id: socketUser.id, name: socketUser.name };
+    let user = {
+        shortid: socketUser.shortid,
+        displayname: socketUser.displayname,
+    };
     wsSend("action", { type: "gamestart", user });
 }
 
@@ -117,7 +127,10 @@ export async function autoJoin() {
 }
 export async function newGame(message) {
     let socketUser = btSocketUser.get();
-    let user = { id: socketUser.id, name: socketUser.name };
+    let user = {
+        shortid: socketUser.shortid,
+        displayname: socketUser.displayname,
+    };
     wsSend("action", { type: "newgame", user });
     btGameStatus.set("none");
 
@@ -129,27 +142,42 @@ export async function newGame(message) {
 
 export function skip(message) {
     let socketUser = btSocketUser.get();
-    let user = { id: socketUser.id, name: socketUser.name };
+    let user = {
+        shortid: socketUser.shortid,
+        displayname: socketUser.displayname,
+    };
     wsSend("action", { type: "skip", user });
 }
 
 export function spawnFakePlayers(message) {
     let socketUser = btSocketUser.get();
-    let user = { id: socketUser.id, name: socketUser.name };
+    let user = {
+        shortid: socketUser.shortid,
+        displayname: socketUser.displayname,
+    };
     wsSend("fakeplayer", { type: "create", user, payload: 1 });
+
+    let autojoin = btAutoJoin.get();
+    if (autojoin) {
+        autoJoin();
+    }
 }
 
 export function joinFakePlayer(fakePlayer, team_slug) {
-    let user = { id: fakePlayer.id, name: fakePlayer.name, team_slug };
+    let user = {
+        shortid: fakePlayer.shortid,
+        displayname: fakePlayer.displayname,
+        team_slug,
+    };
     wsSend("action", { type: "join", user });
 }
 
 export function leaveFakePlayer(fakePlayer) {
     let socketUser = btSocketUser.get();
     let user = {
-        id: fakePlayer.id,
-        name: fakePlayer.name,
-        clientid: socketUser.id,
+        shortid: fakePlayer.shortid,
+        displayname: fakePlayer.displayname,
+        clientid: socketUser.shortid,
     };
     wsSend("action", { type: "leave", user });
 }
@@ -157,9 +185,9 @@ export function leaveFakePlayer(fakePlayer) {
 export function removeFakePlayer(fakePlayer) {
     let socketUser = btSocketUser.get();
     let user = {
-        id: fakePlayer.id,
-        name: fakePlayer.name,
-        clientid: socketUser.id,
+        shortid: fakePlayer.shortid,
+        displayname: fakePlayer.displayname,
+        clientid: socketUser.shortid,
     };
     wsSend("fakeplayer", { type: "remove", user });
 }
@@ -256,14 +284,14 @@ export function onFakePlayer(message) {
     if (message.type == "created") {
         let newFakePlayers = message.payload;
         for (const fakePlayer of newFakePlayers) {
-            fakePlayers[fakePlayer.id] = fakePlayer;
+            fakePlayers[fakePlayer.shortid] = fakePlayer;
         }
         for (const fakePlayer of newFakePlayers) {
-            GamePanelService.createGamePanel(fakePlayer.id);
+            GamePanelService.createGamePanel(fakePlayer.shortid);
         }
         if (newFakePlayers.length == 0) {
             let socketUser = btSocketUser.get();
-            GamePanelService.removeAllButUserGamePanel(socketUser.id);
+            GamePanelService.removeAllButUserGamePanel(socketUser.shortid);
 
             btFakePlayers.set({});
         } else btFakePlayers.set(fakePlayers);

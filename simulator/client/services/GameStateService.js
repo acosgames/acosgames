@@ -35,9 +35,9 @@ class GameStateService {
     getPlayersArray() {
         let players = this.getPlayers();
         let playerList = [];
-        for (const id in players) {
-            let player = players[id];
-            player.id = id;
+        for (const shortid in players) {
+            let player = players[shortid];
+            player.shortid = shortid;
             playerList.push(player);
         }
         return playerList;
@@ -130,7 +130,7 @@ class GameStateService {
         return false;
     }
 
-    validateNextUser(userid) {
+    validateNextUser(shortid) {
         let gamestate = this.getGameState();
         let next = gamestate?.next;
         let nextid = next?.id;
@@ -150,7 +150,7 @@ class GameStateService {
             if (nextid == "*") return true;
 
             //only specific user can send actions
-            if (nextid == userid) return true;
+            if (nextid == shortid) return true;
 
             //validate team has players
             if (!teams || !teams[nextid] || !teams[nextid].players)
@@ -159,13 +159,13 @@ class GameStateService {
             //allow players on specified team to send actions
             if (
                 Array.isArray(teams[nextid].players) &&
-                teams[nextid].players.includes(userid)
+                teams[nextid].players.includes(shortid)
             ) {
                 return true;
             }
         } else if (Array.isArray(nextid)) {
             //multiple users can send actions if in the array
-            if (nextid.includes(userid)) return true;
+            if (nextid.includes(shortid)) return true;
 
             //validate teams exist
             if (!teams) return false;
@@ -175,7 +175,7 @@ class GameStateService {
                 let teamid = nextid[i];
                 if (
                     Array.isArray(teams[teamid].players) &&
-                    teams[teamid].players.includes(userid)
+                    teams[teamid].players.includes(shortid)
                 ) {
                     return true;
                 }
@@ -217,7 +217,8 @@ class GameStateService {
 
         if (delta.events && "$" in delta.events) delete delta.events["$"];
 
-        if (delta?.action?.user?.id) delta.action.user = delta.action.user.id;
+        if (delta?.action?.user?.shortid)
+            delta.action.user = delta.action.user.shortid;
 
         if (delta?.action && "timeseq" in delta.action)
             delete delta.action.timeseq;
@@ -261,11 +262,11 @@ class GameStateService {
         this.updateGamePanels();
     }
 
-    updateGamePanel(id) {
+    updateGamePanel(shortid) {
         try {
             let gameState = btGameState.get();
             let gamepanels = btGamepanels.get();
-            let gamepanel = gamepanels[id];
+            let gamepanel = gamepanels[shortid];
 
             let pstate = JSON.parse(JSON.stringify(gameState));
 
@@ -280,28 +281,32 @@ class GameStateService {
             let hiddenPlayers = btHiddenPlayerState.set();
             if (
                 hiddenPlayers &&
-                hiddenPlayers[id] &&
+                hiddenPlayers[shortid] &&
                 pstate?.players &&
-                pstate?.players[id]
+                pstate?.players[shortid]
             ) {
                 pstate.local = Object.assign(
                     {},
-                    pstate.players[id],
-                    hiddenPlayers[id]
+                    pstate.players[shortid],
+                    hiddenPlayers[shortid]
                 );
-                pstate.private = { players: { [id]: hiddenPlayers[id] } };
+                pstate.private = {
+                    players: { [shortid]: hiddenPlayers[shortid] },
+                };
             }
 
-            if (pstate?.players && pstate?.players[id]) {
-                pstate.local = JSON.parse(JSON.stringify(pstate.players[id]));
-                pstate.local.id = id;
+            if (pstate?.players && pstate?.players[shortid]) {
+                pstate.local = JSON.parse(
+                    JSON.stringify(pstate.players[shortid])
+                );
+                pstate.local.shortid = shortid;
             }
 
             GamePanelService.sendFrameMessage(gamepanel, pstate);
 
             if (pstate?.events?.join && Array.isArray(pstate.events.join)) {
-                if (pstate?.events?.join.includes(id)) {
-                    let user = GamePanelService.getUserById(id);
+                if (pstate?.events?.join.includes(shortid)) {
+                    let user = GamePanelService.getUserById(shortid);
 
                     if (gamepanel.ready && !gameState.room.isreplay)
                         playerReady(user);

@@ -89,14 +89,17 @@ setInterval(() => {
 }, 500);
 
 function onConnect(socket) {
-    let name = socket.handshake.query.username;
+    let name = socket.handshake.query.displayname;
     if (!name) return;
 
     let isFirstUser = UserManager.isFirstUser();
 
     console.log("[ACOS] user connected: " + name);
     let newUser = UserManager.register(socket, name);
+    console.log("Registered: ", newUser);
     let user = UserManager.actionUser(newUser);
+
+    console.log("User Connected: ", user);
     socket.emit(
         "connected",
         encode({
@@ -107,9 +110,9 @@ function onConnect(socket) {
 
     //join user immediately into game
     let room = RoomManager.current();
-    if (room.hasPlayer(user.id)) onAction({ type: "join", user }, true);
+    if (room.hasPlayer(user.shortid)) onAction({ type: "join", user }, true);
 
-    let fakePlayers = UserManager.getFakePlayersByParent(user.id);
+    let fakePlayers = UserManager.getFakePlayersByParent(user.shortid);
     if (fakePlayers?.length >= 0) {
         socket.emit(
             "fakeplayer",
@@ -117,7 +120,7 @@ function onConnect(socket) {
         );
 
         for (const fakePlayer of fakePlayers) {
-            if (room.hasPlayer(fakePlayer.id))
+            if (room.hasPlayer(fakePlayer.shortid))
                 onAction({ type: "join", user: fakePlayer }, true);
         }
     }
@@ -142,9 +145,7 @@ function onDisconnect(socket, e) {
     let user = UserManager.getUserBySocketId(socket.id);
     if (!user) return;
 
-    console.log("[ACOS] user disconnected: " + user.name, e);
-
-    // UserManager.remove(socket.id);
+    console.log("[ACOS] user disconnected: " + user.displayname, e);
 }
 
 function onPing(socket, msg) {
@@ -180,12 +181,12 @@ function onFakePlayer(socket, msg) {
         msg.type = "leave";
         onAction(msg, true);
 
-        UserManager.removeFakePlayer(msg.user.id);
+        UserManager.removeFakePlayer(msg.user.shortid);
 
         // let newFakePlayers = UserManager.iterateFakePlayers(client.shortid);
         socket.emit(
             "fakeplayer",
-            encode({ type: "removed", payload: msg.user.id })
+            encode({ type: "removed", payload: msg.user.shortid })
         );
     }
 }
@@ -222,7 +223,7 @@ io.on("connection", (socket) => {
 
 const onJoinRequest = (action) => {
     let room = RoomManager.current();
-    let client = UserManager.getUserByShortid(action.user.id);
+    let client = UserManager.getUserByShortid(action.user.shortid);
     if (!client) {
         client = UserManager.getParentUser(action.user.clientid);
         if (!client) {
@@ -231,11 +232,11 @@ const onJoinRequest = (action) => {
         }
     }
 
-    if (room.hasPlayer(action.user.id)) {
+    if (room.hasPlayer(action.user.shortid)) {
         console.log(
             "[ACOS] User already in game: ",
-            action.user.id,
-            action.user.name
+            action.user.shortid,
+            action.user.displayname
         );
         sendUserGame(client, room);
         return false;
@@ -246,8 +247,8 @@ const onJoinRequest = (action) => {
     if (!hasVacancy) {
         console.log(
             "[ACOS] Game full, moving to spectator: ",
-            action.user.id,
-            action.user.name
+            action.user.shortid,
+            action.user.displayname
         );
         sendUserSpectator(action.user, room);
         return false;
@@ -263,8 +264,8 @@ const onJoinRequest = (action) => {
                 "[ACOS] [Error] " + attempt.error + ": ",
                 action.user.team_slug,
                 ", for user:",
-                action.user.id,
-                action.user.name
+                action.user.shortid,
+                action.user.displayname
             );
             return false;
         }
@@ -274,14 +275,14 @@ const onJoinRequest = (action) => {
 
     console.log(
         "[ACOS] Adding user to game: ",
-        action.user.id,
-        action.user.name
+        action.user.shortid,
+        action.user.displayname
     );
     return true;
 };
 
 const sendUserSpectator = (user, room) => {
-    let client = UserManager.getUserByShortid(user.id);
+    let client = UserManager.getUserByShortid(user.shortid);
     if (!client) {
         client = UserManager.getParentUser(user.clientid);
         if (!client) {
@@ -290,7 +291,7 @@ const sendUserSpectator = (user, room) => {
         }
     }
     // client.socket.join('spectator');
-    // UserManager.setSpectator(user.id);
+    // UserManager.setSpectator(user.shortid);
 
     // io.to.emit('spectator', encode({ type: 'join', user }));
     // room.addSpectator(user);
@@ -314,14 +315,14 @@ const sendUserGame = (client, room) => {
 };
 
 const onLeaveRequest = (action) => {
-    if (action.user.id in UserManager.getFakePlayers()) {
+    if (action.user.shortid in UserManager.getFakePlayers()) {
         // let fakePlayers = UserManager.getFakePlayersByParent(action.user.clientid)
         // for (const fakePlayer of fakePlayers) {
         // if (action.user.clientid) {
         //     let client = UserManager.getUserByShortid(action.user.clientid);
         // client.socket.emit('fakeplayer', encode({ type: 'removed', user: action.user }));
         // }
-        // UserManager.removeFakePlayer(action.user.id);
+        // UserManager.removeFakePlayer(action.user.shortid);
         // }
     }
 
@@ -329,7 +330,7 @@ const onLeaveRequest = (action) => {
     let gamestate = room.getGameState();
     if (!gamestate || !gamestate.players) return false;
 
-    if (!(action.user.id in gamestate?.players)) {
+    if (!(action.user.shortid in gamestate?.players)) {
         return false;
     }
 
@@ -353,7 +354,7 @@ const onGameActionRequest = (action) => {
 };
 
 const onNewGameRequest = (action) => {
-    let client = UserManager.getUserByShortid(action.user.id);
+    let client = UserManager.getUserByShortid(action.user.shortid);
     let room = RoomManager.create();
     // onAction(client.socket, { type: 'join', user: action.user }, true);
     let prevGamestate = room.copyGameState();
@@ -446,9 +447,9 @@ function onAction(action, skipDecode) {
 
     //find the user by the action shortid
     let user = null;
-    let client = UserManager.getUserByShortid(action.user.id);
+    let client = UserManager.getUserByShortid(action.user.shortid);
     if (!client) {
-        user = UserManager.getFakePlayer(action.user.id);
+        user = UserManager.getFakePlayer(action.user.shortid);
     } else {
         user = UserManager.actionUser(client);
     }
@@ -468,7 +469,7 @@ function onAction(action, skipDecode) {
     let actionFunc = actionTypes[action.type] || onGameActionRequest;
 
     if (actionFunc == onGameActionRequest) {
-        if (!validateNextUser(status, gamestate, action.user.id)) {
+        if (!validateNextUser(status, gamestate, action.user.shortid)) {
             console.warn("[ACOS] User not allowed to run action:", action);
             return;
         }

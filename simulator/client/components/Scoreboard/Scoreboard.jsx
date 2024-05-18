@@ -131,8 +131,9 @@ export function RenderPlayers({ room_slug }) {
         let playerA = players[a];
         let playerB = players[b];
         if (playerA.score == playerB.score) {
-            if (sort) return playerB.name.localeCompare(playerA.name);
-            return playerA.name.localeCompare(playerB.name);
+            if (sort)
+                return playerB.displayname.localeCompare(playerA.displayname);
+            return playerA.displayname.localeCompare(playerB.displayname);
         }
 
         if (sort) return playerA.score - playerB.score;
@@ -163,7 +164,7 @@ export function RenderPlayers({ room_slug }) {
                 {playerElems.map((player) => (
                     <RenderPlayer
                         // gamepanelid={id}
-                        key={player.name}
+                        key={player.displayname}
                         {...player}
                     />
                 ))}
@@ -185,7 +186,9 @@ function RenderTeams({ gamepanelid, players, teams }) {
         let teamA = teams[a];
         let teamB = teams[b];
         if (teamA.score == teamB.score) {
-            return teamA?.name?.localeCompare(teamB?.name || "unknown");
+            return teamA?.displayname?.localeCompare(
+                teamB?.displayname || "unknown"
+            );
         }
 
         return teamB.score - teamA.score;
@@ -214,8 +217,9 @@ function RenderTeam({ gamepanelid, players, team }) {
         let playerA = players[a];
         let playerB = players[b];
         if (playerA.score == playerB.score) {
-            if (sort) return playerB.name.localeCompare(playerA.name);
-            return playerA.name.localeCompare(playerB.name);
+            if (sort)
+                return playerB.displayname.localeCompare(playerA.displayname);
+            return playerA.displayname.localeCompare(playerB.displayname);
         }
 
         if (sort) return playerA.score - playerB.score;

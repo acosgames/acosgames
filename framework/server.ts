@@ -56,7 +56,7 @@ class ACOSServer {
         this.gameState = game;
     };
 
-    commit = (): void => {
+    save = (): void => {
         save(this.gameState);
     };
 

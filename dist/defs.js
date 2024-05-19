@@ -9,3 +9,4 @@ export var EGameStatus;
     EGameStatus[EGameStatus["gamecancelled"] = 6] = "gamecancelled";
     EGameStatus[EGameStatus["gameerror"] = 7] = "gameerror";
 })(EGameStatus || (EGameStatus = {}));
+//# sourceMappingURL=defs.js.map

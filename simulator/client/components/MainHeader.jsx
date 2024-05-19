@@ -85,7 +85,7 @@ export default function MainHeader(props) {
                         fontSize="2rem"
                         fontWeight={"100"}
                         as="span"
-                        width="12rem"
+                        width="16rem"
                         color={statusColor}
                     >
                         {gameStatus}

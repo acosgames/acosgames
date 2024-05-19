@@ -31,7 +31,7 @@ class ACOSServer {
             }
             this.gameState = game;
         };
-        this.commit = () => {
+        this.save = () => {
             save(this.gameState);
         };
         this.gameerror = (payload) => {
@@ -145,3 +145,4 @@ class ACOSServer {
     }
 }
 export default new ACOSServer();
+//# sourceMappingURL=server.js.map

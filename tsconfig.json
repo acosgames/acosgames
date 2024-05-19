@@ -4,6 +4,7 @@
         "target": "ES6",
         "moduleResolution": "Node",
         "declaration": true,
+        "sourceMap": true,
         "declarationDir": "dist/types",
         "outDir": "dist",
         "types": []

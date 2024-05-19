@@ -18,7 +18,7 @@ declare class ACOSServer {
     on: (type: string, cb: (action: Action) => boolean) => void;
     ignore(): void;
     setGame: (game: GameState) => void;
-    commit: () => void;
+    save: () => void;
     gameerror: (payload: any) => void;
     gamecancelled: (payload: any) => void;
     gameover: (payload: any) => void;

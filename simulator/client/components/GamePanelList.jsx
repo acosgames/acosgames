@@ -243,8 +243,8 @@ function CompactLayout(props) {
                 //onClick={(e) => { onClickOverlay(e, props.id) }}
 
                 spacing="0"
-                w="100%"
-                h="100%"
+                w="99%"
+                h="99%"
                 // pr="0.4rem"
             >
                 {/* {panelCount > 1 && */}

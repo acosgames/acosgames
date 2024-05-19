@@ -194,6 +194,10 @@ function GameIFrame(props) {
             // );
         }
 
+        iframeRef.current.style.borderRadius = "1rem";
+        iframeRef.current.style.border =
+            "3px solid var(--chakra-colors-gray-700)";
+
         btIFrameStyle.set(iframeRef.current.style);
     };
 
@@ -265,8 +269,10 @@ function GameIFrame(props) {
         >
             <VStack
                 className="screen-wrapper"
-                w="100%"
-                h={"100%"}
+                w="98%"
+                h={"98%"}
+                // p="1rem"
+                // mb="1.5%"
                 ref={gamewrapperRef}
                 transition={"filter 0.3s ease-in, opacity 0.5s ease-in"}
                 filter={isOpen ? "opacity(1)" : "opacity(0)"}
@@ -280,13 +286,14 @@ function GameIFrame(props) {
                     position="relative"
                     // boxShadow={"0px 12px 24px rgba(0,0,0,0.2)"}
                     alignSelf="center"
+                    // borderRadius="2rem"
                     // bgColor="gray.700"
                     // visibility={gamepanel?.iframe?.current ? "visible" : "hidden"}
                     // boxSizing="content-box"
-
-                    border="2px solid var(--chakra-colors-gray-700)"
-                    boxShadow={
-                        "0 19px 38px rgba(0,0,0,0.50), 0 15px 12px rgba(0,0,0,0.4)"
+                    // mt="2vh"
+                    // border="2px solid var(--chakra-colors-gray-700)"
+                    filter={
+                        "drop-shadow(0 0px 4px rgba(0,0,0,0.50)) drop-shadow(0 0px 8px rgba(0,0,0,0.4))"
                     }
                 >
                     <iframe

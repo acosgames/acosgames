@@ -40,7 +40,7 @@ function Timeleft(props) {
     let greaterThan10 = timeleft >= 10;
     let isEven = timeleft % 2 == 0;
 
-    let textColor = "gray.40";
+    let textColor = "gray.20";
 
     return (
         <HStack
@@ -103,6 +103,7 @@ function Timeleft(props) {
                         as="span"
                         className="digitaltimer"
                         fontSize="2rem"
+                        fontWeight="light"
                         textAlign={"center"}
                         color={textColor}
                     >
@@ -122,6 +123,7 @@ function Timeleft(props) {
                         as="span"
                         className="digitaltimer"
                         fontSize="2rem"
+                        fontWeight="light"
                         textAlign={"center"}
                         color={textColor}
                     >
@@ -149,6 +151,7 @@ function Timeleft(props) {
                     <Heading
                         as="span"
                         fontSize="1.4rem"
+                        fontWeight="light"
                         lineHeight={"4rem"}
                         textAlign={"center"}
                         color={textColor}

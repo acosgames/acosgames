@@ -68,3 +68,4 @@ export function timerLoop(cb) {
     }
 }
 export default { send, ready, listen, getPortrait, getCountryFlag, timerLoop };
+//# sourceMappingURL=client.js.map

@@ -370,7 +370,7 @@ class FSGWorker {
                     globalGame.action.type == "skip" &&
                     globalSkipCount > 5
                 ) {
-                    room.status = "gameover";
+                    room.status = "gamecancelled";
                     room.sequence = room.sequence + 1;
                     room.updated = Date.now();
                     globalResult.room = room;
@@ -406,6 +406,10 @@ class FSGWorker {
             //should we kill the game?
             if (globalResult?.events?.gameover) {
                 room.status = "gameover";
+            } else if (globalResult?.events?.gamecancelled) {
+                room.status = "gamecancelled";
+            } else if (globalResult?.events?.gameerror) {
+                room.status = "gameerror";
             }
             //game still live, process timer and history
             else {

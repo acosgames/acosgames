@@ -1,3 +1,4 @@
+import { EGameStatus } from "./defs";
 export function send(type, payload) {
     window.parent.postMessage({ type, payload }, "*");
 }
@@ -26,7 +27,8 @@ const onMessage = (callback) => (evt) => {
     if (((_a = gamestate === null || gamestate === void 0 ? void 0 : gamestate.room) === null || _a === void 0 ? void 0 : _a.status) != roomStatus) {
         roomStatus = (_b = gamestate === null || gamestate === void 0 ? void 0 : gamestate.room) === null || _b === void 0 ? void 0 : _b.status;
         newStatus = true;
-        if (isGameover && roomStatus != "gameover") {
+        if (isGameover &&
+            EGameStatus[roomStatus] < EGameStatus["gameover"]) {
             isGameover = false;
             timerLoop(timerLoopCallback);
         }
@@ -59,7 +61,7 @@ export function timerLoop(cb) {
     if (cb)
         cb(elapsed);
     let room = gamestate === null || gamestate === void 0 ? void 0 : gamestate.room;
-    if ((room === null || room === void 0 ? void 0 : room.status) == "gameover") {
+    if (EGameStatus[room === null || room === void 0 ? void 0 : room.status] >= EGameStatus["gameover"]) {
         clearTimeout(timerHandle);
         isGameover = true;
         return;

@@ -34,6 +34,13 @@ class ACOSServer {
         this.commit = () => {
             save(this.gameState);
         };
+        this.gameerror = (payload) => {
+            gameerror("[Error]:", payload);
+            this.events("gameerror", typeof payload === "undefined" ? true : payload);
+        };
+        this.gamecancelled = (payload) => {
+            this.events("gamecancelled", typeof payload === "undefined" ? true : payload);
+        };
         this.gameover = (payload) => {
             this.events("gameover", typeof payload === "undefined" ? true : payload);
         };
@@ -59,7 +66,7 @@ class ACOSServer {
         };
         this.playerList = () => Object.keys(this.gameState.players);
         this.playerCount = () => Object.keys(this.gameState.players).length;
-        this.setTimelimit = (seconds) => {
+        this.setTimer = (seconds) => {
             seconds = seconds || 15;
             this.gameState.timer.set = seconds;
         };

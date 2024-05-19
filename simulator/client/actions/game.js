@@ -51,7 +51,12 @@ export function updateTimeleft() {
     let deadline = timer.end;
     if (!deadline) return;
 
-    if (gamestate?.room?.status == "gameover") return;
+    if (
+        gamestate?.room?.status == "gameover" ||
+        gamestate?.room?.status == "gamecancelled" ||
+        gamestate?.room?.status == "gameerror"
+    )
+        return;
 
     let now = new Date().getTime();
     let elapsed = deadline - now;

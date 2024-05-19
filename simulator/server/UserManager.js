@@ -17,7 +17,7 @@ class UserManager {
             shortid = nanoid(6);
         }
 
-        console.log("Registering...", shortid, displayname);
+        // console.log("Registering...", shortid, displayname);
         this.users[displayname] = {
             shortid,
             displayname,

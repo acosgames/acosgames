@@ -293,7 +293,11 @@ class Room {
     }
 
     isGameOver() {
-        return this.status == "gameover";
+        return (
+            this.status == "gameover" ||
+            this.status == "gamecancelled" ||
+            this.status == "gameerror"
+        );
     }
 
     isPregame() {

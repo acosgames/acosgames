@@ -3,9 +3,11 @@
         "module": "ES6",
         "target": "ES6",
         "moduleResolution": "Node",
-        // "declaration": true,
+        "declaration": true,
+        "declarationDir": "dist/types",
         "outDir": "dist",
-        "paths": { "*": ["./node_modules/@types/*.d.ts"] }
+        "types": []
+        // "paths": { "*": ["./node_modules/@types/*.d.ts"] }
     },
     "include": ["framework"]
 }

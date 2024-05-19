@@ -1,94 +1,6 @@
+import { EGameStatus } from "./defs";
+
 declare global {
-    interface GameState {
-        state: State;
-        players: Players;
-        teams: Teams;
-        next: Next;
-        events: Events;
-        timer: Timer;
-        room: Room;
-    }
-
-    interface State {
-        [custom: string]: any;
-    }
-
-    interface Stats {
-        [abbreviation: string]: number | string;
-    }
-
-    interface Player {
-        shortid: string;
-        displayname: string;
-        portraitid: number;
-        countrycode: string;
-        rating: number;
-        rank: number;
-        score: number;
-        teamid?: string;
-        stats?: Stats;
-        [custom: string]: any;
-    }
-
-    interface Players {
-        [shortid: string]: Player;
-    }
-
-    interface Team {
-        name: string;
-        color: string;
-        order: number;
-        players: string[];
-        rank: number;
-        score: number;
-        [custom: string]: any;
-    }
-
-    interface Teams {
-        [teamid: string]: Team;
-    }
-
-    interface Next {
-        id: string | string[];
-        action?: string | string[] | any;
-    }
-
-    interface Room {
-        room_slug: string;
-        status: "waiting" | "pregame" | "starting" | "gamestart" | "gameover";
-        sequence: number;
-        starttime: number;
-        endtime: number;
-        updated: number;
-        isreplay?: boolean;
-    }
-
-    interface Timer {
-        set?: number;
-        sequence: number;
-        seconds?: number;
-        end?: number;
-    }
-
-    interface Events {
-        [eventName: string]: any;
-    }
-
-    interface User {
-        shortid: string;
-        displayname: string;
-        portraitid: number;
-        countrycode: string;
-    }
-
-    interface Action {
-        type: string;
-        payload: any;
-        user: User;
-        timeleft: number;
-        timeseq: number;
-    }
-
     var gamelog: (...msg: any[]) => void;
     var gameerror: (...msg: any[]) => void;
     var save: (gamestate: GameState) => void;
@@ -148,6 +60,19 @@ class ACOSServer {
         save(this.gameState);
     };
 
+    gameerror = (payload: any): void => {
+        gameerror("[Error]:", payload);
+        this.events(
+            "gameerror",
+            typeof payload === "undefined" ? true : payload
+        );
+    };
+    gamecancelled = (payload: any): void => {
+        this.events(
+            "gamecancelled",
+            typeof payload === "undefined" ? true : payload
+        );
+    };
     gameover = (payload: any): void => {
         this.events(
             "gameover",
@@ -265,7 +190,7 @@ class ACOSServer {
         return this.gameState.timer;
     }
 
-    setTimelimit = (seconds: number): void => {
+    setTimer = (seconds: number): void => {
         seconds = seconds || 15;
         this.gameState.timer.set = seconds;
     };

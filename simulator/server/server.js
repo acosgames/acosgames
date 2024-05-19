@@ -96,10 +96,10 @@ function onConnect(socket) {
 
     console.log("[ACOS] user connected: " + name);
     let newUser = UserManager.register(socket, name);
-    console.log("Registered: ", newUser);
+    // console.log("Registered: ", newUser);
     let user = UserManager.actionUser(newUser);
 
-    console.log("User Connected: ", user);
+    // console.log("User Connected: ", user);
     socket.emit(
         "connected",
         encode({
@@ -410,6 +410,7 @@ const replayTypes = {
 };
 
 const actionTypes = {
+    ready: () => true,
     join: onJoinRequest,
     leave: onLeaveRequest,
     skip: onSkipRequest,
@@ -460,6 +461,9 @@ function onAction(action, skipDecode) {
     let gamestate = room.getGameState();
 
     let status = room.status;
+
+    if (status != "gamestart" && !(action.type in actionTypes)) return;
+
     if (action.type == "newgame") {
         status = "pregame";
     }

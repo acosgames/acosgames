@@ -31,7 +31,11 @@ export default function MainHeader(props) {
 
     let statusColor = "white";
     if (gameStatus == "pregame") statusColor = "yellow.200";
-    else if (gameStatus == "gameover") {
+    else if (
+        gameStatus == "gameover" ||
+        gameStatus == "gamecancelled" ||
+        gameStatus == "gameerror"
+    ) {
         statusColor = "red.300";
     } else if (gameStatus == "gamestart") {
         statusColor = "green.200";

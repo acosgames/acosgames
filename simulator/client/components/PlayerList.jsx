@@ -333,7 +333,10 @@ export function DisplayUserActions(props) {
     let isInRoom = player != null;
     let hasVacancy = GameStateService.hasVacancy();
 
-    let isGameActive = gameState?.room?.status != "gameover";
+    let isGameActive =
+        gameState?.room?.status != "gameover" &&
+        gameState?.room?.status != "gamecancelled" &&
+        gameState?.room?.status != "gameerror";
 
     let isJoinAllowed = !isInRoom && hasVacancy;
     let isLeaveAllowed = isInRoom;

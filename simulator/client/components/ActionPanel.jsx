@@ -58,10 +58,16 @@ function GameActionsCompact(props) {
         return <></>;
     }
 
-    let isGameRunning = gameStatus != "gameover" && gameStatus != "none";
+    let isGameRunning =
+        gameStatus == "waiting" ||
+        gameStatus == "pregame" ||
+        gameStatus == "gamestart";
     let isPregame = gameStatus == "pregame";
     let isInGame = gameStatus != "gamestart";
-    let isGameOver = gameStatus == "gameover";
+    let isGameOver =
+        gameStatus == "gameover" ||
+        gameStatus == "gamecancelled" ||
+        gameStatus == "gameerror";
 
     let playerList = Object.keys(gameState.players || {});
 
@@ -162,10 +168,16 @@ export function GameActionsExpanded(props) {
         return <></>;
     }
 
-    let isGameRunning = gameStatus != "gameover" && gameStatus != "none";
+    let isGameRunning =
+        gameStatus == "waiting" ||
+        gameStatus == "pregame" ||
+        gameStatus == "gamestart";
     let isPregame = gameStatus == "pregame";
     let isInGame = gameStatus != "gamestart";
-    let isGameOver = gameStatus == "gameover";
+    let isGameOver =
+        gameStatus == "gameover" ||
+        gameStatus == "gamecancelled" ||
+        gameStatus == "gameerror";
 
     let totalSlotsRemaining = GameStateService.hasVacancy();
     if (gameState.teams) {

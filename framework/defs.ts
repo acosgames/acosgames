@@ -15,7 +15,7 @@ declare global {
     export interface GameState {
         state: State;
         players: Players;
-        teams: Teams;
+        teams?: Teams;
         next: Next;
         events: Events;
         timer: Timer;

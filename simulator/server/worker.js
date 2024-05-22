@@ -395,7 +395,7 @@ class FSGWorker {
             DiscreteRandom.seed(seedStr);
             //------------------------------------
             //RUN GAME SERVER SCRIPT
-            await this.run();
+            let passed = await this.run();
 
             if (globalIgnore) {
                 profiler.End("[WorkerOnAction]");
@@ -408,7 +408,7 @@ class FSGWorker {
                 room.status = "gameover";
             } else if (globalResult?.events?.gamecancelled) {
                 room.status = "gamecancelled";
-            } else if (globalResult?.events?.gameerror) {
+            } else if (!passed || globalResult?.events?.gameerror) {
                 room.status = "gameerror";
             }
             //game still live, process timer and history

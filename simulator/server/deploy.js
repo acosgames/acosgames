@@ -283,10 +283,11 @@ async function deployAll(got, FormData, FormDataEncoder) {
     //ADD GAMESETTINGS HEADER
     try {
         if (!fs.existsSync(settingsPath)) {
-            console.warn(
-                "[ACOS] No game-settings exists. It is optional, but this is a reminder just incase you forgot it.  File path should be `./game-server/database.json`",
+            console.error(
+                "[ACOS] game-settings.json is missing. File path should be `<project>/game-settings.json`.",
                 settingsPath
             );
+            return false;
         } else {
             var settingsFile = fs.readFileSync(settingsPath, "utf-8");
             let settings = JSON.parse(settingsFile);

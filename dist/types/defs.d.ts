@@ -13,7 +13,7 @@ declare global {
     export interface GameState {
         state: State;
         players: Players;
-        teams: Teams;
+        teams?: Teams;
         next: Next;
         events: Events;
         timer: Timer;
@@ -22,8 +22,11 @@ declare global {
     export interface State {
         [custom: string]: any;
     }
+    export interface StatString {
+        [name: string]: number;
+    }
     export interface Stats {
-        [abbreviation: string]: number | string;
+        [abbreviation: string]: number | StatString;
     }
     export interface Player {
         shortid: string;

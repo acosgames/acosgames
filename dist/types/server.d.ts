@@ -39,8 +39,9 @@ declare class ACOSServer {
     players(): Players;
     players(shortid: string): Player;
     players(shortid: string, value: any): any;
-    stats(shortid: string, abbreviation: string): number | string;
-    stats(shortid: string, abbreviation: string, value: number | string): number | string;
+    statIncrement(shortid: string, abbreviation: string): number;
+    stats(shortid: string, abbreviation: string): number | StatString;
+    stats(shortid: string, abbreviation: string, value: number | StatString): number | StatString;
     playerList: () => string[];
     playerCount: () => number;
     teams(): Teams;

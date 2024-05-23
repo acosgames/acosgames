@@ -26,8 +26,11 @@ declare global {
         [custom: string]: any;
     }
 
+    export interface StatString {
+        [name: string]: number;
+    }
     export interface Stats {
-        [abbreviation: string]: number | string;
+        [abbreviation: string]: number | StatString;
     }
 
     export interface Player {

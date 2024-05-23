@@ -112,11 +112,38 @@ class ACOSServer {
         this.gameState.players[shortid] = value;
         return value;
     }
+    statIncrement(shortid, abbreviation, value) {
+        let player = this.players(shortid);
+        if (typeof player.stats === "undefined") {
+            player.stats = {};
+        }
+        value = value || 1;
+        if (typeof player.stats[abbreviation] === "undefined")
+            player.stats[abbreviation] = value;
+        else
+            player.stats[abbreviation] =
+                player.stats[abbreviation] + value;
+        return player.stats[abbreviation];
+    }
     stats(shortid, abbreviation, value) {
         let player = this.players(shortid);
+        if (typeof player.stats === "undefined") {
+            player.stats = {};
+        }
         if (typeof value === "undefined")
             return player.stats[abbreviation];
-        player.stats[abbreviation] = value;
+        if (typeof value == "string") {
+            let obj = player.stats[abbreviation];
+            if (!obj)
+                obj = {};
+            if (value in obj)
+                obj[value] += 1;
+            else
+                obj[value] = 1;
+            player.stats[abbreviation] = obj;
+        }
+        else
+            player.stats[abbreviation] = value;
         return player.stats[abbreviation];
     }
     teams(teamid, value) {

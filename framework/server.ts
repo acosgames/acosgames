@@ -147,20 +147,49 @@ class ACOSServer {
         return value;
     }
 
-    stats(shortid: string, abbreviation: string): number | string;
-    stats(
+    statIncrement(shortid: string, abbreviation: string): number;
+    statIncrement(
         shortid: string,
         abbreviation: string,
-        value: number | string
-    ): number | string;
-    stats(
-        shortid: string,
-        abbreviation: string,
-        value?: number | string
-    ): number | string {
+        value?: number
+    ): number {
         let player = this.players(shortid);
+        if (typeof player.stats === "undefined") {
+            player.stats = {};
+        }
+
+        value = value || 1;
+        if (typeof player.stats[abbreviation] === "undefined")
+            player.stats[abbreviation] = value;
+        else
+            player.stats[abbreviation] =
+                (player.stats[abbreviation] as number) + value;
+        return player.stats[abbreviation] as number;
+    }
+
+    stats(shortid: string, abbreviation: string): number | StatString;
+    stats(
+        shortid: string,
+        abbreviation: string,
+        value: number | StatString
+    ): number | StatString;
+    stats(
+        shortid: string,
+        abbreviation: string,
+        value?: number | StatString
+    ): number | StatString {
+        let player = this.players(shortid);
+        if (typeof player.stats === "undefined") {
+            player.stats = {};
+        }
         if (typeof value === "undefined") return player.stats[abbreviation];
-        player.stats[abbreviation] = value;
+        if (typeof value == "string") {
+            let obj = player.stats[abbreviation] as StatString;
+            if (!obj) obj = {};
+            if (value in obj) obj[value] += 1;
+            else obj[value] = 1;
+            player.stats[abbreviation] = obj;
+        } else player.stats[abbreviation] = value;
         return player.stats[abbreviation];
     }
 

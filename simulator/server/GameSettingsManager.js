@@ -142,7 +142,7 @@ class GameSettingsManager {
             }
 
             s.stats.sort((a, b) => {
-                return a.order - b.order;
+                return a.stat_order - b.stat_order;
             });
         }
 
@@ -170,7 +170,7 @@ class GameSettingsManager {
             }
 
             s.items.sort((a, b) => {
-                return a.order - b.order;
+                return a.item_order - b.item_order;
             });
         }
         if ("teams" in s) {

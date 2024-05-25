@@ -85,13 +85,13 @@ function AddGameItem({}) {
         let gameSettings = btGameSettings.get();
         let item = btCreateItem.get();
 
-        gameSettings.items.sort((a, b) => a.order - b.order);
+        gameSettings.items.sort((a, b) => a.item_order - b.item_order);
         let index = gameSettings?.items
             ?.map((s) => s.item_name)
             .indexOf(item.item_name);
         gameSettings.items.splice(index, 1);
         gameSettings.items.forEach((s, i) => {
-            s.order = i;
+            s.item_order = i;
         });
 
         updateGameSettings(gameSettings);
@@ -123,7 +123,7 @@ function AddGameItem({}) {
 
         let checkItems = [];
         if (showCreateItem == "edit") {
-            checkItems = items.filter((s) => s.order != item.order);
+            checkItems = items.filter((s) => s.item_order != item.item_order);
         } else {
             checkItems = items.filter((s) => true);
         }
@@ -161,13 +161,13 @@ function AddGameItem({}) {
             return;
         }
 
-        if (typeof item?.order === "undefined") {
-            item.order = gameSettings.items.length;
+        if (typeof item?.item_order === "undefined") {
+            item.item_order = gameSettings.items.length;
             gameSettings.items.push(item);
         } else {
             let id = gameSettings?.items
-                ?.map((s) => s.order)
-                .indexOf(item.order);
+                ?.map((s) => s.item_order)
+                .indexOf(item.item_order);
             gameSettings.items[id] = item;
         }
 
@@ -283,7 +283,7 @@ function AddGameItem({}) {
                         {showCreateItem == "edit" && (
                             <CreateItem
                                 isCreate={false}
-                                index={item?.order || 0}
+                                index={item?.item_order || 0}
                             />
                         )}
 
@@ -403,8 +403,8 @@ function CreateItem({ isCreate, index }) {
 }
 
 function GameItem({ item }) {
-    let order = item?.order || 0;
-    let isEven = order % 2 == 0;
+    let item_order = item?.item_order || 0;
+    let isEven = item_order % 2 == 0;
 
     return (
         <Tr>

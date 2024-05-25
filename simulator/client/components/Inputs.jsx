@@ -25,6 +25,7 @@ export function SettingTextInput({
     placeholder,
     helperText,
     maxLength,
+    disabled,
     uppercase,
     regex,
     onChange,
@@ -66,6 +67,7 @@ export function SettingTextInput({
                     fontSize="1.4rem"
                     bgColor="gray.950"
                     aria-describedby=""
+                    disabled={disabled}
                     placeholder={placeholder}
                     maxLength={maxLength || 255}
                     onChange={(e) => {

@@ -98,13 +98,13 @@ function AddStat({}) {
         let gameSettings = btGameSettings.get();
         let stat = btCreateStat.get();
 
-        gameSettings.stats.sort((a, b) => a.order - b.order);
+        gameSettings.stats.sort((a, b) => a.stat_order - b.stat_order);
         let index = gameSettings?.stats
             ?.map((s) => s.stat_name)
             .indexOf(stat.stat_name);
         gameSettings.stats.splice(index, 1);
         gameSettings.stats.forEach((s, i) => {
-            s.order = i;
+            s.stat_order = i;
         });
 
         updateGameSettings(gameSettings);
@@ -136,7 +136,7 @@ function AddStat({}) {
 
         let checkStats = [];
         if (showCreateStat == "edit") {
-            checkStats = stats.filter((s) => s.order != stat.order);
+            checkStats = stats.filter((s) => s.stat_order != stat.stat_order);
         } else {
             checkStats = stats.filter((s) => true);
         }
@@ -165,8 +165,8 @@ function AddStat({}) {
                 newErrors.push("Abbreviation already exist.");
             }
 
-            // if (stats.find((s) => s.order == stat.order)) {
-            //     newErrors.push("Order already exist.");
+            // if (stats.find((s) => s.stat_order == stat.stat_order)) {
+            //     newErrors.push("stat_order already exist.");
             // }
         }
 
@@ -191,13 +191,13 @@ function AddStat({}) {
             return;
         }
 
-        if (typeof stat?.order === "undefined") {
-            stat.order = gameSettings.stats.length;
+        if (typeof stat?.stat_order === "undefined") {
+            stat.stat_order = gameSettings.stats.length;
             gameSettings.stats.push(stat);
         } else {
             let id = gameSettings?.stats
-                ?.map((s) => s.order)
-                .indexOf(stat.order);
+                ?.map((s) => s.stat_order)
+                .indexOf(stat.stat_order);
             gameSettings.stats[id] = stat;
         }
 
@@ -316,7 +316,7 @@ function AddStat({}) {
                         {showCreateStat == "edit" && (
                             <CreateStat
                                 isCreate={false}
-                                index={stat?.order || 0}
+                                index={stat?.stat_order || 0}
                             />
                         )}
 
@@ -388,6 +388,16 @@ function CreateStat({ isCreate, index }) {
     return (
         <VStack>
             <SettingTextInput
+                id="stat_slug"
+                title="Slug"
+                textWidth="13rem"
+                maxLength={"32"}
+                uppercase={true}
+                disabled={!isCreate}
+                useTarget={useStatTarget}
+                useValue={useStatValue}
+            />
+            <SettingTextInput
                 id="stat_name"
                 title="Name"
                 textWidth="13rem"
@@ -442,8 +452,8 @@ function CreateStat({ isCreate, index }) {
 }
 
 function Stat({ stat }) {
-    let order = stat?.order || 0;
-    let isEven = order % 2 == 0;
+    let stat_order = stat?.stat_order || 0;
+    let isEven = stat_order % 2 == 0;
 
     let typeName = "";
     switch (stat.valueTYPE) {

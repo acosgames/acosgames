@@ -17,6 +17,8 @@ import {
 import { updateGameSettings } from "../actions/websocket";
 import { useEffect, useState } from "react";
 
+import Creatable from "react-select/creatable";
+
 export function SettingTextInput({
     id,
     title,
@@ -46,6 +48,7 @@ export function SettingTextInput({
             alignItems={"flex-start"}
             width="100%"
             spacing="0"
+            mb="0.5rem"
         >
             <Text
                 fontWeight={"bold"}
@@ -60,7 +63,7 @@ export function SettingTextInput({
             >
                 {title}
             </Text>
-            <VStack>
+            <VStack spacing="0">
                 <Input
                     className=""
                     id={id}
@@ -87,6 +90,7 @@ export function SettingTextInput({
                     }}
                     value={currentValue || ""}
                     w={width || "100%"}
+                    h={"3rem"}
                 />
                 {helperText && (
                     <Text
@@ -96,6 +100,188 @@ export function SettingTextInput({
                         pr="0.5rem"
                         color="gray.50"
                         fontSize="1.2rem"
+                        w="100%"
+                        pl="1rem"
+                    >
+                        {helperText}
+                    </Text>
+                )}
+            </VStack>
+        </HStack>
+    );
+}
+
+export function SettingCreatableInput({
+    id,
+    title,
+    options,
+    width,
+    textWidth,
+    useValue,
+    useTarget,
+    onChange,
+    helperText,
+}) {
+    let gameSettings = useBucket(btGameSettings);
+    let currentValue = useValue
+        ? useValue(gameSettings, id)
+        : gameSettings[id] || 0;
+
+    currentValue = { label: currentValue, value: currentValue };
+
+    return (
+        <HStack
+            w="100%"
+            key={"setting-" + id}
+            id={"setting-" + id}
+            display={gameSettings?.screentype == 1 ? "none" : "flex"}
+            alignItems={"flex-start"}
+            width="100%"
+            spacing="0"
+            mb="0.5rem"
+        >
+            {title && (
+                <Text
+                    fontWeight={"bold"}
+                    as="label"
+                    w={textWidth || "100%"}
+                    display={title ? "inline-block" : "none"}
+                    pr="0.5rem"
+                    pt="0.5rem"
+                    color="gray.50"
+                    fontSize="1.4rem"
+                    htmlFor={id}
+                >
+                    {title}
+                </Text>
+            )}
+            <VStack spacing="0" w={width || "20rem"}>
+                <Creatable
+                    options={options}
+                    isMulti={false}
+                    value={currentValue || 0}
+                    onChange={(e) => {
+                        let value = e.value; // e.target.value;
+                        if (onChange) onChange(id, value);
+                        let gameSettings = btGameSettings.get();
+
+                        if (useTarget) {
+                            let shouldUpdate = useTarget(
+                                gameSettings,
+                                id,
+                                value
+                            );
+                            if (shouldUpdate) updateGameSettings(gameSettings);
+                        }
+                    }}
+                    styles={{
+                        container: (baseStyles, state) => ({
+                            ...baseStyles,
+                            fontSize: "1.4rem",
+                            // color: "var(--chakra-colors-gray-10)",
+                            // backgroundColor: "var(--chakra-colors-gray.950)",
+                            width: width || "20rem",
+                        }),
+
+                        valueContainer: (baseStyles, state) => ({
+                            ...baseStyles,
+                            fontSize: "1.2rem",
+                            // paddingLeft: "1rem",
+                            // color: "var(--chakra-colors-gray-10)",
+                            backgroundColor: "var(--chakra-colors-gray-950)",
+                        }),
+                        control: (baseStyles, state) => ({
+                            ...baseStyles,
+                            fontSize: "1.2rem",
+                            minHeight: "1.5rem",
+                            border: "none",
+                            outline: "none",
+                            ":active": {
+                                border: "none",
+                                boxShadow: "0 0 0 black !important",
+                            },
+                            ":hover": {
+                                border: "none",
+                                boxShadow: "0 0 0 black !important",
+                            },
+                            ":focus": {
+                                outline: "none",
+                                border: "none",
+                                boxShadow: "0 0 0 black !important",
+                            },
+                            // color: "var(--chakra-colors-gray-10)",
+                            backgroundColor: "var(--chakra-colors-gray-950)",
+                            // width: width || "20rem",
+                        }),
+                        singleValue: (baseStyles, state) => ({
+                            ...baseStyles,
+                            fontSize: "1.4rem",
+                            fontWeight: 400,
+                            color: "var(--chakra-colors-gray-20)",
+
+                            // backgroundColor: "var(--chakra-colors-gray-700)",
+                        }),
+                        input: (baseStyles, state) => ({
+                            ...baseStyles,
+                            fontSize: "1.2rem",
+                            color: "var(--chakra-colors-gray-200)",
+                            // paddingRight: "1rem",
+                            // backgroundColor: "var(--chakra-colors-gray-950)",
+                            // width: width || "20rem",
+                        }),
+                        placeholder: (baseStyles, state) => ({
+                            ...baseStyles,
+                            fontSize: "1.2rem",
+                            // color: "var(--chakra-colors-gray-100)",
+                            backgroundColor: "var(--chakra-colors-gray-950)",
+                            // width: width || "20rem",
+                        }),
+                        option: (baseStyles, state) => ({
+                            ...baseStyles,
+                            fontSize: "1.2rem",
+                            borderLeft: state.isSelected
+                                ? "3px solid var(--chakra-colors-brand-300)"
+                                : "0",
+                            backgroundColor: "var(--chakra-colors-gray-700)",
+                            hover: {
+                                backgroundColor:
+                                    "var(--chakra-colors-gray-700)",
+                            },
+                            focus: {
+                                backgroundColor:
+                                    "var(--chakra-colors-gray-700)",
+                            },
+                        }),
+                        menu: (baseStyles, state) => ({
+                            ...baseStyles,
+                            backgroundColor: "var(--chakra-colors-gray-700)",
+                        }),
+                        menuList: (baseStyles, state) => ({
+                            ...baseStyles,
+                            backgroundColor: "var(--chakra-colors-gray-700)",
+                        }),
+                    }}
+                >
+                    {/* {options.map((option) => (
+                        <option
+                            key={"select-" + option.label + option.value}
+                            fontSize={"1rem"}
+                            value={option.value}
+                        >
+                            {option.label}
+                        </option>
+                    ))} */}
+                </Creatable>
+                {helperText && (
+                    <Text
+                        fontWeight={"light"}
+                        as="label"
+                        display={"inline-block"}
+                        pr="0.5rem"
+                        color="gray.50"
+                        fontSize="1.2rem"
+                        w="100%"
+                        pl="1rem"
                     >
                         {helperText}
                     </Text>
@@ -130,6 +316,7 @@ export function SettingSelectInput({
             alignItems={"flex-start"}
             width="100%"
             spacing="0"
+            mb="0.5rem"
         >
             {title && (
                 <Text
@@ -180,6 +367,8 @@ export function SettingSelectInput({
                     pr="0.5rem"
                     color="gray.50"
                     fontSize="1.2rem"
+                    w="100%"
+                    pl="1rem"
                 >
                     {helperText}
                 </Text>
@@ -217,6 +406,7 @@ export function SettingNumberInput({
                 alignItems={"flex-start"}
                 width="100%"
                 spacing="0"
+                mb="0.5rem"
             >
                 {title && (
                     <Text
@@ -233,7 +423,7 @@ export function SettingNumberInput({
                         {title}
                     </Text>
                 )}
-                <VStack>
+                <VStack spacing="0">
                     <NumberInput
                         className=""
                         id={id}
@@ -266,8 +456,10 @@ export function SettingNumberInput({
                         }}
                         value={currentValue || 0}
                         w={width || "100%"}
+
+                        // h={"3rem"}
                     >
-                        <NumberInputField fontSize="1.4rem" />
+                        <NumberInputField h="3rem" fontSize="1.4rem" />
                         <NumberInputStepper>
                             <NumberIncrementStepper />
                             <NumberDecrementStepper />
@@ -281,6 +473,8 @@ export function SettingNumberInput({
                             pr="0.5rem"
                             color="gray.50"
                             fontSize="1.2rem"
+                            w="100%"
+                            pl="1rem"
                         >
                             {helperText}
                         </Text>
@@ -290,7 +484,7 @@ export function SettingNumberInput({
         );
     }
     return (
-        <VStack key={"setting-" + id} id={"setting-" + id}>
+        <VStack key={"setting-" + id} id={"setting-" + id} spacing="0">
             <Text
                 fontWeight={"500"}
                 as="label"
@@ -331,8 +525,9 @@ export function SettingNumberInput({
                 }}
                 value={currentValue || 0}
                 w={width || "100%"}
+                // h={"3rem"}
             >
-                <NumberInputField fontSize="1.4rem" />
+                <NumberInputField h="3rem" fontSize="1.4rem" />
                 <NumberInputStepper>
                     <NumberIncrementStepper />
                     <NumberDecrementStepper />
@@ -399,6 +594,7 @@ export function SettingSwitchInput({
                 w="100%"
                 justifyContent={"center"}
                 pt="1rem"
+                spacing="0"
             >
                 <Box justifySelf={"center"}>
                     <Switch
@@ -427,6 +623,7 @@ export function SettingSwitchInput({
                         }}
                         value={currentValue || 0}
                         w={width || "100%"}
+                        h={"3rem"}
                     />
                 </Box>
                 {helperText && (
@@ -437,6 +634,8 @@ export function SettingSwitchInput({
                         pr="0.5rem"
                         color="gray.50"
                         fontSize="1.2rem"
+                        w="100%"
+                        pl="1rem"
                     >
                         {helperText}
                     </Text>

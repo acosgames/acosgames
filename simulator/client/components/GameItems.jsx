@@ -24,6 +24,7 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import {
+    SettingCreatableInput,
     SettingNumberInput,
     SettingSelectInput,
     SettingSwitchInput,
@@ -32,14 +33,14 @@ import {
 import { MdEdit } from "react-icons/md";
 import { bucket, useBucket, useBucketSelector } from "react-bucketjs";
 import { btGameSettings } from "../actions/buckets";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { updateGameSettings } from "../actions/websocket";
 
-let btShowCreateItem = bucket(false);
-let btEditItem = bucket(null);
-let btCreateItem = bucket({});
-let btDeleteCheck = bucket(false);
-let btItemError = bucket([]);
+const btShowCreateItem = bucket(false);
+const btEditItem = bucket(null);
+const btCreateItem = bucket({});
+const btDeleteCheck = bucket(false);
+const btItemError = bucket([]);
 
 export function GameItems({}) {
     let showCreateItem = useBucket(btShowCreateItem);
@@ -338,13 +339,46 @@ function AddGameItem({}) {
         </>
     );
 }
+
+function createItemCategories(newCategories) {
+    newCategories = newCategories || [];
+    let gs = btGameSettings.get();
+    let items = gs.items;
+
+    let itemCategories = items
+        .filter((item) => item.item_category)
+        .map((item) => item.item_category);
+
+    if (newCategories.length > 0) {
+        itemCategories = itemCategories.concat(newCategories);
+    }
+
+    itemCategories = itemCategories.filter(
+        (value, index, array) => array.indexOf(value) === index
+    );
+
+    itemCategories = itemCategories.map((cat) => ({
+        label: cat,
+        value: cat,
+    }));
+    return itemCategories;
+}
 function CreateItem({ isCreate, index }) {
     let item = useBucket(btCreateItem);
+
+    let [categories, setCategories] = useState([]);
 
     const useItemTarget = (gameSettings, id, value) => {
         item = btCreateItem.get();
         item[id] = value;
         btCreateItem.set(item);
+        if (
+            id == "item_category" &&
+            !categories.find((c) => c.value == value)
+        ) {
+            categories.push(value);
+            setCategories(categories);
+        }
         return false;
     };
     const useItemValue = (gameSettings, id) => {
@@ -352,8 +386,29 @@ function CreateItem({ isCreate, index }) {
         return item[id];
     };
 
+    let itemCategories = createItemCategories(categories);
+
     return (
         <VStack>
+            <SettingTextInput
+                id="item_slug"
+                title="Slug"
+                textWidth="13rem"
+                helperText="used in player object"
+                maxLength={32}
+                useTarget={useItemTarget}
+                useValue={useItemValue}
+            />
+            <SettingCreatableInput
+                id="item_category"
+                title="Category"
+                textWidth="13rem"
+                helperText="Type to create new category"
+                maxLength={32}
+                options={itemCategories}
+                useTarget={useItemTarget}
+                useValue={useItemValue}
+            />
             <SettingTextInput
                 id="item_name"
                 title="Name"
@@ -370,15 +425,6 @@ function CreateItem({ isCreate, index }) {
                 useTarget={useItemTarget}
                 useValue={useItemValue}
             />
-            <SettingTextInput
-                id="item_slug"
-                title="Slug"
-                textWidth="13rem"
-                helperText="used in player object"
-                maxLength={32}
-                useTarget={useItemTarget}
-                useValue={useItemValue}
-            />
             <SettingNumberInput
                 id="max_uses"
                 title="Max Uses"
@@ -391,7 +437,8 @@ function CreateItem({ isCreate, index }) {
             />
             <SettingNumberInput
                 id="expire_days"
-                title="Expires in"
+                title="Expires in (days)"
+                helperText="0 = never"
                 placeholder="0"
                 textWidth={"13rem"}
                 theme="row"

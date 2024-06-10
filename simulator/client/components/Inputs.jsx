@@ -51,13 +51,13 @@ export function SettingTextInput({
             mb="0.5rem"
         >
             <Text
-                fontWeight={"bold"}
+                fontWeight="500"
                 as="label"
                 w={textWidth || "100%"}
                 display={title ? "inline-block" : "none"}
                 pr="0.5rem"
                 pt="0.5rem"
-                color="gray.50"
+                color="gray.20"
                 fontSize="1.4rem"
                 htmlFor={id}
             >
@@ -98,7 +98,7 @@ export function SettingTextInput({
                         as="label"
                         display={"inline-block"}
                         pr="0.5rem"
-                        color="gray.50"
+                        color="gray.20"
                         fontSize="1.2rem"
                         w="100%"
                         pl="1rem"
@@ -142,13 +142,13 @@ export function SettingCreatableInput({
         >
             {title && (
                 <Text
-                    fontWeight={"bold"}
+                    fontWeight="500"
                     as="label"
                     w={textWidth || "100%"}
                     display={title ? "inline-block" : "none"}
                     pr="0.5rem"
                     pt="0.5rem"
-                    color="gray.50"
+                    color="gray.20"
                     fontSize="1.4rem"
                     htmlFor={id}
                 >
@@ -278,7 +278,7 @@ export function SettingCreatableInput({
                         as="label"
                         display={"inline-block"}
                         pr="0.5rem"
-                        color="gray.50"
+                        color="gray.20"
                         fontSize="1.2rem"
                         w="100%"
                         pl="1rem"
@@ -320,13 +320,13 @@ export function SettingSelectInput({
         >
             {title && (
                 <Text
-                    fontWeight={"bold"}
+                    fontWeight="500"
                     as="label"
                     w={textWidth || "100%"}
                     display={title ? "inline-block" : "none"}
                     pr="0.5rem"
                     pt="0.5rem"
-                    color="gray.50"
+                    color="gray.20"
                     fontSize="1.4rem"
                     htmlFor={id}
                 >
@@ -365,7 +365,7 @@ export function SettingSelectInput({
                     as="label"
                     display={"inline-block"}
                     pr="0.5rem"
-                    color="gray.50"
+                    color="gray.20"
                     fontSize="1.2rem"
                     w="100%"
                     pl="1rem"
@@ -410,13 +410,13 @@ export function SettingNumberInput({
             >
                 {title && (
                     <Text
-                        fontWeight={"bold"}
+                        fontWeight="500"
                         as="label"
                         w={textWidth || "100%"}
                         display={title ? "inline-block" : "none"}
                         pr="0.5rem"
                         pt="0.5rem"
-                        color="gray.50"
+                        color="gray.20"
                         fontSize="1.4rem"
                         htmlFor={id}
                     >
@@ -471,7 +471,7 @@ export function SettingNumberInput({
                             as="label"
                             display={"inline-block"}
                             pr="0.5rem"
-                            color="gray.50"
+                            color="gray.20"
                             fontSize="1.2rem"
                             w="100%"
                             pl="1rem"
@@ -491,7 +491,7 @@ export function SettingNumberInput({
                 w={textWidth || "100%"}
                 display={title ? "inline-block" : "none"}
                 pr="0.5rem"
-                color="gray.50"
+                color="gray.20"
                 fontSize="1.2rem"
                 textAlign={"center"}
                 htmlFor={id}
@@ -539,7 +539,7 @@ export function SettingNumberInput({
                     as="label"
                     display={"inline-block"}
                     pr="0.5rem"
-                    color="gray.50"
+                    color="gray.20"
                     fontSize="1.2rem"
                 >
                     {helperText}
@@ -575,13 +575,13 @@ export function SettingSwitchInput({
         >
             {title && (
                 <Text
-                    fontWeight={"bold"}
+                    fontWeight="500"
                     as="label"
                     w={textWidth || "100%"}
                     display={title ? "inline-block" : "none"}
                     pr="0.5rem"
                     pt="1rem"
-                    color="gray.50"
+                    color="gray.20"
                     fontSize="1.4rem"
                     htmlFor={id}
                 >
@@ -592,11 +592,12 @@ export function SettingSwitchInput({
                 key={"setting-" + id}
                 id={"setting-" + id}
                 w="100%"
-                justifyContent={"center"}
+                justifyContent={"flex-start"}
+                alignItems={"flex-start"}
                 pt="1rem"
                 spacing="0"
             >
-                <Box justifySelf={"center"}>
+                <Box justifySelf={"flex-start"}>
                     <Switch
                         className=""
                         id={id}
@@ -632,10 +633,10 @@ export function SettingSwitchInput({
                         as="label"
                         display={"inline-block"}
                         pr="0.5rem"
-                        color="gray.50"
+                        color="gray.20"
                         fontSize="1.2rem"
                         w="100%"
-                        pl="1rem"
+                        // pl="1rem"
                     >
                         {helperText}
                     </Text>

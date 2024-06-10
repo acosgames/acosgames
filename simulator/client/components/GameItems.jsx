@@ -188,6 +188,8 @@ function AddGameItem({}) {
                 p="1.5rem"
                 px="2rem"
                 borderRadius={"2rem"}
+                fontSize="1.4rem"
+                fontWeight="500"
                 bgColor="brand.500"
                 _hover={{
                     bgColor: "brand.400",
@@ -214,6 +216,8 @@ function AddGameItem({}) {
                                 <Button
                                     p="0rem"
                                     px="1rem"
+                                    fontSize="1.4rem"
+                                    fontWeight="500"
                                     bgColor="red.600"
                                     color="gray.0"
                                     onClick={() => btDeleteCheck.set(true)}
@@ -228,8 +232,9 @@ function AddGameItem({}) {
                                     <AlertDialogOverlay>
                                         <AlertDialogContent>
                                             <AlertDialogHeader
-                                                fontSize="lg"
-                                                fontWeight="bold"
+                                                fontSize="1.6rem"
+                                                fontWeight="600"
+                                                color="gray.0"
                                             >
                                                 Delete Item
                                             </AlertDialogHeader>
@@ -311,6 +316,8 @@ function AddGameItem({}) {
                             bgColor="gray.200"
                             borderRadius={0}
                             p="2rem"
+                            fontSize="1.4rem"
+                            fontWeight="500"
                             variant="secondary"
                             onClick={onCancel}
                         >
@@ -318,7 +325,9 @@ function AddGameItem({}) {
                         </Button>
                         <Box flex="1"></Box>
                         <Button
-                            bgColor="blue.500"
+                            bgColor="brand.500"
+                            fontSize="1.4rem"
+                            fontWeight="500"
                             borderRadius={0}
                             isDisabled={
                                 showCreateItem == "create" && !isReadyForCreate

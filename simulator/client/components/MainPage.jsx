@@ -25,6 +25,7 @@ function MainPage(props) {
     let isMobile = useBucket(btIsMobile);
     let displayMode = useBucket(btDisplayMode);
 
+    let displayname = useBucket(btUsername);
     const mainPageRef = useRef();
     const primaryCanvasRef = useRef();
 
@@ -32,6 +33,13 @@ function MainPage(props) {
         btPrimaryCanvasRef.set(primaryCanvasRef);
 
         btMainPageRef.set(mainPageRef);
+
+        if (!displayname) {
+            displayname = "Player_0";
+            btUsername.set(displayname);
+            localStorage.setItem("displayname", displayname);
+            connect(displayname);
+        }
     });
 
     useEffect(() => {
@@ -121,7 +129,7 @@ function MainPage(props) {
                                 transition={"filter 0.3s ease-in"}
                                 // maxW={['1200px']}
                             >
-                                <ChoosePlayerName />
+                                {/* <ChoosePlayerName /> */}
                                 <GamePanelList />
                             </Box>
                         </VStack>

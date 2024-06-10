@@ -13,6 +13,8 @@ import {
     onReplay,
     onReplayStats,
     onTeamInfo,
+    autoJoin,
+    newGame,
 } from "./game";
 
 import GamePanelService from "../services/GamePanelService";
@@ -111,6 +113,11 @@ export function saveGameSettings() {
 
 const onNewGame = (message) => {
     GameStateService.clearState();
+
+    let autojoin = btAutoJoin.get();
+    if (autojoin) {
+        autoJoin();
+    }
 };
 
 const onGameSettings = (message) => {
@@ -151,6 +158,12 @@ const onConnected = (message) => {
 
         setTimeout(() => {
             ping();
+
+            newGame();
+            let autojoin = btAutoJoin.get();
+            if (autojoin) {
+                autoJoin();
+            }
         }, 200);
     } catch (e) {
         console.error(e);

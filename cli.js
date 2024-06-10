@@ -399,27 +399,40 @@ function runDeploy(isDev) {
     });
 }
 
-// console.log("[ACOS] RUNNING COMMAND!!!: ", command);
+// console.log("[ACOS] RUNNING COMMAND!!!: ", acosCommand);
+const { openBrowser } = require("./simulator/server/openBrowser");
 
-function processACOSCommand() {
+async function processACOSCommand() {
     // console.log("[ACOS] Command: ", argv);
-    if (acosCommand == "dev") {
-        runServer(true);
-        setTimeout(() => {
-            runClient(true);
-        }, 100);
-        // runBrowserSync(true);
-        if (acosClientType == "webpack" || acosClientType == "bundle")
-            runBrowserSync(false);
-        // runBrowserOpenDevTools();
-    } else if (acosCommand == "deploy") {
-        runDeploy();
-    } else {
-        runServer(false);
-        // runClient();
-        if (acosClientType == "webpack" || acosClientType == "bundle")
-            runBrowserSync(false);
-        // runBrowserOpen();
+
+    try {
+        // const open = await import("./simulator/server/openBrowser");
+
+        let defaultURL = "http://localhost:3100/";
+        // console.log("OPENING BROWSER TO: ", defaultURL);
+        if (acosCommand == "dev") {
+            await runServer(true);
+            // // setTimeout(() => {
+            await runClient(true);
+            // // }, 100);
+            // // runBrowserSync(true);
+            if (acosClientType == "webpack" || acosClientType == "bundle")
+                await runBrowserSync(false);
+            // // runBrowserOpenDevTools();
+
+            await openBrowser(defaultURL);
+        } else if (acosCommand == "deploy") {
+            runDeploy();
+        } else {
+            await runServer(false);
+            // runClient();
+            if (acosClientType == "webpack" || acosClientType == "bundle")
+                await runBrowserSync(false);
+            // runBrowserOpen();
+            await openBrowser(defaultURL);
+        }
+    } catch (e) {
+        console.error(e);
     }
 }
 

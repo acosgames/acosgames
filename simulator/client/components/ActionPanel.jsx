@@ -35,6 +35,7 @@ import {
     btSocketUser,
     btWebsocketStatus,
 } from "../actions/buckets";
+import { useEffect } from "react";
 
 export function ActionPanel(props) {
     return (
@@ -164,6 +165,17 @@ export function GameActionsExpanded(props) {
 
     // gamePanelLayout = gamePanelLayout || 'compact';
 
+    const onAutoJoin = async (e) => {
+        btAutoJoin.set(e.target.checked);
+        if (e.target.checked == true) {
+            autoJoin();
+        }
+    };
+
+    // useEffect(() => {
+    //     btAutoJoin.set(true);
+    // }, []);
+
     if (wsStatus == "disconnected") {
         return <></>;
     }
@@ -189,12 +201,6 @@ export function GameActionsExpanded(props) {
         }
     }
 
-    const onAutoJoin = async (e) => {
-        btAutoJoin.set(e.target.checked);
-        if (e.target.checked == true) {
-            autoJoin();
-        }
-    };
     return (
         <Card>
             {/* <CardHeader>
@@ -271,6 +277,7 @@ export function GameActionsExpanded(props) {
                                     Auto Join?
                                 </Text>
                                 <Switch
+                                    defaultChecked
                                     value={autojoin}
                                     onChange={onAutoJoin}
                                 ></Switch>

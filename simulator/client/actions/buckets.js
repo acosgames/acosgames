@@ -23,7 +23,7 @@ export const btLocalGameSettings = bucket({});
 
 export const btUsername = bucket("");
 export const btSocketUser = bucket({});
-export const btAutoJoin = bucket(false);
+export const btAutoJoin = bucket(true);
 
 export const btGamepanelLayout = bucket("compact");
 export const btGameState = bucket({});

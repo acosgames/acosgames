@@ -9,16 +9,16 @@ export enum EGameStatus {
     gameerror,
 }
 
-export type GameStatus = keyof typeof EGameStatus;
+export type GameStatus = EGameStatus;
 
 declare global {
     export interface GameState {
         state: State;
         players: Players;
         teams?: Teams;
-        next: Next;
-        events: Events;
-        timer: Timer;
+        // next: Next;
+        // events: Events;
+        // timer: Timer;
         room: Room;
     }
 
@@ -26,6 +26,12 @@ declare global {
         [custom: string]: any;
     }
 
+    /**
+     * StatString to count repeated uses of a specific string
+     *
+     * @interface StatString
+     * @member {[name: string]: number} string and its increment count
+     */
     export interface StatString {
         [name: string]: number;
     }
@@ -46,11 +52,10 @@ declare global {
         [custom: string]: any;
     }
 
-    export interface Players {
-        [shortid: string]: Player;
-    }
+    export type Players = Player[];
 
     export interface Team {
+        team_slug: string;
         name: string;
         color: string;
         order: number;
@@ -60,20 +65,46 @@ declare global {
         [custom: string]: any;
     }
 
-    export interface Teams {
-        [teamid: string]: Team;
-    }
+    export type Teams = Team[];
 
     export interface Next {
         id: string | string[];
         action?: string | string[] | any;
     }
 
+    export interface NextID {
+        /** number = player array index; string = "*" or team slug */
+        id: number | number[] | string | string[];
+    }
+    export interface NextAction {
+        action: string | string[] | any;
+    }
+
+    export interface PlayerRef {
+        [shortid: string]: number;
+    }
+
+    export interface TeamRef {
+        [team_slug: string]: number;
+    }
+
     export interface Room {
         room_slug: string;
         status: GameStatus;
-        sequence: number;
+        _sequence: number;
         starttime: number;
+        timeset: number;
+        timesec: number;
+        timeend: number;
+        events: ACOSEvents;
+        // next: Next;
+        // next_id: NextID;
+        next_player?: NextID;
+        next_team?: NextID;
+        next_action?: NextAction;
+        // playerMap: Players;
+        _players: PlayerRef;
+        _teams: TeamRef;
         endtime: number;
         updated: number;
         isreplay?: boolean;
@@ -81,14 +112,16 @@ declare global {
 
     export interface Timer {
         set?: number;
-        sequence: number;
+        // sequence: number;
         seconds?: number;
         end?: number;
     }
 
-    export interface Events {
-        [eventName: string]: any;
+    export interface ACOSEvent {
+        type: string;
+        payload: any;
     }
+    export type ACOSEvents = ACOSEvent[];
 
     export interface User {
         shortid: string;

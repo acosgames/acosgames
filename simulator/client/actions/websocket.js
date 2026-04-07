@@ -1,6 +1,4 @@
-import ENCODER from "acos-json-encoder";
-import ACOSDictionary from "shared/acos-dictionary.json";
-ENCODER.createDefaultDict(ACOSDictionary);
+import { protoEncode, protoDecode } from "acos-json-encoder";
 
 import { io } from "socket.io-client";
 
@@ -20,6 +18,7 @@ import {
 import GamePanelService from "../services/GamePanelService";
 import GameStateService from "../services/GameStateService";
 import {
+    btAutoJoin,
     btGameSettings,
     btGameStatus,
     btLatencyInfo,
@@ -97,7 +96,7 @@ export function connect(displayname) {
 
 export function wsSend(type, payload) {
     let socket = btSocket.get();
-    socket.emit(type, ENCODER.encode(payload));
+    socket.emit(type, protoEncode({ type, payload }));
 }
 
 export function updateGameSettings(newSettings) {
@@ -123,11 +122,11 @@ const onNewGame = (message) => {
 const onGameSettings = (message) => {
     try {
         //message should have { id, name }
-        message = ENCODER.decode(message);
+        message = protoDecode(message);
 
-        btLocalGameSettings.set(message.gameSettings);
+        btLocalGameSettings.set(message.payload.gameSettings);
         btPrevGameSettings.set(btGameSettings.get());
-        btGameSettings.set(message.gameSettings);
+        btGameSettings.set(message.payload.gameSettings);
     } catch (e) {
         console.error(e);
     }
@@ -142,10 +141,10 @@ const onConnect = (evt) => {
 const onConnected = (message) => {
     try {
         //message should have { id, name }
-        message = ENCODER.decode(message);
+        message = protoDecode(message);
 
-        let socketUser = message.user;
-        let gameSettings = message.gameSettings;
+        let socketUser = message.payload.user;
+        let gameSettings = message.payload.gameSettings;
 
         btLocalGameSettings.set(gameSettings);
         btPrevGameSettings.set(btGameSettings.get());
@@ -156,15 +155,15 @@ const onConnected = (message) => {
 
         GamePanelService.createGamePanel(socketUser.shortid);
 
-        setTimeout(() => {
-            ping();
+        // setTimeout(() => {
+        //     ping();
 
-            newGame();
-            let autojoin = btAutoJoin.get();
-            if (autojoin) {
-                autoJoin();
-            }
-        }, 200);
+        //     newGame();
+        //     let autojoin = btAutoJoin.get();
+        //     if (autojoin) {
+        //         autoJoin();
+        //     }
+        // }, 200);
     } catch (e) {
         console.error(e);
     }
@@ -172,7 +171,7 @@ const onConnected = (message) => {
 
 const ping = () => {
     try {
-        let latencyStart = new Date().getTime();
+        let latencyStart = Date.now();
         wsSend("ping", { payload: latencyStart });
 
         btLatencyInfo.assign({ latencyStart });
@@ -183,11 +182,11 @@ const ping = () => {
 
 const onPong = (message) => {
     try {
-        message = ENCODER.decode(message);
+        message = protoDecode(message);
         let latencyStart = btLatencyInfo.get((b) => b.latencyStart);
         let serverOffset = message.payload.offset;
         let serverTime = message.payload.serverTime;
-        let currentTime = new Date().getTime();
+        let currentTime = Date.now();
         let latency = currentTime - latencyStart;
         let offsetTime = currentTime - serverTime;
         let realTime = currentTime + offsetTime + Math.ceil(latency / 2);
@@ -212,7 +211,7 @@ const onPong = (message) => {
 
 const onLastAction = (message) => {
     try {
-        message = ENCODER.decode(message);
+        message = protoDecode(message);
         console.log("Last Action: ", message);
     } catch (e) {
         console.error(e);
@@ -222,7 +221,7 @@ const onLastAction = (message) => {
 const onDisconnect = (e) => {
     try {
         btWebsocketStatus.set("disconnected");
-        btGameStatus.set("none");
+        btGameStatus.set(0);
         let socket = btSocket.get();
         console.log(socket.shortid + " disconnect", e, socket.io.engine);
     } catch (e) {

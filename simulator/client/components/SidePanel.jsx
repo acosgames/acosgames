@@ -57,14 +57,14 @@ function SidePanel(props) {
     let desktopIcon = toggle ? (
         <Icon
             as={AiFillCloseCircle}
-            filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
+            // filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
             fontSize="2rem"
             color={"gray.400"}
         />
     ) : (
         <Icon
             as={BsChatDotsFill}
-            filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
+            // filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
             fontSize="2rem"
             color={"gray.100"}
         />
@@ -72,14 +72,14 @@ function SidePanel(props) {
     let mobileIcon = toggle ? (
         <Icon
             as={AiFillCloseCircle}
-            filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
+            // filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
             fontSize="2rem"
             color={"gray.400"}
         />
     ) : (
         <Icon
             as={BsChatDotsFill}
-            filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
+            // filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
             fontSize="2rem"
             color={"gray.100"}
         />
@@ -120,7 +120,7 @@ function SidePanel(props) {
                 >
                     <Icon
                         as={actionToggle ? GoSidebarCollapse : GoSidebarExpand}
-                        filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
+                        // filter={"drop-shadow(0px -12px 24px rgba(0,0,0,0.2))"}
                         fontSize="2.5rem"
                         color={"gray.100"}
                         _hover={{
@@ -163,8 +163,8 @@ function SidePanel(props) {
                         h="100%"
                         p="0"
                         pl="0.5rem"
-                        borderLeft="2px solid var(--chakra-colors-gray-925)"
-                        boxShadow="inset 0 0 6px rgba(0,0,0,.6)"
+                        borderLeft="2px solid var(--chakra-colors-gray-900)"
+                        // boxShadow="inset 0 0 6px rgba(0,0,0,.6)"
                     >
                         <TabPanel
                             h="100%"

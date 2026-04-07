@@ -3,7 +3,7 @@ import { bucket } from "react-bucketjs";
 export const btTimeleft = bucket(0);
 export const btTimeleftUpdated = bucket(0);
 
-export const btGameStatus = bucket("none");
+export const btGameStatus = bucket(0);
 export const btWebsocketStatus = bucket("none");
 export const btReplayStats = bucket({ position: 0, total: 0 });
 export const btTeamInfo = bucket([]);
@@ -44,7 +44,7 @@ export const btActionToggle = bucket(true);
 export const btPrimaryCanvasRef = bucket(null);
 export const btMainPageRef = bucket(null);
 export const btScoreboardExpanded = bucket(null);
-export const btViewerAccordianIndex = bucket([0, 1, 2]);
+export const btViewerAccordianIndex = bucket([0, 1, 2, 3, 4, 5, 6, 7]);
 export const btScreenConfig = bucket({
     screentype: 3,
     resow: 4,

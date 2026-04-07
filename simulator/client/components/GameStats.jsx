@@ -51,14 +51,17 @@ let btDeleteCheck = bucket(false);
 let btStatError = bucket([]);
 
 export function GameStats({}) {
-    let showCreateStat = useBucket(btShowCreateStat);
-    let stat = useBucket(btCreateStat);
+    // let showCreateStat = useBucket(btShowCreateStat);
+    // let stat = useBucket(btCreateStat);
     let stats = useBucketSelector(btGameSettings, (b) => b.stats);
+
+    if (!stats) return <></>;
+    let abbrs = Object.keys(stats);
     return (
         <VStack w="100%">
             <AddStat />
 
-            {stats?.length > 0 && (
+            {abbrs?.length > 0 && (
                 <Table mt="2rem" mb="4rem">
                     <Thead>
                         <Tr>
@@ -69,14 +72,11 @@ export function GameStats({}) {
                         </Tr>
                     </Thead>
                     <Tbody>
-                        {stats.map((stat) => (
+                        {abbrs.map((abbr, i) => (
                             <Stat
-                                key={
-                                    "stat-" +
-                                    stat.stat_name +
-                                    stat.stat_abbreviation
-                                }
-                                stat={stat}
+                                key={"stat-" + stats[abbr].stat_name + abbr}
+                                stat={stats[abbr]}
+                                index={i}
                             />
                         ))}
                     </Tbody>
@@ -98,19 +98,26 @@ function AddStat({}) {
         let gameSettings = btGameSettings.get();
         let stat = btCreateStat.get();
 
-        gameSettings.stats.sort((a, b) => a.stat_order - b.stat_order);
-        let index = gameSettings?.stats
-            ?.map((s) => s.stat_name)
-            .indexOf(stat.stat_name);
-        gameSettings.stats.splice(index, 1);
-        gameSettings.stats.forEach((s, i) => {
-            s.stat_order = i;
-        });
+        if (gameSettings.stats && stat.stat_abbreviation in gameSettings.stats) {
+            delete gameSettings.stats[stat.stat_abbreviation];
+        }
+
+        if (gameSettings.statsEnum && stat.stat_abbreviation in gameSettings.statsEnum) {
+            delete gameSettings.statsEnum[stat.stat_abbreviation];
+        }
+        // gameSettings.stats.sort((a, b) => a.stat_order - b.stat_order);
+        // let index = gameSettings?.stats
+        //     ?.map((s) => s.stat_name)
+        //     .indexOf(stat.stat_name);
+        // gameSettings.stats.splice(index, 1);
+        // gameSettings.stats.forEach((s, i) => {
+        //     s.stat_order = i;
+        // });
 
         updateGameSettings(gameSettings);
 
         btCreateStat.set({});
-        btShowCreateStat.set(false);
+        btShowCreateStat.set(null);
         btDeleteCheck.set(false);
         btStatError.set([]);
     };
@@ -134,41 +141,42 @@ function AddStat({}) {
         let stats = btGameSettings.get((g) => g.stats);
         let newErrors = [];
 
-        let checkStats = [];
+        let checkStats = true;
         if (showCreateStat == "edit") {
-            checkStats = stats.filter((s) => s.stat_order != stat.stat_order);
-        } else {
-            checkStats = stats.filter((s) => true);
+            // if( stat.stat_abbreviation in stats )
+            //     newErrors.push(
+            //         "Stat abbreviation '" + stat.stat_abbreviation + "' already exists."
+            //     );
+            // checkStats = stat.stat_abbreviation in stats;// stats.filter((s) => s.stat_abbreviation != stat.stat_abbreviation);
         }
+        // else {
+        //     checkStats =  stats.filter((s) => true);
+        // }
         if (stat.stat_name == "" || stat?.stat_name?.trim().length < 3) {
             newErrors.push("Must have a name with at least 3 characters");
         }
 
-        if (
-            stat.stat_abbreviation == "" ||
-            stat?.stat_abbreviation?.trim().length == 0
-        ) {
-            newErrors.push(
-                "Must have a abbreviation with at least 1 character"
-            );
+        if (stat.stat_abbreviation == "" || stat?.stat_abbreviation?.trim().length == 0) {
+            newErrors.push("Must have a abbreviation with at least 1 character");
         }
-        if (checkStats && checkStats.length > 0) {
-            if (checkStats.find((s) => s.stat_name == stat.name)) {
-                newErrors.push("Name already exist.");
-            }
 
-            if (
-                checkStats.find(
-                    (s) => s.stat_abbreviation == stat.stat_abbreviation
-                )
-            ) {
-                newErrors.push("Abbreviation already exist.");
-            }
+        // if (checkStats) {
+        //     if (checkStats.find((s) => s.stat_name == stat.name)) {
+        //         newErrors.push("Name already exist.");
+        //     }
 
-            // if (stats.find((s) => s.stat_order == stat.stat_order)) {
-            //     newErrors.push("stat_order already exist.");
-            // }
-        }
+        //     if (
+        //         checkStats.find(
+        //             (s) => s.stat_abbreviation == stat.stat_abbreviation
+        //         )
+        //     ) {
+        //         newErrors.push("Abbreviation already exist.");
+        //     }
+
+        //     // if (stats.find((s) => s.stat_order == stat.stat_order)) {
+        //     //     newErrors.push("stat_order already exist.");
+        //     // }
+        // }
 
         if (newErrors.length > 0) {
             btStatError.set(newErrors);
@@ -181,7 +189,7 @@ function AddStat({}) {
     const onCreateOrSave = (e) => {
         let gameSettings = btGameSettings.get();
         let stat = btCreateStat.get();
-        if (!gameSettings.stats) gameSettings.stats = [];
+        if (!gameSettings.stats) gameSettings.stats = {};
 
         if (typeof stat.valueTYPE === "undefined") {
             stat.valueTYPE = 0;
@@ -191,15 +199,27 @@ function AddStat({}) {
             return;
         }
 
-        if (typeof stat?.stat_order === "undefined") {
-            stat.stat_order = gameSettings.stats.length;
-            gameSettings.stats.push(stat);
-        } else {
-            let id = gameSettings?.stats
-                ?.map((s) => s.stat_order)
-                .indexOf(stat.stat_order);
-            gameSettings.stats[id] = stat;
-        }
+        // if (typeof stat?.stat_order === "undefined") {
+        //     stat.stat_order = gameSettings.stats.length;
+        //     gameSettings.stats[stat.stat_abbreviation] = stat;//.push(stat);
+        // } else {
+        // let abbrs = Object.keys(gameSettings.stats);
+
+        // let id = abbrs
+        //     .map((s) => gameSettings.stats[s].stat_order)
+        //     .indexOf(stat.stat_order);
+        gameSettings.stats[stat.stat_abbreviation] = stat;
+
+        gameSettings.statsEnum = {};
+        let abbrs = Object.keys(gameSettings.stats);
+        abbrs.forEach((abbr) => {
+            let name = gameSettings.stats[abbr].stat_name;
+            name = name.replace(/[\s]/gi, "_").replace(/[^A-Za-z\_]/gi, "");
+            gameSettings.statsEnum[name] = abbr;
+            gameSettings.statsEnum[abbr] = abbr;
+        });
+        // gameSettings.statsEnum[stat.stat_abbreviation] = stat.stat_abbreviation;
+        // }
 
         updateGameSettings(gameSettings);
 
@@ -239,8 +259,7 @@ function AddStat({}) {
                 <ModalContent>
                     <ModalHeader display="flex" flexDir="row">
                         <Text fontWeight={"500"}>
-                            {showCreateStat == "create" ? "Create" : "Edit"}{" "}
-                            Stat
+                            {showCreateStat == "create" ? "Create" : "Edit"} Stat
                         </Text>
                         <Box flex="1"></Box>
                         {showCreateStat == "edit" && (
@@ -273,15 +292,10 @@ function AddStat({}) {
 
                                             <AlertDialogBody>
                                                 Delete{" "}
-                                                <Text
-                                                    as="span"
-                                                    color="brand.900"
-                                                    fontWeight="600"
-                                                >
+                                                <Text as="span" color="brand.900" fontWeight="600">
                                                     {stat?.stat_name}
                                                 </Text>
-                                                ? You can't undo this action
-                                                afterwards.
+                                                ? You can't undo this action afterwards.
                                             </AlertDialogBody>
 
                                             <AlertDialogFooter>
@@ -315,15 +329,8 @@ function AddStat({}) {
                     {/* <ModalHeader>Modal Title</ModalHeader> */}
                     {/* <ModalCloseButton /> */}
                     <ModalBody>
-                        {showCreateStat == "create" && (
-                            <CreateStat isCreate={true} />
-                        )}
-                        {showCreateStat == "edit" && (
-                            <CreateStat
-                                isCreate={false}
-                                index={stat?.stat_order || 0}
-                            />
-                        )}
+                        {showCreateStat == "create" && <CreateStat isCreate={true} />}
+                        {showCreateStat == "edit" && <CreateStat isCreate={false} />}
 
                         <VStack pt="2rem">
                             {statErrors.map((error) => {
@@ -361,15 +368,9 @@ function AddStat({}) {
                             fontSize="1.4rem"
                             fontWeight="500"
                             borderRadius={0}
-                            isDisabled={
-                                showCreateStat == "create" && !isReadyForCreate
-                            }
+                            isDisabled={showCreateStat == "create" && !isReadyForCreate}
                             p="2rem"
-                            variant={
-                                showCreateStat == "create"
-                                    ? "primary"
-                                    : "secondary"
-                            }
+                            variant={showCreateStat == "create" ? "primary" : "secondary"}
                             onClick={onCreateOrSave}
                         >
                             {showCreateStat == "create" ? "Create" : "Save"}
@@ -396,13 +397,25 @@ function CreateStat({ isCreate, index }) {
 
     return (
         <VStack>
-            <SettingTextInput
+            {/* <SettingTextInput
                 id="stat_slug"
                 title="Slug"
                 textWidth="13rem"
                 maxLength={"32"}
                 uppercase={true}
                 disabled={!isCreate}
+                useTarget={useStatTarget}
+                useValue={useStatValue}
+            /> */}
+            <SettingTextInput
+                id="stat_abbreviation"
+                title="Abbreviation"
+                textWidth="13rem"
+                helperText="1-3 character short name"
+                maxLength={3}
+                disabled={!isCreate}
+                uppercase={true}
+                regex={/[^A-Z0-9]/g}
                 useTarget={useStatTarget}
                 useValue={useStatValue}
             />
@@ -422,17 +435,7 @@ function CreateStat({ isCreate, index }) {
                 useTarget={useStatTarget}
                 useValue={useStatValue}
             />
-            <SettingTextInput
-                id="stat_abbreviation"
-                title="Abbreviation"
-                textWidth="13rem"
-                helperText="1-3 character short name"
-                maxLength={3}
-                uppercase={true}
-                regex={/[^A-Z0-9]/g}
-                useTarget={useStatTarget}
-                useValue={useStatValue}
-            />
+
             <SettingSelectInput
                 id="valueTYPE"
                 title="Value Type"
@@ -442,7 +445,7 @@ function CreateStat({ isCreate, index }) {
                     { text: "Float", value: 1 },
                     { text: "Average", value: 2 },
                     { text: "Time", value: 3 },
-                    { text: "String Counts", value: 4 },
+                    // { text: "String Count", value: 4 },
                 ]}
                 useTarget={useStatTarget}
                 useValue={useStatValue}
@@ -460,9 +463,10 @@ function CreateStat({ isCreate, index }) {
     );
 }
 
-function Stat({ stat }) {
-    let stat_order = stat?.stat_order || 0;
-    let isEven = stat_order % 2 == 0;
+function Stat({ stat, index }) {
+    // let stat_order = stat?.stat_order || 0;
+    // let isEven = stat_order % 2 == 0;
+    let isEven = index % 2 == 0;
 
     let typeName = "";
     switch (stat.valueTYPE) {
@@ -478,9 +482,9 @@ function Stat({ stat }) {
         case 3:
             typeName = "Time";
             break;
-        case 4:
-            typeName = "String Counts";
-            break;
+        // case 4:
+        //     typeName = "String Count";
+        //     break;
         default:
             typeName = "Integer";
             break;
@@ -488,10 +492,7 @@ function Stat({ stat }) {
     return (
         <Tr>
             <Td bgColor={isEven ? "gray.700" : "gray.750"}>
-                <Tooltip
-                    label={stat.stat_name + " - " + stat.stat_desc}
-                    placement="top"
-                >
+                <Tooltip label={stat.stat_name + " - " + stat.stat_desc} placement="top">
                     <Text
                         as="span"
                         fontWeight="500"

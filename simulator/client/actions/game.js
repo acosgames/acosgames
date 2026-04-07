@@ -1,6 +1,4 @@
-import ENCODER from "acos-json-encoder";
-import ACOSDictionary from "shared/acos-dictionary.json";
-ENCODER.createDefaultDict(ACOSDictionary);
+import { protoDecode } from "acos-json-encoder";
 
 import GamePanelService from "../services/GamePanelService";
 import { wsSend } from "./websocket";
@@ -43,22 +41,17 @@ export function updateTimeleft() {
     let gamestate = GameStateService.getGameState();
     if (!gamestate) return;
 
-    let timer = gamestate.timer;
-    if (!timer) {
-        return;
-    }
-
-    let deadline = timer.end;
+    let deadline = gamestate.room?.starttime + gamestate.room?.timeend;
     if (!deadline) return;
 
     if (
-        gamestate?.room?.status == "gameover" ||
-        gamestate?.room?.status == "gamecancelled" ||
-        gamestate?.room?.status == "gameerror"
+        gamestate?.room?.status == GameStateService.statusByName("gameover") ||
+        gamestate?.room?.status == GameStateService.statusByName("gamecancelled") ||
+        gamestate?.room?.status == GameStateService.statusByName("gameerror")
     )
         return;
 
-    let now = new Date().getTime();
+    let now = Date.now();
     let elapsed = deadline - now;
 
     if (elapsed <= 0) {
@@ -76,7 +69,7 @@ export function leaveGame(message) {
         displayname: socketUser.displayname,
     };
     wsSend("action", { type: "leave", user });
-    btGameStatus.set("none");
+    btGameStatus.set(0);
 }
 
 export function replayNext() {
@@ -91,12 +84,12 @@ export function replayJump(index) {
     wsSend("replay", { type: "jump", payload: index });
 }
 
-export function joinGame(team_slug) {
+export function joinGame(teamid) {
     let socketUser = btSocketUser.get();
     let user = {
         shortid: socketUser.shortid,
         displayname: socketUser.displayname,
-        team_slug,
+        teamid,
     };
     wsSend("action", { type: "join", user });
 }
@@ -115,19 +108,24 @@ export function startGame(message) {
 }
 
 export async function autoJoin() {
-    await sleep(300);
-    joinGame();
-    await sleep(300);
-    let gameSettings = btGameSettings.get();
     let gameState = btGameState.get();
-    let playerList = Object.keys(gameState?.players);
+    let socketUser = btSocketUser.get();
+    await sleep(1000);
+    if( !gameState?.room?._players || !(socketUser.shortid in gameState?.room?._players ) ) 
+        joinGame();
+    await sleep(200);
+
+    gameState = btGameState.get();
+    let gameSettings = btGameSettings.get();
+    let playerList = gameState?.players || [];
     let fakePlayers = btFakePlayers.get() || {};
     for (let id in fakePlayers) {
         if (playerList.length >= gameSettings.maxplayers) break;
+        if(gameState?.room?._players  && !(id in gameState?.room?._players))
         joinFakePlayer(fakePlayers[id]);
         await sleep(300);
         gameState = btGameState.get();
-        playerList = Object.keys(gameState?.players);
+        playerList = gameState?.players || [];
     }
 }
 export async function newGame(message) {
@@ -136,8 +134,8 @@ export async function newGame(message) {
         shortid: socketUser.shortid,
         displayname: socketUser.displayname,
     };
-    wsSend("action", { type: "newgame", user });
-    btGameStatus.set("none");
+    wsSend("action", { type: "newgame",  user  });
+    btGameStatus.set(0);
 
     let autojoin = btAutoJoin.get();
     if (autojoin) {
@@ -151,7 +149,7 @@ export function skip(message) {
         shortid: socketUser.shortid,
         displayname: socketUser.displayname,
     };
-    wsSend("action", { type: "skip", user });
+    wsSend("action", { type: "skip",  user });
 }
 
 export function spawnFakePlayers(message) {
@@ -160,7 +158,7 @@ export function spawnFakePlayers(message) {
         shortid: socketUser.shortid,
         displayname: socketUser.displayname,
     };
-    wsSend("fakeplayer", { type: "create", user, payload: 1 });
+    wsSend("fakeplayer", { type: "create", payload: { user, count: 1 } });
 
     let autojoin = btAutoJoin.get();
     if (autojoin) {
@@ -168,11 +166,11 @@ export function spawnFakePlayers(message) {
     }
 }
 
-export function joinFakePlayer(fakePlayer, team_slug) {
+export function joinFakePlayer(fakePlayer, teamid) {
     let user = {
         shortid: fakePlayer.shortid,
         displayname: fakePlayer.displayname,
-        team_slug,
+        teamid,
     };
     wsSend("action", { type: "join", user });
 }
@@ -200,7 +198,7 @@ export function removeFakePlayer(fakePlayer) {
 export function onLeave(message) {
     try {
         btWebsocketStatus.set("connected");
-        btGameStatus.set("none");
+        btGameStatus.set(0);
     } catch (e) {
         console.error(e);
     }
@@ -208,11 +206,11 @@ export function onLeave(message) {
 
 export function onReplayStats(message) {
     try {
-        message = ENCODER.decode(message);
+        message = protoDecode(message);
         // console.log("REPLAY STATS: ", message);
         if (!message) return;
 
-        btReplayStats.set(message);
+        btReplayStats.set(message.payload);
     } catch (e) {
         console.error(e);
     }
@@ -220,14 +218,14 @@ export function onReplayStats(message) {
 
 export function onReplay(message) {
     try {
-        message = ENCODER.decode(message);
+        message = protoDecode(message);
         console.log("REPLAY: ", message);
         if (!message) return;
 
-        GameStateService.updateState(message.current, message.prev);
+        GameStateService.updateState(message.payload.current, message.payload.prev);
 
         updateTimeleft();
-        btGameStatus.set(message?.current?.room?.status || "none");
+        btGameStatus.set(message?.payload?.current?.room?.status || 0);
     } catch (e) {
         console.error(e);
     }
@@ -235,11 +233,11 @@ export function onReplay(message) {
 
 export function onTeamInfo(message) {
     try {
-        message = ENCODER.decode(message);
+        message = protoDecode(message);
         // console.log("TEAMINFO UPDATE: ", message);
         if (!message) return;
 
-        btTeamInfo.set(message);
+        btTeamInfo.set(message.payload);
     } catch (e) {
         console.error(e);
     }
@@ -247,13 +245,13 @@ export function onTeamInfo(message) {
 
 export function onGameUpdate(message) {
     try {
-        message = ENCODER.decode(message);
+        message = protoDecode(message);
         // console.log("GAME UPDATE: ", message);
         if (!message) return;
 
-        GameStateService.updateState(message);
+        GameStateService.updateState(message.payload);
 
-        btGameStatus.set(message?.room?.status || "none");
+        btGameStatus.set(message?.payload?.room?.status || 0);
     } catch (e) {
         console.error(e);
     }
@@ -261,14 +259,14 @@ export function onGameUpdate(message) {
 
 export function onJoin(message) {
     try {
-        message = ENCODER.decode(message);
+        message = protoDecode(message);
         console.log("JOINED: ", message);
         if (!message) return;
 
-        GameStateService.updateState(message);
+        GameStateService.updateState(message.payload);
 
-        if (message?.room?.status) {
-            btGameStatus.set(message.room.status);
+        if (message?.payload?.room?.status) {
+            btGameStatus.set(message.payload.room.status);
         }
 
         btWebsocketStatus.set("ingame");
@@ -280,7 +278,7 @@ export function onJoin(message) {
 export function onSpectate(message) {}
 
 export function onFakePlayer(message) {
-    message = ENCODER.decode(message);
+    message = protoDecode(message);
     // console.log("FAKEPLAYER: ", message);
     if (!message || typeof message.type === "undefined") return;
 
@@ -303,8 +301,8 @@ export function onFakePlayer(message) {
     } else if (message.type == "join") {
     } else if (message.type == "leave") {
     } else if (message.type == "removed") {
-        let id = message?.payload;
-
+        let user = message?.payload?.user;
+        let id = user?.shortid;
         if (id && id in fakePlayers) {
             let fakePlayer = fakePlayers[id];
             leaveFakePlayer(fakePlayer);

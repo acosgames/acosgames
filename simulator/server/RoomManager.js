@@ -57,7 +57,7 @@ class RoomManager {
     getActiveRoom() {
         for (const room_slug in rooms) {
             let room = rooms[room_slug];
-            if ((room.status = "gamestart")) {
+            if ((room.status = this.room.statusByName("gamestart"))) {
                 return room;
             }
         }
@@ -67,7 +67,7 @@ class RoomManager {
     getOpenRoom() {
         for (const room_slug in rooms) {
             let room = rooms[room_slug];
-            if ((room.status = "pregame")) {
+            if ((room.status = this.room.statusByName("pregame"))) {
                 return room;
             }
         }

@@ -124,30 +124,20 @@ export function RenderPlayers({ room_slug }) {
     }
 
     let playerElems = [];
-    let playerList = Object.keys(players || {});
+    let playerList = (players || []).slice();
 
     //sort from highest to lowest
     playerList.sort((a, b) => {
-        let playerA = players[a];
-        let playerB = players[b];
-        if (playerA.score == playerB.score) {
+        if (a.score == b.score) {
             if (sort)
-                return playerB.displayname.localeCompare(playerA.displayname);
-            return playerA.displayname.localeCompare(playerB.displayname);
+                return b.displayname.localeCompare(a.displayname);
+            return a.displayname.localeCompare(b.displayname);
         }
 
-        if (sort) return playerA.score - playerB.score;
+        if (sort) return a.score - b.score;
 
-        return playerB.score - playerA.score;
+        return b.score - a.score;
     });
-
-    //render the players
-    for (let i = 0; i < playerList.length; i++) {
-        let shortid = playerList[i];
-        let player = players[shortid];
-
-        playerElems.push(player);
-    }
 
     return (
         <VStack
@@ -161,7 +151,7 @@ export function RenderPlayers({ room_slug }) {
         >
             <AnimatePresence>
                 {/* <LayoutGroup> */}
-                {playerElems.map((player) => (
+                {playerList.map((player) => (
                     <RenderPlayer
                         // gamepanelid={id}
                         key={player.displayname}
@@ -179,24 +169,20 @@ function RenderTeams({ gamepanelid, players, teams }) {
 
     if (!players) return <></>;
 
-    let teamList = Object.keys(teams || []);
-    if (!teamList) return <></>;
+    let teamList = (teams || []).slice();
+    if (!teamList.length) return <></>;
 
     teamList.sort((a, b) => {
-        let teamA = teams[a];
-        let teamB = teams[b];
-        if (teamA.score == teamB.score) {
-            return teamA?.displayname?.localeCompare(
-                teamB?.displayname || "unknown"
-            );
+        if (a.score == b.score) {
+            return a?.displayname?.localeCompare(b?.displayname || "unknown");
         }
 
-        return teamB.score - teamA.score;
+        return b.score - a.score;
     });
 
     for (let i = 0; i < teamList.length; i++) {
-        let team_slug = teamList[i];
-        let team = teams[team_slug];
+        let team = teamList[i];
+        let team_slug = team.team_slug;
 
         teamElems.push(
             <RenderTeam
@@ -213,28 +199,24 @@ function RenderTeams({ gamepanelid, players, teams }) {
 function RenderTeam({ gamepanelid, players, team }) {
     let playerElems = [];
 
-    team.players.sort((a, b) => {
-        let playerA = players[a];
-        let playerB = players[b];
-        if (playerA.score == playerB.score) {
-            if (sort)
-                return playerB.displayname.localeCompare(playerA.displayname);
-            return playerA.displayname.localeCompare(playerB.displayname);
+    let teamPlayerList = team.players.map(id => ({ ...players[id], id }));
+
+    teamPlayerList.sort((a, b) => {
+        if (!a || !b) return 0;
+        if (a.score == b.score) {
+            return a.displayname.localeCompare(b.displayname);
         }
-
-        if (sort) return playerA.score - playerB.score;
-
-        return playerB.score - playerA.score;
+        return b.score - a.score;
     });
 
-    for (let i = 0; i < team.players.length; i++) {
-        let shortid = team.players[i];
-        let player = players[shortid];
+    for (let i = 0; i < teamPlayerList.length; i++) {
+        let player = teamPlayerList[i];
+        if (!player) continue;
         playerElems.push(
             <RenderPlayer
                 // gamepanelid={gamepanelid}
-                key={"renderteam-player-" + shortid}
-                shortid={shortid}
+                key={"renderteam-player-" + player.id}
+                shortid={player.id}
                 {...player}
                 team={team}
             />

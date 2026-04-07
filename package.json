@@ -1,6 +1,6 @@
 {
     "name": "acosgames",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -18,8 +18,8 @@
         "url": "https://github.com/acosgames/acosgames.git"
     },
     "dependencies": {
-        "acos-json-delta": "^1.0.0",
-        "acos-json-encoder": "^1.0.0",
+        "acos-json-delta": "^1.1.1",
+        "acos-json-encoder": "^1.2.2",
         "axios": "^1.6.8",
         "browser-sync": "^3.0.2",
         "chalk": "^5.3.0",
@@ -38,6 +38,7 @@
         "react-select": "^5.8.0",
         "seedrandom": "^3.0.5",
         "shelljs": "^0.8.5",
+        "slug": "^9.1.0",
         "socket.io": "^4.7.5",
         "terminate": "^2.6.1",
         "vlq": "^2.0.4",

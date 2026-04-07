@@ -113,7 +113,7 @@
     "timeseq",
     "isreplay",
     "status",
-    "sequence",
+    "_sequence",
     "history",
     "index",
     "value",
@@ -148,5 +148,9 @@
     "US",
     "UK",
     "gamecancelled",
-    "gameerror"
+    "gameerror",
+    "timesec",
+    "timeend",
+    "next_id",
+    "next_action"
 ]

@@ -115,7 +115,7 @@ function GameIFrame(props) {
     const onResize = () => {
         if (!gamescreenRef?.current || !iframeRef?.current) return;
 
-        var now = new Date().getTime();
+        var now = Date.now();
         if (now - timestamp < THROTTLE) {
             return onResize;
         }
@@ -292,9 +292,9 @@ function GameIFrame(props) {
                     // boxSizing="content-box"
                     // mt="2vh"
                     // border="2px solid var(--chakra-colors-gray-700)"
-                    filter={
-                        "drop-shadow(0 0px 4px rgba(0,0,0,0.50)) drop-shadow(0 0px 8px rgba(0,0,0,0.4))"
-                    }
+                    // filter={
+                        // "drop-shadow(0 0px 4px rgba(0,0,0,0.50)) drop-shadow(0 0px 8px rgba(0,0,0,0.4))"
+                    // }
                 >
                     <iframe
                         className="gamescreen"

@@ -12,7 +12,7 @@ class Rank {
     }
 
     calculateRanks(players, teams) {
-        if (this.isObject(teams) && Object.keys(teams).length > 0)
+        if (Array.isArray(teams) && teams.length > 0)
             return this.calculateTeams(players, teams);
 
         return this.calculateFFA(players);
@@ -27,9 +27,8 @@ class Rank {
         if (!players) return false;
 
         try {
-            for (var teamid in teams) {
+            for (const team of teams) {
                 //teams must have a players array list that holds the ids of players on this team
-                let team = teams[teamid];
                 if (!team || !team.players || !Array.isArray(team.players))
                     return this.calculateFFA(players);
 

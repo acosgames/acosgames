@@ -103,7 +103,7 @@ class GamePanelService {
         }
 
         let gameState = GameStateService.getGameState();
-        if (!gameState?.players || !(gamepanel.id in gameState.players)) {
+        if (!Array.isArray(gameState?.players) || !gameState.players.some(p => p.shortid === gamepanel.id)) {
             return;
         }
 

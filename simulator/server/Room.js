@@ -5,13 +5,37 @@ const nanoid = NANOID.customAlphabet("6789BCDFGHJKLMNPQRTW", 6);
 
 class Room {
     constructor(settings) {
+
+
+        this.statusList = [
+            "none",
+            "waiting",
+            "pregame",
+            "starting",
+            "gamestart",
+            "gameover",
+            "gamecancelled",
+            "gameerror",
+        ]
+
+        this.statusMap = {
+            "none": 0,
+            "waiting": 1,
+            "pregame": 2,
+            "starting": 3,
+            "gamestart": 4,
+            "gameover": 5,
+            "gamecancelled": 6,
+            "gameerror": 7,
+        }
+
         this.room_slug = nanoid(8);
-        this.status = "pregame";
+        this.status = 2;
         this.sequence = 0;
         this.starttime = Date.now();
         this.endtime = 0;
         this.spectators = [];
-        this.history = [{}];
+        this.history = [];
         this.gamestate = 0;
         this.gsm = GameSettingsManager; //game settings manager
         if (settings) this.gsm = settings;
@@ -32,14 +56,14 @@ class Room {
         return {
             room_slug: this.room_slug,
             status: this.status,
-            sequence: this.sequence,
+            _sequence: this._sequence,
             starttime: this.starttime,
-            endtime: this.endtime,
+            // endtime: this.endtime,
         };
     }
 
     hasVacancy() {
-        return this.sequence == 0 || (this.isPregame() && !this.isFull());
+        return this._sequence == 0 || (this.isPregame() && !this.isFull());
     }
 
     replayStats() {
@@ -99,20 +123,22 @@ class Room {
 
         let now = Date.now();
         if (current?.room?.updated) {
-            if (current?.timer?.end) {
-                let offset = current.timer.end - current.room.updated;
-                current.timer.end = now + offset;
+            if (current?.room.timeend) {
+                let updatedTime = current?.room?.starttime + current?.room?.updated;
+                let offset = current.timeend - updatedTime;
+                current.timeend = (now + offset) - current?.room?.starttime;
                 this.setDeadline(0);
             }
-            current.room.updated = now;
+            current.room.updated = now - current?.room?.starttime;
         }
 
         if (prev?.room?.updated) {
-            if (prev?.timer?.end) {
-                let offset = prev.timer.end - prev.room.updated;
-                prev.timer.end = now + offset;
+            if (prev?.room?.timeend) {
+                let updatedTime = prev?.room?.starttime + prev?.room?.updated;
+                let offset = prev.timeend - updatedTime;
+                prev.timeend = (now + offset) - prev?.room?.starttime;
             }
-            prev.room.updated = now;
+            prev.room.updated = now - prev?.room?.starttime;
         }
 
         if (current?.room) current.room.isreplay = true;
@@ -140,15 +166,15 @@ class Room {
             this.status = newGamestate.room.status;
         }
 
-        if (newGamestate?.room?.sequence) {
-            this.sequence = newGamestate.room.sequence;
+        if (newGamestate?.room?._sequence) {
+            this._sequence = newGamestate.room._sequence;
         }
 
         if (this.isGameOver()) {
             this.setDeadline(0);
-            this.endtime = Date.now();
-        } else if (newGamestate?.timer?.end) {
-            this.setDeadline(newGamestate.timer.end);
+            // this.endtime = Date.now();
+        } else if (newGamestate?.room?.timeend) {
+            this.setDeadline(newGamestate.room.timeend);
         }
     }
 
@@ -207,32 +233,36 @@ class Room {
 
         if (this.history.length > 1) return;
 
-        let gameState = this.history[0];
-        gameState.teams = {};
+        let gameState = this.history[0] || {};
+        if (teamsBySize.length > 0) {
+            // gameState.teams = {};
 
-        for (const team of teamsBySize) {
-            gameState.teams[team.team_slug] = { players: [] };
+            // for (const team of teamsBySize) {
+            //     gameState.teams[team.team_slug] = { players: [] };
+            // }
+
+            // this.history[0] = gameState;
+
+            this.teaminfo = teamsBySize;
         }
-
-        this.history[0] = gameState;
-
-        this.teaminfo = teamsBySize;
     }
 
-    attemptJoinTeam(team_slug) {
-        for (const team of this.teaminfo) {
-            if (team.team_slug == team_slug) {
+    attemptJoinTeam(teamid) {
+        // for (let i = 0; i < this.teaminfo.length; i++) {
+            let team = this.teaminfo[teamid];
+            if (team) {
                 if (team.vacancy > 0) {
                     team.vacancy -= 1;
-                    return { team_slug: team.team_slug };
+                    return { teamid };
                 }
             }
-        }
+        // }
 
-        for (const team of this.teaminfo) {
+        for (let i = 0; i < this.teaminfo.length; i++) {
+            let team = this.teaminfo[i];
             if (team.vacancy > 0) {
                 team.vacancy -= 1;
-                return { team_slug: team.team_slug };
+                return { teamid: i };
             }
         }
         return { error: "No teams available" };
@@ -275,37 +305,48 @@ class Room {
     isFull() {
         let gameSettings = this.gsm.get();
         let gamestate = this.getGameState();
-        let players = gamestate?.players || {};
-        let playerList = Object.keys(players);
+        let players = gamestate?.players || [];
         let maxplayers = gameSettings?.maxplayers || 0;
-        if (playerList.length >= maxplayers) {
+        if (players.length >= maxplayers) {
             return true;
         }
         return false;
     }
     hasPlayer(shortid) {
         let gamestate = this.getGameState();
-        return gamestate?.players && shortid in gamestate?.players;
+        return gamestate?.room?._players[shortid];// Array.isArray(gamestate?.players) && gamestate.players.some(p => p.shortid === shortid);
     }
 
     copyGameState() {
         return cloneObj(this.getGameState());
     }
 
+    getAllStatus() {
+        return this.statusList;
+    }
+
+    statusById(id) {
+        return this.statusList[id];
+    }
+
+    statusByName(name) {
+        return this.statusMap[name];
+    }
+
     isGameOver() {
         return (
-            this.status == "gameover" ||
-            this.status == "gamecancelled" ||
-            this.status == "gameerror"
+            this.status == this.statusByName("gameover") ||
+            this.status == this.statusByName("gamecancelled") ||
+            this.status == this.statusByName("gameerror")
         );
     }
 
     isPregame() {
-        return this.status == "pregame";
+        return this.status == this.statusByName("pregame");
     }
 
     isGameStart() {
-        return this.status == "gamestart";
+        return this.status == this.statusByName("gamestart");
     }
 }
 

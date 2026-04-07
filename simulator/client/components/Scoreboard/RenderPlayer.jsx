@@ -29,7 +29,7 @@ function IsNextIndicator({ gamepanelid, shortid }) {
 }
 export default function RenderPlayer({
     gamepanelid,
-    shortid,
+    id,
     displayname,
     portraitid,
     rating,
@@ -39,7 +39,7 @@ export default function RenderPlayer({
 }) {
     let gameState = useBucket(btGameState);
 
-    let isUserNext = GameStateService.validateNextUser(shortid);
+    let isUserNext = GameStateService.validateNextUser(id);
     let filename = `assorted-${portraitid || 1}-medium.webp`;
     return (
         <HStackMotion

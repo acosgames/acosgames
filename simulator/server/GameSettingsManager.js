@@ -24,10 +24,7 @@ class GameSettingsManager {
     start(gameWorkingDirectory, callback) {
         if (!gameWorkingDirectory) return;
         this.onGameSettingsReloaded = callback;
-        this.settingsPath = path.join(
-            gameWorkingDirectory,
-            "./game-settings.json"
-        );
+        this.settingsPath = path.join(gameWorkingDirectory, "./game-settings.json");
         this.gameSettings = defaultGameSettings;
 
         this.loadSettings();
@@ -126,7 +123,8 @@ class GameSettingsManager {
         let teamMaxPlayers = 0;
 
         if ("stats" in s) {
-            for (let stat of s.stats) {
+            for (let abbr in s.stats) {
+                let stat = s.stats[abbr];
                 let prev = stat.valueTYPE;
                 try {
                     stat.valueTYPE = Number.parseInt(stat.valueTYPE);
@@ -141,9 +139,12 @@ class GameSettingsManager {
                 }
             }
 
-            s.stats.sort((a, b) => {
-                return a.stat_order - b.stat_order;
-            });
+            // s.stats.sort((a, b) => {
+            //     return a.stat_order - b.stat_order;
+            // });
+        } else {
+            s.stats = {};
+            dirty = true;
         }
 
         if ("items" in s) {
@@ -176,20 +177,14 @@ class GameSettingsManager {
         if ("teams" in s) {
             if (s.teams.length > 0) {
                 for (let team of s.teams) {
-                    if (
-                        !("minplayers" in team) ||
-                        !Number.isInteger(team.minplayers)
-                    ) {
+                    if (!("minplayers" in team) || !Number.isInteger(team.minplayers)) {
                         team.minplayers = 1;
                         dirty = true;
                     } else if (team.minplayers < 0) {
                         team.minplayers = 0;
                         dirty = true;
                     }
-                    if (
-                        !("maxplayers" in team) ||
-                        !Number.isInteger(team.maxplayers)
-                    ) {
+                    if (!("maxplayers" in team) || !Number.isInteger(team.maxplayers)) {
                         team.maxplayers = 1;
                         dirty = true;
                     } else if (team.maxplayers < team.minplayers) {
@@ -243,10 +238,7 @@ class GameSettingsManager {
     loadSettings() {
         this.reloadServerGameSettings(this.settingsPath);
 
-        let watchPath = this.settingsPath.substr(
-            0,
-            this.settingsPath.lastIndexOf(path.sep)
-        );
+        let watchPath = this.settingsPath.substr(0, this.settingsPath.lastIndexOf(path.sep));
         chokidar.watch(this.settingsPath).on("change", (path) => {
             let s = this.reloadServerGameSettings(this.settingsPath);
             if (s) this.onGameSettingsReloaded();
@@ -262,11 +254,7 @@ class GameSettingsManager {
 
             // this.validateSettings();
         } catch (e) {
-            console.error(
-                "Invalid JSON for updateGameSettings: ",
-                newGameSettings,
-                e
-            );
+            console.error("Invalid JSON for updateGameSettings: ", newGameSettings, e);
             return false;
         }
         return true;

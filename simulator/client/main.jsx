@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 import App from "./components/App";
-
+import * as encoder from "../shared/acos-encoder.js";
 import theme from "./theme";
 import { ColorModeScript, ChakraProvider } from "@chakra-ui/react";
 import "./components/app.scss";

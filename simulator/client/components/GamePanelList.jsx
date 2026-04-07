@@ -161,7 +161,7 @@ function GamePanelList(props) {
             if (layout == "expanded") {
                 elems.push(
                     <ExpandedLayout
-                        key={"gamepanel-" + shortid}
+                        key={"gamepaneld-" + shortid}
                         shortid={shortid}
                         displayname={user.displayname}
                         isPrimary={isPrimary}

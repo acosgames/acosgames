@@ -21,7 +21,7 @@ export function getCountryFlag(countrycode: string): string {
 }
 
 const onMessage =
-    (callback: (message: string, newStatus: boolean) => void) => (evt) => {
+    (callback: (message: string, newStatus: boolean) => void) => (evt: MessageEvent<any>) => {
         // console.log("MESSAGE EVENT CALLED #1");
         let message = evt.data;
         let origin = evt.origin;
@@ -30,12 +30,12 @@ const onMessage =
 
         let newStatus = false;
         gamestate = message;
-        if (gamestate?.room?.status != roomStatus) {
+        if (gamestate && gamestate?.room?.status != roomStatus) {
             roomStatus = gamestate?.room?.status;
             newStatus = true;
             if (
                 isGameover &&
-                EGameStatus[roomStatus] < EGameStatus["gameover"]
+                roomStatus < EGameStatus.gameover
             ) {
                 isGameover = false;
                 timerLoop(timerLoopCallback);
@@ -48,23 +48,23 @@ const onMessage =
     };
 
 let isGameover: boolean = false;
-let roomStatus: string = "none";
-let gamestate: GameState = null;
+let roomStatus: EGameStatus = EGameStatus.none;
+let gamestate: GameState | null = null;
 let timerHandle: any = 0;
-let timerLoopCallback = null;
+let timerLoopCallback: ((elapsed: number) => void) = (elapsed: number) => {};
 export function timerLoop(cb: (elapsed: number) => void): void {
     timerLoopCallback = cb;
     timerHandle = setTimeout(() => {
         timerLoop(cb);
     }, 100);
 
-    let timer = gamestate?.timer;
+    let timer = gamestate?.room;
     if (!timer) return;
 
-    let deadline = timer?.end;
+    let deadline = (timer?.starttime || 0) + (timer?.timeend || 0);
     if (!deadline) return;
 
-    let now = new Date().getTime();
+    let now = Date.now();
     let elapsed = deadline - now;
 
     if (elapsed <= 0) {
@@ -74,7 +74,7 @@ export function timerLoop(cb: (elapsed: number) => void): void {
     if (cb) cb(elapsed);
 
     let room = gamestate?.room;
-    if (EGameStatus[room?.status] >= EGameStatus["gameover"]) {
+    if (room && room.status >= EGameStatus.gameover) {
         clearTimeout(timerHandle);
         isGameover = true;
         return;

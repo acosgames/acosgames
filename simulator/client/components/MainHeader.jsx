@@ -8,6 +8,7 @@ import {
     Button,
     Text,
     Divider,
+    VStack,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 // import config from '../config'
@@ -15,12 +16,8 @@ import { Link } from "react-router-dom";
 import { ActionPanel } from "./ActionPanel.jsx";
 import Timeleft from "./Timeleft.jsx";
 import { useBucket } from "react-bucketjs";
-import {
-    btActionToggle,
-    btGameStatus,
-    btIsMobile,
-    btReplayStats,
-} from "../actions/buckets.js";
+import { btActionToggle, btGameStatus, btIsMobile, btReplayStats } from "../actions/buckets.js";
+import GameStateService from "../services/GameStateService.js";
 // import GameActions from './games/GameDisplay/GameActions';
 
 export default function MainHeader(props) {
@@ -30,21 +27,19 @@ export default function MainHeader(props) {
     let replayStats = useBucket(btReplayStats);
 
     let statusColor = "white";
-    if (gameStatus == "pregame") statusColor = "yellow.200";
+    if (gameStatus == GameStateService.statusByName("pregame")) statusColor = "yellow.200";
     else if (
-        gameStatus == "gameover" ||
-        gameStatus == "gamecancelled" ||
-        gameStatus == "gameerror"
+        gameStatus == GameStateService.statusByName("gameover") ||
+        gameStatus == GameStateService.statusByName("gamecancelled") ||
+        gameStatus == GameStateService.statusByName("gameerror")
     ) {
         statusColor = "red.300";
-    } else if (gameStatus == "gamestart") {
+    } else if (gameStatus == GameStateService.statusByName("gamestart")) {
         statusColor = "green.200";
-    } else if (gameStatus == "none") {
-        gameStatus = "waiting";
+    } else if (gameStatus == GameStateService.statusByName("none")) {
+        gameStatus = GameStateService.statusByName("waiting");
     }
-    let isGameActive =
-        replayStats?.position >= replayStats?.total &&
-        gameStatus == "gamestart";
+    let isGameActive = replayStats?.position >= replayStats?.total && gameStatus == GameStateService.statusByName("gamestart");
     return (
         <Box
             zIndex="20"
@@ -68,17 +63,17 @@ export default function MainHeader(props) {
                     justifyContent={"center"}
                     opacity={isGameActive ? "0.1" : "1"}
                 >
-                    <Box>
-                        <Link to="/" className="">
-                            <Image
-                                alt={"A cup of skill logo"}
-                                src={`https://cdn.acos.games/file/acospub/acos-logo-standalone4.png`}
-                                h={["1.8rem", "1.8rem", "3rem"]}
-                                maxHeight={"90%"}
-                            />
-                            <Text fontSize="1rem">SIMULATOR</Text>
-                        </Link>
-                    </Box>
+                    <VStack justifyContent={"center"} spacing={"0"}>
+                        {/* <Link to="/" className=""> */}
+                        <Image
+                            alt={"A cup of skill logo"}
+                            src={`https://assets.acos.games/acos-logo-2025.png`}
+                            h={["1.8rem", "1.8rem", "3rem"]}
+                            maxHeight={"90%"}
+                        />
+                        <Text fontSize="1rem">SIMULATOR</Text>
+                        {/* </Link> */}
+                    </VStack>
                 </HStack>
                 <HStack w="100%" lineHeight="100%" pl="2rem">
                     <Text
@@ -102,7 +97,7 @@ export default function MainHeader(props) {
                     height="100%"
                     flex="1"
                     display={["none", "none", "flex"]}
-                    opacity={isGameActive ? "0.1" : "1"}
+                    opacity={isGameActive ? "0.9" : "1"}
                 >
                     <Stack direction={"row"} spacing={0} height="100%">
                         <Box w="30rem">

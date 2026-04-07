@@ -60,25 +60,25 @@ function GameActionsCompact(props) {
     }
 
     let isGameRunning =
-        gameStatus == "waiting" ||
-        gameStatus == "pregame" ||
-        gameStatus == "gamestart";
-    let isPregame = gameStatus == "pregame";
-    let isInGame = gameStatus != "gamestart";
+        gameStatus == GameStateService.statusByName("waiting") ||
+        gameStatus == GameStateService.statusByName("pregame") ||
+        gameStatus == GameStateService.statusByName("gamestart");
+    let isPregame = gameStatus == GameStateService.statusByName("pregame");
+    let isInGame = gameStatus != GameStateService.statusByName("gamestart");
     let isGameOver =
-        gameStatus == "gameover" ||
-        gameStatus == "gamecancelled" ||
-        gameStatus == "gameerror";
+        gameStatus == GameStateService.statusByName("gameover") ||
+        gameStatus == GameStateService.statusByName("gamecancelled") ||
+        gameStatus == GameStateService.statusByName("gameerror");
 
     let playerList = Object.keys(gameState.players || {});
 
     let totalSlotsRemaining = GameStateService.hasVacancy();
     if (gameState.teams) {
         totalSlotsRemaining = 0;
-        let teamList = Object.keys(gameState.teams);
+        let teamList = gameState.teams;
         for (let i = 0; i < teamList.length; i++) {
-            let team_slug = teamList[i];
-            totalSlotsRemaining += GameStateService.hasVacancy(team_slug);
+            let team = teamList[i];
+            totalSlotsRemaining += GameStateService.hasVacancy(team.team_slug);
         }
     }
 
@@ -181,15 +181,15 @@ export function GameActionsExpanded(props) {
     }
 
     let isGameRunning =
-        gameStatus == "waiting" ||
-        gameStatus == "pregame" ||
-        gameStatus == "gamestart";
-    let isPregame = gameStatus == "pregame";
-    let isInGame = gameStatus != "gamestart";
+        gameStatus == GameStateService.statusByName("waiting") ||
+        gameStatus == GameStateService.statusByName("pregame") ||
+        gameStatus == GameStateService.statusByName("gamestart");
+    let isPregame = gameStatus == GameStateService.statusByName("pregame");
+    let isInGame = gameStatus != GameStateService.statusByName("gamestart");
     let isGameOver =
-        gameStatus == "gameover" ||
-        gameStatus == "gamecancelled" ||
-        gameStatus == "gameerror";
+        gameStatus == GameStateService.statusByName("gameover") ||
+        gameStatus == GameStateService.statusByName("gamecancelled") ||
+        gameStatus == GameStateService.statusByName("gameerror");
 
     let totalSlotsRemaining = GameStateService.hasVacancy();
     if (gameState.teams) {

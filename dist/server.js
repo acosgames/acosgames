@@ -1,5 +1,16 @@
+// import { EGameStatus } from "./defs";
 class ACOSServer {
     constructor() {
+        this.gameState = null;
+        this.currentAction = null;
+        this.defaultSeconds = 300;
+        this.kickedPlayers = [];
+        this.requireGameState = () => {
+            if (!this.gameState) {
+                throw new Error("Game state is not initialized");
+            }
+            return this.gameState;
+        };
         this.init = () => {
             try {
                 this.gameState = JSON.parse(JSON.stringify(game()));
@@ -25,14 +36,12 @@ class ACOSServer {
             }
         };
         this.setGame = (game) => {
-            for (var id in this.gameState.players) {
-                let player = this.gameState.players[id];
-                game.players[id] = player;
-            }
+            const currentGame = this.requireGameState();
+            game.players = currentGame.players.slice();
             this.gameState = game;
         };
         this.save = () => {
-            save(this.gameState);
+            save(this.requireGameState());
         };
         this.gameerror = (payload) => {
             gameerror("[Error]:", payload);
@@ -64,11 +73,27 @@ class ACOSServer {
         this.gamestate = () => {
             return this.gameState;
         };
-        this.playerList = () => Object.keys(this.gameState.players);
-        this.playerCount = () => Object.keys(this.gameState.players).length;
+        this.playerByShortid = (shortid) => {
+            let playerid = this.room()._players[shortid];
+            return this.players(playerid);
+        };
+        this.playerIndex = (shortid) => {
+            let playerid = this.room()._players[shortid];
+            return playerid !== undefined ? playerid : -1;
+        };
+        this.playerList = () => this.requireGameState().players.map(p => p.shortid);
+        this.playerCount = () => this.requireGameState().players.length;
+        this.teamBySlug = (team_slug) => {
+            let team = this.room()._teams[team_slug];
+            return team !== undefined ? this.teams(team_slug) : undefined;
+        };
+        this.teamByIndex = (teamid) => {
+            let teams = this.teams();
+            return teams[teamid];
+        };
         this.setTimer = (seconds) => {
             seconds = seconds || 15;
-            this.gameState.timer.set = seconds;
+            this.requireGameState().room.timeset = seconds;
         };
         this.reachedTimelimit = (action) => {
             if (typeof action.timeleft == "undefined")
@@ -76,7 +101,7 @@ class ACOSServer {
             return action.timeleft <= 0;
         };
         this.clearEvents = () => {
-            this.gameState.events = {};
+            this.requireGameState().room.events = [];
         };
     }
     ignore() {
@@ -89,31 +114,40 @@ class ACOSServer {
         return database();
     }
     room(key, value) {
+        const gameState = this.requireGameState();
         if (typeof key === "undefined")
-            return this.gameState.room;
+            return gameState.room;
+        const room = gameState.room;
         if (typeof value === "undefined")
-            return this.gameState.room[key];
-        this.gameState.room[key] = value;
+            return room[key];
+        room[key] = value;
         return value;
+    }
+    newState(s) {
+        this.requireGameState().state = s;
     }
     state(key, value) {
+        const state = this.requireGameState().state;
         if (typeof key === "undefined")
-            return this.gameState.state;
+            return state;
         if (typeof value === "undefined")
-            return this.gameState.state[key];
-        this.gameState.state[key] = value;
+            return state[key];
+        state[key] = value;
         return value;
     }
-    players(shortid, value) {
-        if (typeof shortid === "undefined")
-            return this.gameState.players;
+    players(index, value) {
+        const players = this.requireGameState().players;
+        if (typeof index === "undefined")
+            return players;
         if (typeof value === "undefined")
-            return this.gameState.players[shortid];
-        this.gameState.players[shortid] = value;
+            return players[index];
+        players[index] = value;
         return value;
     }
     statIncrement(shortid, abbreviation, value) {
-        let player = this.players(shortid);
+        let player = this.playerByShortid(shortid);
+        if (!player)
+            throw new Error(`Player not found: ${shortid}`);
         if (typeof player.stats === "undefined") {
             player.stats = {};
         }
@@ -126,7 +160,9 @@ class ACOSServer {
         return player.stats[abbreviation];
     }
     stats(shortid, abbreviation, value) {
-        let player = this.players(shortid);
+        let player = this.playerByShortid(shortid);
+        if (!player)
+            throw new Error(`Player not found: ${shortid}`);
         if (typeof player.stats === "undefined") {
             player.stats = {};
         }
@@ -146,29 +182,65 @@ class ACOSServer {
             player.stats[abbreviation] = value;
         return player.stats[abbreviation];
     }
-    teams(teamid, value) {
-        if (typeof teamid === "undefined")
-            return this.gameState.teams;
+    teams(team_slug, value) {
+        const gameState = this.requireGameState();
+        const room = gameState.room;
+        if (!gameState.teams)
+            gameState.teams = [];
+        if (typeof team_slug === "undefined")
+            return gameState.teams;
+        const idx = room._teams[team_slug];
         if (typeof value === "undefined")
-            return this.gameState.teams[teamid];
-        this.gameState.teams[teamid] = value;
+            return gameState.teams[idx];
+        if (idx >= 0)
+            gameState.teams[idx] = value;
+        else
+            gameState.teams.push(value);
+        return value;
     }
-    next(id, action) {
-        if (typeof id !== "undefined") {
-            this.gameState.next = { id, action };
+    nextPlayer(id, action) {
+        const room = this.requireGameState().room;
+        if (typeof id === "undefined") {
+            return room.next_player;
         }
-        return this.gameState.next;
+        if (typeof action === "undefined") {
+            room.next_player = id;
+            return room.next_player;
+        }
+        room.next_player = id;
+        room.next_action = action;
+        return room.next_player;
+    }
+    nextTeam(id, action) {
+        const room = this.requireGameState().room;
+        if (typeof id === "undefined") {
+            return room.next_team;
+        }
+        if (typeof action === "undefined") {
+            room.next_team = id;
+            return room.next_team;
+        }
+        room.next_team = id;
+        room.next_action = action;
+        return room.next_team;
     }
     timer() {
-        return this.gameState.timer;
+        const room = this.requireGameState().room;
+        return {
+            seconds: room.timesec,
+            end: room.timeend,
+        };
     }
     events(name, payload) {
+        const room = this.requireGameState().room;
         if (typeof name === "undefined")
-            return this.gameState.events;
+            return room.events;
         if (typeof payload === "undefined")
-            return this.gameState.events[name];
-        this.gameState.events[name] = payload;
-        return this.gameState.events[name];
+            return room.events.find(e => e.type == name);
+        if (!room.events)
+            room.events = [];
+        room.events.push({ type: name, payload });
+        return room.events.find(e => e.type == name);
     }
 }
 export default new ACOSServer();

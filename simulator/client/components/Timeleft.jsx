@@ -118,7 +118,7 @@ function Timeleft(props) {
                 >
                     :
                 </Heading>
-                <HStack spacing="0" w="2.25rem">
+                <HStack spacing="0" w="2rem">
                     <Heading
                         as="span"
                         className="digitaltimer"

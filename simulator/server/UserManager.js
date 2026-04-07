@@ -163,6 +163,12 @@ class UserManager {
 
         return null;
     }
+
+    getPlayerId(shortid) {
+        let user = this.getUserByShortid(shortid);
+        if (user) return user.shortid;
+        return null;
+    }
 }
 
 module.exports = new UserManager();

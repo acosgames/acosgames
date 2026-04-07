@@ -5,10 +5,17 @@
         "moduleResolution": "Node",
         "declaration": true,
         "sourceMap": true,
-        "declarationDir": "dist/types",
+        // "declarationDir": "dist/types",
+        "rootDir": "./framework",
         "outDir": "dist",
         "types": []
         // "paths": { "*": ["./node_modules/@types/*.d.ts"] }
     },
-    "include": ["framework"]
+    "include": [
+        "framework",
+        "dist/client.js",
+        "dist/defs.js",
+        "dist/index.js",
+        "dist/server.js"
+    ]
 }

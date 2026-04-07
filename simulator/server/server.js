@@ -12,11 +12,8 @@ const options = {
 };
 const io = new Server(server, options);
 const { Worker } = require("worker_threads");
-const delta = require("acos-json-delta");
-const { encode, decode, createDefaultDict } = require("acos-json-encoder");
-
-const ACOSDictionary = require("../shared/acos-dictionary.json");
-createDefaultDict(ACOSDictionary);
+const { protoEncode, protoDecode, delta, hidden } = require("acos-json-encoder");
+require('../shared/acos-encoder-server.js');
 
 const NANOID = require("nanoid");
 const nanoid = NANOID.customAlphabet("6789BCDFGHJKLMNPQRTW", 6);
@@ -53,25 +50,19 @@ function onGameSettingsReloaded() {
     //     gamestate,
     //     gameSettings: settings.get(),
     // });
-    io.emit("teaminfo", encode(room.getTeamInfo()));
-    io.emit(
-        "gameSettings",
-        encode({
-            gameSettings: settings.get(),
-        })
-    );
+    io.emit("teaminfo", protoEncode({ type: "teaminfo", payload: room.getTeamInfo() }));
+    io.emit("gameSettings", protoEncode({ type: "gameSettings", payload: { gameSettings: settings.get() } }));
 }
 
 setInterval(() => {
     let room = RoomManager.current();
-
+    let gamestate =  room.getGameState();
     let deadline = room.getDeadline();
     if (deadline == 0) return;
-    let now = new Date().getTime();
-    if (now > deadline) {
+    let now = Date.now();
+    if (now > (deadline + (gamestate?.room?.starttime || 0 ))) {
         let room = RoomManager.current();
-        let gamestate = room.getGameState();
-
+       
         room.skipCount++;
         if (room.skipCount > 5) {
             RoomManager.create();
@@ -99,39 +90,36 @@ function onConnect(socket) {
     // console.log("Registered: ", newUser);
     let user = UserManager.actionUser(newUser);
 
+    socket.user = user;
+
     // console.log("User Connected: ", user);
-    socket.emit(
-        "connected",
-        encode({
-            user,
-            gameSettings: settings.get(),
-        })
-    );
+    let connectedMsg = {
+        user,
+        gameSettings: settings.get(),
+    };
+    socket.emit("connected", protoEncode({ type: "connected", payload: connectedMsg }));
 
     //join user immediately into game
     let room = RoomManager.current();
-    if (room.hasPlayer(user.shortid)) onAction({ type: "join", user }, true);
+    if (room.hasPlayer(user.shortid)) onAction(socket, { type: "join", user }, true);
 
     let fakePlayers = UserManager.getFakePlayersByParent(user.shortid);
     if (fakePlayers?.length >= 0) {
-        socket.emit(
-            "fakeplayer",
-            encode({ type: "created", payload: fakePlayers })
-        );
+        socket.emit("fakeplayer", protoEncode({ type: "created", payload: fakePlayers }));
 
         for (const fakePlayer of fakePlayers) {
             if (room.hasPlayer(fakePlayer.shortid))
-                onAction({ type: "join", user: fakePlayer }, true);
+                onAction(socket, { type: "join", user: fakePlayer }, true);
         }
     }
 
     socket.join("gameroom");
 
     if (isFirstUser) {
-        createNewGame(user);
+        createNewGame(socket, user);
     } else {
-        socket.emit("game", encode(room.copyGameState()));
-        io.emit("teaminfo", encode(room.getTeamInfo()));
+        socket.emit("game", protoEncode({ type: "game", payload: room.copyGameState() }));
+        io.emit("teaminfo", protoEncode({ type: "teaminfo", payload: room.getTeamInfo() }));
     }
 
     //user is already in game, just rejoin them and send them full game state
@@ -149,21 +137,20 @@ function onDisconnect(socket, e) {
 }
 
 function onPing(socket, msg) {
-    msg = decode(msg);
+    msg = protoDecode(msg);
     let clientTime = msg.payload;
-    let serverTime = new Date().getTime();
+    let serverTime = Date.now();
     let offset = serverTime - clientTime;
-    socket.emit("pong", encode({ payload: { offset, serverTime } }));
+    socket.emit("pong", protoEncode({ type: "pong", payload: { offset, serverTime } }));
 }
 
 function onNewGameSettings(socket, newGameSettings) {
-    newGameSettings = decode(newGameSettings);
-
-    settings.updateGameSettings(newGameSettings);
+    newGameSettings = protoDecode(newGameSettings);
+    settings.updateGameSettings(newGameSettings.payload ?? newGameSettings);
 }
 
 function onFakePlayer(socket, msg) {
-    msg = decode(msg);
+    msg = protoDecode(msg).payload;
     let type = msg.type;
 
     let client = UserManager.getUserBySocketId(socket.id);
@@ -171,23 +158,17 @@ function onFakePlayer(socket, msg) {
     let shortid = client.shortid;
 
     if (type == "create") {
-        let count = msg.payload || 1;
+        let count = msg?.payload.count || 1;
         let newFakePlayers = UserManager.createFakePlayers(shortid, count);
-        socket.emit(
-            "fakeplayer",
-            encode({ type: "created", payload: newFakePlayers })
-        );
+        socket.emit("fakeplayer", protoEncode({ type: "created", payload: newFakePlayers }));
     } else if (type == "remove") {
-        msg.type = "leave";
-        onAction(msg, true);
+        let user = msg?.user ?? msg.payload.user;
+        onAction(socket, { type: "leave", user }, true);
 
-        UserManager.removeFakePlayer(msg.user.shortid);
+        UserManager.removeFakePlayer(user.shortid);
 
         // let newFakePlayers = UserManager.iterateFakePlayers(client.shortid);
-        socket.emit(
-            "fakeplayer",
-            encode({ type: "removed", payload: msg.user.shortid })
-        );
+        socket.emit("fakeplayer", protoEncode({ type: "removed", payload: { user } }));
     }
 }
 io.on("connection", (socket) => {
@@ -208,13 +189,13 @@ io.on("connection", (socket) => {
         onFakePlayer(socket, msg);
     });
     socket.on("replay", (msg) => {
-        onReplay(msg);
+        onReplay(socket, protoDecode(msg));
     });
     socket.on("action", (msg) => {
-        onAction(msg);
+        onAction(socket, protoDecode(msg));
     });
     socket.on("reload", (msg) => {
-        msg = decode(msg);
+        msg = protoDecode(msg);
         console.log("[ACOS] Incoming Action: ", msg);
         gameHistory = [];
         worker.postMessage([{ type: "reset" }]);
@@ -223,11 +204,11 @@ io.on("connection", (socket) => {
 
 const onJoinRequest = (action) => {
     let room = RoomManager.current();
-    let client = UserManager.getUserByShortid(action.user.shortid);
+    let client = UserManager.getUserByName(action.user.displayname);
     if (!client) {
         client = UserManager.getParentUser(action.user.clientid);
         if (!client) {
-            console.error("Invalid client found using: ", user);
+            console.error("Invalid client found using: ", action.user);
             return;
         }
     }
@@ -257,12 +238,12 @@ const onJoinRequest = (action) => {
     //check if team is available
     let teaminfo = room.getTeamInfo();
     if (teaminfo.length > 1) {
-        let attempt = room.attemptJoinTeam(action.user.team_slug);
+        let attempt = room.attemptJoinTeam(action.user.teamid);
         if (attempt.error) {
-            client.socket.emit("error", encode(attempt));
+            client.socket.emit("error", protoEncode({ type: "error", payload: attempt }));
             console.log(
                 "[ACOS] [Error] " + attempt.error + ": ",
-                action.user.team_slug,
+                action.user.teamid,
                 ", for user:",
                 action.user.shortid,
                 action.user.displayname
@@ -270,7 +251,7 @@ const onJoinRequest = (action) => {
             return false;
         }
 
-        action.user.team_slug = attempt.team_slug;
+        action.user.teamid = attempt.teamid;
     }
 
     console.log(
@@ -282,7 +263,7 @@ const onJoinRequest = (action) => {
 };
 
 const sendUserSpectator = (user, room) => {
-    let client = UserManager.getUserByShortid(user.shortid);
+    let client = UserManager.getUserByName(user.displayname);
     if (!client) {
         client = UserManager.getParentUser(user.clientid);
         if (!client) {
@@ -305,8 +286,8 @@ const sendUserGame = (client, room) => {
     let gamestate = room.copyGameState();
     // let hiddenState = delta.hidden(gamestate.state);
     // let hiddenPlayers = delta.hidden(gamestate.players);
-    io.emit("replayStats", encode(room.replayStats()));
-    io.emit("game", encode(gamestate));
+    io.emit("replayStats", protoEncode({ type: "replayStats", payload: room.replayStats() }));
+    io.emit("game", protoEncode({ type: "game", payload: gamestate }));
     // if (hiddenPlayers) {
     //     if (client.shortid in hiddenPlayers) {
     //         client.socket.emit('private', encode(hiddenPlayers[client.shortid]));
@@ -315,11 +296,11 @@ const sendUserGame = (client, room) => {
 };
 
 const onLeaveRequest = (action) => {
-    if (action.user.shortid in UserManager.getFakePlayers()) {
+    if (action?.user?.shortid in UserManager.getFakePlayers()) {
         // let fakePlayers = UserManager.getFakePlayersByParent(action.user.clientid)
         // for (const fakePlayer of fakePlayers) {
         // if (action.user.clientid) {
-        //     let client = UserManager.getUserByShortid(action.user.clientid);
+        //     let client = UserManager.getUserByName(action.user.displayname);
         // client.socket.emit('fakeplayer', encode({ type: 'removed', user: action.user }));
         // }
         // UserManager.removeFakePlayer(action.user.shortid);
@@ -328,13 +309,13 @@ const onLeaveRequest = (action) => {
 
     let room = RoomManager.current();
     let gamestate = room.getGameState();
-    if (!gamestate || !gamestate.players) return false;
+    if (!gamestate || !Array.isArray(gamestate.players)) return false;
 
-    if (!(action.user.shortid in gamestate?.players)) {
+    if (!gamestate?.room?._players[action?.user?.shortid]) {
         return false;
     }
 
-    io.to(room.room_slug).emit("leave", encode({ user: action.user }));
+    io.to(room.room_slug).emit("leave", protoEncode({ type: "leave", payload: { user: action.user } }));
     return true;
 };
 const onSkipRequest = (action) => {
@@ -354,26 +335,25 @@ const onGameActionRequest = (action) => {
 };
 
 const onNewGameRequest = (action) => {
-    let client = UserManager.getUserByShortid(action.user.shortid);
+    let client = UserManager.getUserByName(action.user.displayname);
     let room = RoomManager.create();
     // onAction(client.socket, { type: 'join', user: action.user }, true);
     let prevGamestate = room.copyGameState();
-    io.emit("replayStats", encode(room.replayStats()));
-    io.to("gameroom").emit("newgame", encode(prevGamestate));
-    io.emit("teaminfo", encode(room.getTeamInfo()));
+    io.emit("replayStats", protoEncode({ type: "replayStats", payload: room.replayStats() }));
+    io.to("gameroom").emit("newgame", protoEncode({ type: "newgame", payload: prevGamestate || {} }));
+    io.emit("teaminfo", protoEncode({ type: "teaminfo", payload: room.getTeamInfo() }));
 
     return true;
 };
-const createNewGame = (user) => {
-    let action = { user, type: "newgame" };
-    onAction(encode(action));
+const createNewGame = (socket, user) => {
+    onAction(socket, { type: "newgame",  user }, true);
 };
 
 const calculateTimeleft = (gamestate) => {
-    if (!gamestate || !gamestate.timer || !gamestate.timer.end) return 0;
+    if (!gamestate || !gamestate.timer || !gamestate.room?.timeend) return 0;
 
-    let deadline = gamestate.timer.end;
-    let now = new Date().getTime();
+    let deadline = gamestate.room?.starttime + gamestate.room?.timeend;
+    let now = Date.now();
     let timeleft = deadline - now;
 
     return timeleft;
@@ -382,22 +362,22 @@ const calculateTimeleft = (gamestate) => {
 function onNextRequest(action) {
     let room = RoomManager.current();
     let states = room.jumpNextState();
-    io.emit("replayStats", encode(room.replayStats()));
-    io.emit("replay", encode(states));
+    io.emit("replayStats", protoEncode({ type: "replayStats", payload: room.replayStats() }));
+    io.emit("replay", protoEncode({ type: "replay", payload: states }));
 }
 
 function onPrevRequest(action) {
     let room = RoomManager.current();
     let states = room.jumpPrevState();
-    io.emit("replayStats", encode(room.replayStats()));
-    io.emit("replay", encode(states));
+    io.emit("replayStats", protoEncode({ type: "replayStats", payload: room.replayStats() }));
+    io.emit("replay", protoEncode({ type: "replay", payload: states }));
 }
 
 function onJumpRequest(action) {
     let room = RoomManager.current();
     let states = room.jumpToState(action.payload);
-    io.emit("replayStats", encode(room.replayStats()));
-    io.emit("replay", encode(states));
+    io.emit("replayStats", protoEncode({ type: "replayStats", payload: room.replayStats() }));
+    io.emit("replay", protoEncode({ type: "replay", payload: states }));
 }
 
 function onLoadRequest(action) {}
@@ -422,8 +402,9 @@ function noop() {
     return false;
 }
 
-function onReplay(action, skipDecode) {
-    if (!skipDecode) action = decode(action);
+function onReplay(socket, action, fromServer) {
+    if (!fromServer) 
+        action = action.payload;
     // msg.userid = socket.user.userid;
     if (typeof action !== "object" || !("type" in action)) return;
 
@@ -431,8 +412,12 @@ function onReplay(action, skipDecode) {
     if (!replayFunc(action)) return;
 }
 
-function onAction(action, skipDecode) {
-    if (!skipDecode) action = decode(action);
+function onAction(socket, action, fromServer) {
+    if (!fromServer) 
+        action = action.payload;
+        // action = protoDecode(action);
+
+    
     // msg.userid = socket.user.userid;
     if (typeof action !== "object" || !("type" in action)) return;
     let msgStr = JSON.stringify(action);
@@ -448,9 +433,9 @@ function onAction(action, skipDecode) {
 
     //find the user by the action shortid
     let user = null;
-    let client = UserManager.getUserByShortid(action.user.shortid);
+    let client = UserManager.getUserByShortid(action?.user?.shortid);
     if (!client) {
-        user = UserManager.getFakePlayer(action.user.shortid);
+        user = UserManager.getFakePlayer(action?.user?.shortid);
     } else {
         user = UserManager.actionUser(client);
     }
@@ -462,18 +447,23 @@ function onAction(action, skipDecode) {
 
     let status = room.status;
 
-    if (status != "gamestart" && !(action.type in actionTypes)) return;
+    if (status != room.statusByName("gamestart") && !(action.type in actionTypes)) return;
 
     if (action.type == "newgame") {
-        status = "pregame";
+        status = room.statusByName("pregame");
     }
     //set the action to this user
-    action.user = Object.assign({}, action.user, user);
+    action.user = Object.assign({}, socket?.user, user);
+    action.user.id = gamestate?.room?._players[action.user.shortid];
+    if( action.user.id == undefined ) {
+        action.user.id = -1;
+    }
+
 
     let actionFunc = actionTypes[action.type] || onGameActionRequest;
 
     if (actionFunc == onGameActionRequest) {
-        if (!validateNextUser(status, gamestate, action.user.shortid)) {
+        if (!validateNextUser(status, gamestate, action.user.id)) {
             console.warn("[ACOS] User not allowed to run action:", action);
             return;
         }
@@ -488,70 +478,113 @@ function onAction(action, skipDecode) {
     let timeleft = calculateTimeleft(gamestate);
 
     //add timing sequence
-    action.timeseq = gamestate?.timer?.sequence || 0;
-    action.timeleft = timeleft;
+    action.user.timeseq = gamestate?.room?._sequence || 0;
+    action.user.timeleft = timeleft;
 
     // io.to('gameroom').emit('lastAction', encode({ action, gamestate }));
     // io.to('spectator').emit('lastAction', encode({ action, gamestate }));
     worker.postMessage({
         action,
-        room: room.json(),
+        // room: room.json(),
         gamestate,
         gameSettings: settings.get(),
     });
 }
 
-function validateNextUser(status, gamestate, userid) {
-    let next = gamestate?.next;
-    let nextid = next?.id;
+    function validateNextUser(status, gamestate, userid) {
+        // let gamestate = this.getGameState();
+        let nextid = gamestate?.room?.next_player;
+        let room = gamestate.room;
 
-    if (status == "pregame") return true;
+        let roomManager = RoomManager.current();
+        if (room?.status != roomManager.statusByName("gamestart")) return false;
+        if (nextid === null || nextid === undefined) return false;
+        if (!gamestate.state) return false;
 
-    if (!next || !nextid) return false;
+        if (nextid === userid) return true;
+        if (Array.isArray(nextid) && nextid.includes(userid)) return true;
 
-    if (!gamestate.state) return false;
+        let player = gamestate?.players[userid];
+        if(!player) return false;
+        
+        let teamid = player.teamid;
+        if( validateNextTeam(teamid) ) return true;
 
-    //check if we ven have teams
-    let teams = gamestate?.teams;
+        return false;
+    }   
 
-    if (typeof nextid === "string") {
-        //anyone can send actions
-        if (nextid == "*") return true;
-
-        //only specific user can send actions
-        if (nextid == userid) return true;
-
-        //validate team has players
-        if (!teams || !teams[nextid] || !teams[nextid].players) return false;
-
-        //allow players on specified team to send actions
-        if (
-            Array.isArray(teams[nextid].players) &&
-            teams[nextid].players.includes(userid)
-        ) {
-            return true;
-        }
-    } else if (Array.isArray(nextid)) {
-        //multiple users can send actions if in the array
-        if (nextid.includes(userid)) return true;
-
-        //validate teams exist
-        if (!teams) return false;
-
-        //multiple teams can send actions if in the array
-        for (var i = 0; i < nextid.length; i++) {
-            let teamid = nextid[i];
-            if (
-                Array.isArray(teams[teamid].players) &&
-                teams[teamid].players.includes(userid)
-            ) {
-                return true;
-            }
-        }
+    function validateNextTeam(gamestate, teamid) {
+        // let gamestate = this.getGameState();
+        let nextid = gamestate?.room?.next_team;
+        let room = gamestate.room;
+        let roomManager = RoomManager.current();
+        if (room?.status != roomManager.statusByName("gamestart")) return false;
+        if (nextid === null || nextid === undefined) return false;
+        if (!gamestate.state) return false;
+        if (nextid === teamid) return true;
+        if (Array.isArray(nextid) && nextid.includes(teamid)) return true;
+        return false;
     }
 
-    return false;
-}
+// function validateNextUser(status, gamestate, userid) {
+//     // let next = gamestate?.room?.next;
+//     let nextid = gamestate?.room?.next_player;
+
+//     if (status == "pregame") return true;
+
+//     if (nextid === null || nextid === undefined) return false;
+
+//     if (!gamestate.state) return false;
+
+//     //check if we have teams
+//     let teams = gamestate?.teams;
+
+//     // find this user's player index in the array
+//     let userIndex = Array.isArray(gamestate.players)
+//         ? gamestate.players.findIndex(p => p.shortid === userid)
+//         : -1;
+
+//     if (typeof nextid === "string") {
+//         //anyone can send actions
+//         if (nextid == "*") return true;
+
+//         //team slug — validate team has this player
+//         if (!teams || !teams.find(t => t.team_slug === nextid)?.players) return false;
+
+//         //allow players on specified team to send actions
+//         if (
+//             Array.isArray(teams.find(t => t.team_slug === nextid).players) &&
+//             teams.find(t => t.team_slug === nextid).players.includes(userid)
+//         ) {
+//             return true;
+//         }
+//     } else if (typeof nextid === "number") {
+//         //specific player index
+//         if (nextid === userIndex) return true;
+//     } else if (Array.isArray(nextid)) {
+//         //multiple player indices or team slugs
+//         if (userIndex >= 0 && nextid.includes(userIndex)) return true;
+
+//         //validate teams exist
+//         if (!teams) return false;
+
+//         //check team slugs in the array
+//         for (var i = 0; i < nextid.length; i++) {
+//             let item = nextid[i];
+//             if (typeof item === "string") {
+//                 let itemTeam = Array.isArray(teams) ? teams.find(t => t.team_slug === item) : undefined;
+//                 if (
+//                     Array.isArray(itemTeam?.players) &&
+//                     itemTeam.players.includes(userid)
+//                 ) {
+//                     return true;
+//                 }
+//             }
+//         }
+//     }
+
+//     return false;
+// }
 
 function stringify(obj) {
     return JSON.stringify(
@@ -583,8 +616,8 @@ function createWorker(index) {
         let room = RoomManager.current();
 
         let prevGamestate = room.copyGameState();
-        prevGamestate.events = {};
-        let deltaGamestate = delta.delta(
+        if (prevGamestate?.room) prevGamestate.room.events = [];
+        let deltaGamestate = delta(
             prevGamestate,
             cloneObj(gamestate),
             {}
@@ -598,22 +631,27 @@ function createWorker(index) {
         // let hiddenState = delta.hidden(copy.state);
         // let hiddenPlayers = delta.hidden(copy.players);
 
-        if (gamestate?.events?.join) {
-            for (const shortid of gamestate.events.join) {
-                let client = UserManager.getUserByShortid(shortid);
+        let joinEvent = gamestate?.room?.events?.find(e => e.type === "join" && Array.isArray(e.payload));
+        if (joinEvent) {
+            for (const playerid of joinEvent.payload) {
+                let player = gamestate?.players[playerid];
+                if (!player) continue;
+                let client = UserManager.getUserByName(player.displayname);
                 if (!client) {
-                    let fakeUser = UserManager.getFakePlayer(shortid);
+                    let fakeUser = UserManager.getFakePlayer(player.shortid);
                     if (fakeUser)
                         client = UserManager.getParentUser(fakeUser.clientid);
                 }
-                client.socket.join("gameroom");
+                if (client) {
+                    client.socket.join("gameroom");
+                }
             }
         }
 
-        io.to("gameroom").emit("game", encode(gamestate));
+        io.to("gameroom").emit("game", protoEncode({ type: "game", payload: gamestate }));
 
         if (room.spectators.length > 0) {
-            io.to("spectator").emit("spectator", encode(gamestate));
+            io.to("spectator").emit("spectator", protoEncode({ type: "spectator", payload: gamestate }));
         }
 
         // if (hiddenPlayers)
@@ -625,8 +663,8 @@ function createWorker(index) {
 
         room.updateGame(gamestate);
 
-        io.emit("replayStats", encode(room.replayStats()));
-        io.emit("teaminfo", encode(room.getTeamInfo()));
+        io.emit("replayStats", protoEncode({ type: "replayStats", payload: room.replayStats() }));
+        io.emit("teaminfo", protoEncode({ type: "teaminfo", payload: room.getTeamInfo() }));
 
         // console.timeEnd('[ACOS] [WorkerOnMessage]')
         // console.timeEnd('[ACOS] [ActionLoop]')

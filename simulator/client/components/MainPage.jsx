@@ -65,7 +65,7 @@ function MainPage(props) {
                 justifyContent={"center"}
             >
                 <HStack
-                    boxShadow={"#0003 0 4px 6px -1px, #0000001f 0 2px 4px -1px"}
+                    // boxShadow={"#0003 0 4px 6px -1px, #0000001f 0 2px 4px -1px"}
                     spacing="0"
                     w="100%"
                     h={["3rem", "4rem", "5rem"]}
@@ -127,6 +127,7 @@ function MainPage(props) {
                                 display="flex"
                                 flexDirection="column"
                                 transition={"filter 0.3s ease-in"}
+                                // boxShadow="inset -4px 0 6px rgba(0,0,0,.6)"
                                 // maxW={['1200px']}
                             >
                                 {/* <ChoosePlayerName /> */}

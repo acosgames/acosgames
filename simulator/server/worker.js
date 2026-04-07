@@ -14,6 +14,12 @@ const { isObject } = require("./util");
 const DiscreteRandom = require("./DiscreteRandom");
 const nanoid = NANOID.customAlphabet("6789BCDFGHJKLMNPQRTW", 6);
 
+
+const Room = require("./Room");
+const GameSettingsManager = require("./GameSettingsManager");
+
+const ROOM = new Room(GameSettingsManager);
+
 const vm = require("vm");
 
 // const ivm = require('isolated-vm');
@@ -194,14 +200,8 @@ class FSGWorker {
         this.gameHistory = [];
         this.bundlePath = path.join(workerData.dir, "./builds/");
         this.bundleFilename = "server.bundle.dev.js";
-        this.bundleFilePath = path.resolve(
-            this.bundlePath,
-            "server.bundle.dev.js"
-        );
-        this.entryFilePath = path.join(
-            workerData.dir,
-            "./game-server/index.js"
-        );
+        this.bundleFilePath = path.resolve(this.bundlePath, "server.bundle.dev.js");
+        this.entryFilePath = path.join(workerData.dir, "./game-server/index.js");
         this.settingsPath = path.join(workerData.dir, "./game-settings.json");
         this.dbPath = path.join(workerData.dir, "./game-server/database.json");
 
@@ -238,26 +238,30 @@ class FSGWorker {
         if (globalGame.killGame) {
             delete globalGame["killGame"];
         }
-        globalGame.room = {};
+        globalGame.room = { _teams: {}, _players: {}, next_id: null };
         globalGame.state = {};
+        globalGame.events = [];
         // globalGame.rules = {};
-        globalGame.next = {};
-        globalGame.teams = {};
-        globalGame.players = {};
-        globalGame.timer = {};
+        // globalGame.next = {};
+        globalGame.teams = [];
+        globalGame.players = [];
+        // globalGame.timer = {};
         if (gameSettings) {
             for (const team of gameSettings.teams) {
-                globalGame.teams[team.team_slug] = {
+                globalGame.teams.push({
+                    team_slug: team.team_slug,
                     name: team.team_name,
                     color: team.color,
                     order: team.team_order,
                     players: [],
                     rank: 0,
                     score: 0,
-                };
+                });
+                if (!(team.team_slug in globalGame.room._teams))
+                    globalGame.room._teams[team.team_slug] = globalGame.teams.length - 1;
             }
         }
-        globalGame.events = {};
+        // globalGame.events = {};
 
         // let newPlayers = {};
         // for (var id in players) {
@@ -269,23 +273,29 @@ class FSGWorker {
         // globalGame.players = newPlayers;
     }
 
-    processTimelimit(timer) {
-        if (!timer || !timer.set) return;
+    processTimelimit(gameState, room) {
+        // let room = gameState?.room;
+        let timer = gameState?.room?.timeset;
+        // if (!timer) return;
 
-        if (typeof timer.set === "undefined") return;
+        if (typeof timer === "undefined") return;
 
-        let seconds = Math.min(3000000, Math.max(1, timer.set));
+        let seconds = Math.min(3000000, Math.max(1, timer));
         // let seconds = Math.min(60, Math.max(10, timer.set));
-        let sequence = timer.sequence || 0;
-        let now = new Date().getTime();
+        // let sequence = timer.sequence || 0;
+        let now = Date.now();
         let deadline = now + seconds * 1000;
         let timeleft = deadline - now;
 
-        timer.end = deadline;
-        timer.seconds = seconds;
+        // timer.end = deadline;
+        // timer.seconds = seconds;
+        // let deltaTime =  + gameState.room.updated
+        gameState.room.timeend = deadline - gameState.room.starttime;
+        gameState.room.timesec = seconds;
+
         // timer.data = [deadline, seconds];
-        timer.sequence = sequence + 1;
-        delete timer.set;
+        // timer.sequence = sequence + 1;
+        delete gameState.room.timeset;
     }
 
     generatePortrait = () => {
@@ -293,7 +303,7 @@ class FSGWorker {
         return portraitid;
     };
 
-    async onAction({ room, action, gamestate, gameSettings }) {
+    async onAction({ action, gamestate, gameSettings }) {
         try {
             // profiler.Start("[WorkerOnAction]")
             console.log("[ACOS] Executing Action: ", action);
@@ -303,8 +313,10 @@ class FSGWorker {
             globalIgnore = false;
             if (!globalGame) this.makeGame(gameSettings);
             else {
-                globalGame.events = {};
+                globalGame.room.events = [];
             }
+
+            let room = globalGame.room || {};
 
             //pre process actions
             if (action.type == "join") {
@@ -316,63 +328,73 @@ class FSGWorker {
                     return;
                 }
 
-                if (!("players" in globalGame)) globalGame.players = {};
+                if (!('players' in globalGame)) globalGame.players = [];
 
                 //first player joined, begin pregame mode
-                if (Object.keys(globalGame.players).length == 0) {
+                if (globalGame.players.length == 0) {
                     if (!("state" in globalGame)) globalGame.state = {};
 
-                    room.status = "pregame";
-                    room.sequence = 0;
+                    room.status = ROOM.statusByName("pregame");
+                    room._sequence = 0;
                 }
 
                 //add player into the game
-                if (!(shortid in globalGame.players))
-                    globalGame.players[shortid] = {};
-                globalGame.players[shortid].displayname = username;
-                globalGame.players[shortid].shortid = shortid;
-                globalGame.players[shortid].portraitid =
-                    this.generatePortrait();
-
+                let playerId = globalGame.room._players[shortid];
+                let player = globalGame.players[playerId] || null;
+                if (!player) {
+                    playerId = globalGame.players.length;
+                    globalGame.players.push({
+                        id: playerId,
+                        shortid: shortid,
+                        displayname: username,
+                        portraitid: this.generatePortrait(),
+                    });
+                    player = globalGame.players[playerId];
+                    globalGame.room._players[shortid] = playerId;
+                } else {
+                    player.displayname = username;
+                    player.portraitid = this.generatePortrait();
+                }
                 if (globalGame.teams) {
-                    if (action?.user?.team_slug) {
-                        let team_slug = action.user.team_slug;
-                        if (!(team_slug in globalGame.teams)) {
-                            globalGame.teams[team_slug] = { players: [] };
-                        }
-                        globalGame.teams[team_slug].players.push(shortid);
-                        globalGame.players[shortid].teamid = team_slug;
+                    if (action?.user?.teamid !== undefined) {
+                        let teamid = action.user.teamid;
+                        let team = globalGame?.teams[teamid];
+                        team.players.push(playerId);
+                        player.teamid = teamid;
                     }
                 }
+
+                action.user.id = playerId;
+
             } else if (action.type == "leave") {
                 let shortid = action.user.shortid;
-                globalGame.players[shortid].ingame = false;
+                let leavingPlayerId = globalGame.room._players[shortid];
+                let leavingPlayer = globalGame.players[leavingPlayerId] || null;
+                if (leavingPlayer) leavingPlayer.ingame = false;
             } else if (action.type == "reset" || action.type == "newgame") {
                 this.makeGame(gameSettings);
+                room = globalGame.room;
+                room.starttime = Date.now();
             } else if (action.type == "ready") {
                 if (room.status != "pregame") return;
-                let shortid = action.user.shortid;
-                if (
-                    typeof action.payload === "boolean" ||
-                    typeof action.payload === "undefined"
-                )
-                    globalGame.players[shortid].ready = action.payload || true;
+                let playerId = action.user.id;
+                let player = globalGame.players[playerId] || null;
+                if (player && (typeof action.payload === "boolean" || typeof action.payload === "undefined"))
+                    player.ready = action.payload || true;
             } else if (action.type == "loaded") {
+                let seedStr = room.room_slug + room.starttime + room._sequence;
+                DiscreteRandom.seed(seedStr);
                 return;
             } else if (action.type == "gamestart") {
-                room.status = "gamestart";
+                room.status = ROOM.statusByName("gamestart");
             } else if (action.type == "skip") {
                 globalSkipCount++;
                 //on repeated 2nd skip kill the game
                 // developer should have handled it, too bad so sad
-                if (
-                    globalGame.action &&
-                    globalGame.action.type == "skip" &&
-                    globalSkipCount > 5
-                ) {
-                    room.status = "gamecancelled";
-                    room.sequence = room.sequence + 1;
-                    room.updated = Date.now();
+                if (globalGame.action && globalGame.action.type == "skip" && globalSkipCount > 5) {
+                    room.status = ROOM.statusByName("gamecancelled");
+                    room._sequence = room._sequence + 1;
+                    room.updated = Date.now() - room.starttime;
                     globalResult.room = room;
                     globalResult.action = action;
 
@@ -391,8 +413,6 @@ class FSGWorker {
             //add room data to gamestate
             globalGame.room = room;
 
-            let seedStr = room.room_slug + room.starttime + room.sequence;
-            DiscreteRandom.seed(seedStr);
             //------------------------------------
             //RUN GAME SERVER SCRIPT
             let passed = await this.run();
@@ -403,13 +423,19 @@ class FSGWorker {
             }
             //------------------------------------
 
+            let eventMap = {};
+            for (const event of globalResult?.room?.events || []) {
+                eventMap[event.type] = event;
+            }
+
             //should we kill the game?
-            if (globalResult?.events?.gameover) {
-                room.status = "gameover";
-            } else if (globalResult?.events?.gamecancelled) {
-                room.status = "gamecancelled";
-            } else if (!passed || globalResult?.events?.gameerror) {
-                room.status = "gameerror";
+            if (eventMap["gameover"]) {
+                room.status = ROOM.statusByName("gameover");
+                room.endtime = Date.now() - room.starttime;
+            } else if (eventMap["gamecancelled"]) {
+                room.status = ROOM.statusByName("gamecancelled");
+            } else if (!passed || eventMap["gameerror"]) {
+                room.status = ROOM.statusByName("gameerror");
             }
             //game still live, process timer and history
             else {
@@ -417,42 +443,63 @@ class FSGWorker {
                 if (action.type == "join") {
                     let shortid = action.user.shortid;
 
+                    let joinEvent = eventMap["join"];
                     if (
-                        !globalResult?.events?.join ||
-                        !Array.isArray(globalResult.events.join)
+                        !joinEvent
                     ) {
-                        if (!globalResult?.events) globalResult.events = {};
-                        globalResult.events.join = [];
+                        if (!globalResult?.room?.events) globalResult.room.events = [];
+                        joinEvent = { type: "join", payload: [] };
+                        globalResult.room.events.push(joinEvent);
+                        eventMap["join"] = joinEvent;
                     }
-                    globalResult.events.join.push(shortid);
+
+                    if (joinEvent) {
+                        joinEvent.payload.push(globalResult.room._players[shortid]);
+                    }
                 }
                 if (action.type == "leave") {
-                    let shortid = action.user.shortid;
+                    let playerId = action.user.id;
 
-                    if (!globalResult?.events?.leave) {
-                        if (!globalResult?.events) globalResult.events = {};
-                        globalResult.events.leave = [];
+                    if (!eventMap["leave"]) {
+                        if (!globalResult?.room?.events) globalResult.room.events = [];
+                        eventMap["leave"] = { type: "leave", payload: [] };
+                        globalResult.room.events.push(eventMap["leave"]);
                     }
-                    globalResult.events.leave.push(shortid);
+                    eventMap["leave"].payload.push(playerId);
 
-                    globalResult.players[shortid].ingame = false;
+                    let player = globalResult.players[playerId];
+                    if (player)
+                        player.ingame = false;
+
                 } else if (action.type == "reset") {
-                    room.status = "pregame";
-                    room.sequence = 0;
+                    room.status = ROOM.statusByName("pregame");
+                    room._sequence = 0;
                 } else if (action.type == "gamestart") {
                     // this.gameHistory = [];
-                    room.status = "gamestart";
+                    room.status = ROOM.statusByName("gamestart");
                 }
 
-                this.processTimelimit(globalResult.timer);
+                this.processTimelimit(globalResult, room);
             }
 
-            room.sequence = room.sequence + 1;
-            room.updated = Date.now();
+            room._sequence = room._sequence + 1;
+            let now = Date.now();
+            room.updated = now - room.starttime;
+            if (globalResult.room.next_player !== undefined)
+                room.next_player = globalResult.room.next_player;
+            if (globalResult.room.next_team !== undefined)
+                room.next_team = globalResult.room.next_team;
+            if (globalResult.room.next_action !== undefined)
+                room.next_action = globalResult.room.next_action;
+            room.timeend = globalResult.room.timeend;
+            room.timesec = globalResult.room.timesec;
+            room.events = globalResult.room.events || [];
+            if( room.events.length == 0 ) delete room.events;
             globalResult.room = room;
 
             globalResult.action = action;
 
+            console.log("processTimelimit", JSON.stringify(globalResult, null, 2));
             // this.storeGame(globalResult);
 
             // profiler.End("[WorkerOnAction]")
@@ -472,29 +519,20 @@ class FSGWorker {
     processPlayerRatings(players, teams) {
         //add saved ratings to players
         let playerRatings = {};
-        for (var shortid in players) {
-            let player = players[shortid];
+        for (const player of players) {
+            let shortid = player.shortid;
 
             if (!(shortid in globalRatings)) {
                 continue;
             }
             if (typeof player.rank === "undefined") {
                 console.error(
-                    "Player [" +
-                        shortid +
-                        "] (" +
-                        player.displayname +
-                        ") is missing rank"
+                    "Player [" + shortid + "] (" + player.displayname + ") is missing rank"
                 );
                 return;
             }
-            // if ((typeof player.score === 'undefined')) {
-            //     console.error("Player [" + id + "] (" + player.displayname + ") is missing score")
-            //     return;
-            // }
             let playerRating = globalRatings[shortid];
             playerRating.rank = player.rank;
-            //playerRating.score = player.score;
             playerRatings[shortid] = playerRating;
         }
 
@@ -504,8 +542,8 @@ class FSGWorker {
         rank.calculateRanks(playerRatings, teams);
 
         //update player ratings
-        for (var shortid in players) {
-            let player = players[shortid];
+        for (const player of players) {
+            let shortid = player.shortid;
 
             if (!(shortid in playerRatings)) {
                 continue;
@@ -542,16 +580,11 @@ class FSGWorker {
             // filename: 'http://localhost:3100/server.bundle.dev.js'
             // filename: 'server.bundle.dev.js'
         };
-        profiler.Start(
-            `Reloaded Server Bundle ${options.filename.replace(
-                "file:///",
-                ""
-            )} in`
-        );
+        profiler.Start(`Reloaded Server Bundle ${options.filename.replace("file:///", "")} in`);
         {
             // console.log("reloadServerBundle: ", options);
             filepath = filepath || this.bundleFilePath;
-            var data = await fs.promises.readFile(filepath, "utf8");
+            var data = fs.readFileSync(filepath, "utf8");
             // if (this.gameScript) {
             // onVM();
             // onWebsocket();
@@ -567,12 +600,7 @@ class FSGWorker {
 
             // this.gameScript = new VMScript(data, this.bundleFilePath).compile();
         }
-        profiler.End(
-            `Reloaded Server Bundle ${options.filename.replace(
-                "file:///",
-                ""
-            )} in`
-        );
+        profiler.End(`Reloaded Server Bundle ${options.filename.replace("file:///", "")} in`);
 
         let filename = filepath.split(/\/|\\/gi);
         filename = filename[filename.length - 1];
@@ -592,23 +620,14 @@ class FSGWorker {
             );
             chokidar.watch(watchPath).on("change", (path) => {
                 this.reloadServerBundle();
-                console.log(
-                    `[ACOS] ${this.bundleFilePath} file Changed`,
-                    watchPath
-                );
+                console.log(`[ACOS] ${this.bundleFilePath} file Changed`, watchPath);
             });
 
             if (this.dbPath) {
-                let watchPath2 = this.dbPath.substr(
-                    0,
-                    this.dbPath.lastIndexOf(path.sep)
-                );
+                let watchPath2 = this.dbPath.substr(0, this.dbPath.lastIndexOf(path.sep));
                 chokidar.watch(watchPath2).on("change", (path) => {
                     this.reloadServerDatabase();
-                    console.log(
-                        `[ACOS] ${this.dbPath} file Changed`,
-                        watchPath2
-                    );
+                    console.log(`[ACOS] ${this.dbPath} file Changed`, watchPath2);
                 });
             }
 
@@ -709,25 +728,20 @@ class FSGWorker {
                 continue;
             }
             let lineInfo = this.findLineInfo(sourcemap, lineNumber);
-            let newLineTrace = lineInfo[0] + ":" + lineInfo[1] + ":" + match[2];
+            let targetFilepath = path.join(workerData.dir, "./game-server/", lineInfo[0]);
+            let newLineTrace = targetFilepath + ":" + lineInfo[1] + ":" + match[2];
             stackTrace = stackTrace.replace(
                 sourcePath + ":" + match[1] + ":" + match[2],
                 newLineTrace
             );
-            stackTrace = stackTrace.replace(
-                sourcePath + ":" + match[1],
-                newLineTrace
-            );
+            stackTrace = stackTrace.replace(sourcePath + ":" + match[1], newLineTrace);
         }
 
         return stackTrace;
     }
 
     decodeSourceMap() {
-        let sourceMapPath = path.join(
-            this.bundlePath,
-            this.bundleFilename + ".map"
-        );
+        let sourceMapPath = path.join(this.bundlePath, this.bundleFilename + ".map");
         let jsonStr = fs.readFileSync(sourceMapPath);
         let json = JSON.parse(jsonStr);
 

@@ -14,6 +14,7 @@ import Timeleft from "./Timeleft";
 import { useBucket } from "react-bucketjs";
 import { btActionToggle, btGameStatus, btIsMobile, btReplayStats } from "../actions/buckets";
 import GameStateService from "../services/GameStateService";
+import { GameStatus } from "@acosgames/framework";
 
 export default function MainHeader() {
     const isMobile = useBucket(btIsMobile);
@@ -22,22 +23,22 @@ export default function MainHeader() {
     const replayStats = useBucket(btReplayStats);
 
     let statusColor = "white";
-    if (gameStatus == GameStateService.statusByName("pregame")) statusColor = "yellow.200";
+    if (gameStatus == GameStatus.pregame) statusColor = "yellow.400";
     else if (
-        gameStatus == GameStateService.statusByName("gameover") ||
-        gameStatus == GameStateService.statusByName("gamecancelled") ||
-        gameStatus == GameStateService.statusByName("gameerror")
+        gameStatus == GameStatus.gameover ||
+        gameStatus == GameStatus.gamecancelled ||
+        gameStatus == GameStatus.gameerror
     ) {
         statusColor = "red.300";
-    } else if (gameStatus == GameStateService.statusByName("gamestart")) {
-        statusColor = "green.200";
-    } else if (gameStatus == GameStateService.statusByName("none")) {
-        gameStatus = GameStateService.statusByName("waiting");
+    } else if (gameStatus == GameStatus.gamestart) {
+        statusColor = "green.300";
+    } else if (gameStatus == GameStatus.none) {
+        gameStatus = GameStatus.waiting;
     }
 
     const isGameActive =
         replayStats && replayStats?.position >= replayStats?.total &&
-        gameStatus == GameStateService.statusByName("gamestart");
+        gameStatus == GameStatus.gamestart;
 
     return (
         <Box
@@ -78,7 +79,7 @@ export default function MainHeader() {
                         width="16rem"
                         color={statusColor}
                     >
-                        {gameStatus}
+                        {GameStatus[gameStatus].toUpperCase()}
                     </Text>
                     <Box w="10rem" alignSelf={"center"} justifySelf={"center"}>
                         <Timeleft />

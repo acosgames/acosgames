@@ -11,6 +11,7 @@ import {
     btPlayerTeams,
     btTeamInfo,
 } from "../actions/buckets";
+import { gs } from "@acosgames/framework";
 
 interface TeamSettingItem {
     team_slug: string;
@@ -147,34 +148,38 @@ class GameStateService {
     }
 
     validateNextTeam(teamid: string | number): boolean {
-        const gamestate = this.getGameState();
-        const nextid = gamestate?.room?.next_team;
-        const room = gamestate.room;
-        if (room?.status !== this.statusByName("gamestart")) return false;
-        if (nextid === null || nextid === undefined) return false;
-        if (!gamestate.state) return false;
-        if (nextid === teamid) return true;
-        if (Array.isArray(nextid) && nextid.includes(teamid)) return true;
+        const gamestate = gs(this.getGameState());
+
+        let gameroom = gamestate.room();
+        let nextTeam = gameroom.nextTeam;
+
+        if( nextTeam === teamid) return true;
+        if( Array.isArray(nextTeam) && nextTeam.includes(teamid)) return true;
+
+        // const nextid = gameroom?.next_team;
+        // const room = gameroom;
+        // if (room?.status !== this.statusByName("gamestart")) return false;
+        // if (nextid === null || nextid === undefined) return false;
+        // if (!gamestate.state) return false;
+        // if (nextid === teamid) return true;
+        // if (Array.isArray(nextid) && nextid.includes(teamid)) return true;
         return false;
     }
 
-    validateNextUser(id: string): boolean {
-        const gamestate = this.getGameState();
-        const nextid = gamestate?.room?.next_player;
-        const room = gamestate.room;
+    validateNextUser(id: number): boolean {
 
-        if (room?.status !== this.statusByName("gamestart")) return false;
-        if (nextid === null || nextid === undefined) return false;
-        if (!gamestate.state) return false;
+        const gamestate = gs(this.getGameState());
+        const gameroom = gamestate.room();
 
-        if (nextid === id) return true;
-        if (Array.isArray(nextid) && nextid.includes(id)) return true;
+        let next = gameroom.nextPlayer;
 
-        const player = gamestate?.players?.[id];
+        if( Array.isArray(next) && next.includes(id)) return true;
+        
+        let player = gamestate.player(id);
         if (!player) return false;
 
-        const teamid = player.teamid;
-        if (this.validateNextTeam(teamid)) return true;
+        if( next === id) return true;
+
 
         return false;
     }

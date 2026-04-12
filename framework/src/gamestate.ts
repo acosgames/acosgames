@@ -343,6 +343,10 @@ export class GameStateReader {
 		return this.player(index);
 	}
 
+	playerByIndex(index: number): PlayerReader | null {
+		return this.player(index);
+	}
+
 	players(): PlayerReader[] {
 		return (this.gameStateRef?.players ?? []).map((player: any) => new PlayerReader(player));
 	}

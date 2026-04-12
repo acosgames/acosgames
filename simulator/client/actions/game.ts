@@ -16,6 +16,7 @@ import {
     btTimeleftUpdated,
     btWebsocketStatus,
 } from "./buckets";
+import { GameStatus, gs } from "@acosgames/framework";
 
 export const sleep = (ms: number): Promise<void> =>
     new Promise((r) => setTimeout(r, ms));
@@ -40,17 +41,20 @@ export function timerLoop(cb?: () => void): void {
 timerLoop();
 
 export function updateTimeleft(): void {
-    const gamestate = GameStateService.getGameState();
+    const gamestate = gs(GameStateService.getGameState());
     if (!gamestate) return;
 
-    const deadline = (gamestate.room?.starttime ?? 0) + (gamestate.room?.timeend ?? 0);
+    let gameroom = gamestate.room();
+    if (!gameroom) return;
+
+    const deadline = (gameroom.startTime ?? 0) + (gameroom.deadline ?? 0);
     if (!deadline) return;
 
-    const status = gamestate?.room?.status;
+    const status = gameroom.status;
     if (
-        status === GameStateService.statusByName("gameover") ||
-        status === GameStateService.statusByName("gamecancelled") ||
-        status === GameStateService.statusByName("gameerror")
+        status === GameStatus.gameover ||
+        status === GameStatus.gamecancelled ||
+        status === GameStatus.gameerror
     )
         return;
 
@@ -110,16 +114,16 @@ export async function autoJoin(): Promise<void> {
     joinGame();
     await sleep(100);
 
-    const gameState = btGameState.get();
+    const gameState = gs(btGameState.get());
     const gameSettings = btGameSettings.get();
-    let playerList: any[] = gameState?.players || [];
+    let playerList: any[] = gameState.players() || [];
     const fakePlayers = btFakePlayers.get() || {};
 
     for (const id in fakePlayers) {
         if (playerList.length >= gameSettings.maxplayers) break;
         joinFakePlayer(fakePlayers[id]);
-        const gs = btGameState.get();
-        playerList = gs?.players || [];
+        
+        // playerList = gameState.players() || [];
     }
 }
 

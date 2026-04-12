@@ -18,6 +18,7 @@ import RoomManagerService from "./RoomManager";
 import GameSettingsManager from "./GameSettingsManager";
 import GameProtocolManager from "./GameProtocolManager";
 import { cloneObj, isObject } from "./util";
+import { gs } from "@acosgames/framework";
 
 const UserManager = UserManagerInstance;
 const app = express();
@@ -27,7 +28,7 @@ const io = new Server(server, { transports: ["websocket"] });
 const port = process.env.PORT || 3100;
 const maxActionBytes = 150;
 
-let worker = createWorker(1); 
+let worker = createWorker(1);
 
 const gameWorkingDirectory = process.argv[2];
 
@@ -274,7 +275,7 @@ function onJumpRequest(action: any): void {
     io.emit("replay", protoEncode({ type: "replay", payload: states }));
 }
 
-function onLoadRequest(_action: any): void {}
+function onLoadRequest(_action: any): void { }
 
 const replayTypes: Record<string, (a: any) => void> = {
     next: onNextRequest,
@@ -360,36 +361,68 @@ function onAction(socket: Socket, action: any, fromServer?: boolean): void {
 }
 
 function validateNextUser(status: number, gamestate: any, userid: number): boolean {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nextid = gamestate?.room?.next_player as any;
-    const room = gamestate.room;
-    const roomManager = RoomManager.current();
 
-    if (room?.status !== roomManager.statusByName("gamestart")) return false;
-    if (nextid === null || nextid === undefined) return false;
-    if (!gamestate.state) return false;
-    if (nextid === userid) return true;
-    if (Array.isArray(nextid) && nextid.includes(userid)) return true;
+    gamestate = gs(gamestate);
+    let gameroom = gamestate.room();
+    let next = gameroom.nextPlayer;
 
-    const player = gamestate?.players?.[userid];
+    if (Array.isArray(next) && next.includes(userid)) return true;
+
+    let player = gamestate.player(userid);
     if (!player) return false;
-    if (validateNextTeam(gamestate, player.teamid)) return true;
+
+    if (next === userid) return true;
+
+    if( validateNextTeam(gamestate, player.teamid) ) return true;
 
     return false;
+
+    // // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // const nextid = gamestate?.room?.next_player as any;
+    // const room = gamestate.room;
+    // const roomManager = RoomManager.current();
+
+    // if (room?.status !== roomManager.statusByName("gamestart")) return false;
+    // if (nextid === null || nextid === undefined) return false;
+    // if (!gamestate.state) return false;
+    // if (nextid === userid) return true;
+    // if (Array.isArray(nextid) && nextid.includes(userid)) return true;
+
+    // const player = gamestate?.players?.[userid];
+    // if (!player) return false;
+    // if (validateNextTeam(gamestate, player.teamid)) return true;
+
+    // return false;
 }
 
 function validateNextTeam(gamestate: any, teamid: number): boolean {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nextid = gamestate?.room?.next_team as any;
-    const room = gamestate.room;
-    const roomManager = RoomManager.current();
 
-    if (room?.status !== roomManager.statusByName("gamestart")) return false;
-    if (nextid === null || nextid === undefined) return false;
-    if (!gamestate.state) return false;
-    if (nextid === teamid) return true;
-    if (Array.isArray(nextid) && nextid.includes(teamid)) return true;
+    gamestate = gs(gamestate);
+    const gameroom = gamestate.room();
+
+    let next = gameroom.nextPlayer;
+
+    if (Array.isArray(next) && next.includes(teamid)) return true;
+
+    let player = gamestate.player(teamid);
+    if (!player) return false;
+
+    if (next === teamid) return true;
+
+
     return false;
+
+    // // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // const nextid = gamestate?.room?.next_team as any;
+    // const room = gamestate.room;
+    // const roomManager = RoomManager.current();
+
+    // if (room?.status !== roomManager.statusByName("gamestart")) return false;
+    // if (nextid === null || nextid === undefined) return false;
+    // if (!gamestate.state) return false;
+    // if (nextid === teamid) return true;
+    // if (Array.isArray(nextid) && nextid.includes(teamid)) return true;
+    // return false;
 }
 
 function createWorker(index: number): Worker {
@@ -435,7 +468,7 @@ function createWorker(index: number): Worker {
         io.emit("teaminfo", protoEncode({ type: "teaminfo", payload: room.getTeamInfo() }));
     });
 
-    w.on("online", () => {});
+    w.on("online", () => { });
     w.on("error", (err) => { console.error(err); });
     w.on("exit", (code) => {
         if (code !== 0) {
@@ -461,7 +494,7 @@ app.get("/bundle.js", (req, res) => {
     console.log("Using bundle: ", path.join(__dirname, "../../public/bundle." + process.argv[3] + ".js"));
     res.sendFile(path.join(__dirname, "../../public/bundle." + process.argv[3] + ".js"));
 });
-app.get("/bundle.css", (req, res) => { 
+app.get("/bundle.css", (req, res) => {
     console.log("Using bundle: ", path.join(__dirname, "../../public/bundle." + process.argv[3] + ".css"));
     res.sendFile(path.join(__dirname, "../../public/bundle." + process.argv[3] + ".css"));
 });

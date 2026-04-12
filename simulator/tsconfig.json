@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "NodeNext",
+        "lib": ["ES2020"],
+        "rootDir": ".",
+        "outDir": "dist",
+        "strict": false,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "moduleResolution": "NodeNext",
+        "allowJs": false,
+        "paths": {
+            "shared/*": ["./shared/*"],
+        }
+    },
+    "include": ["./server/**/*.ts", "./shared/**/*.ts"],
+    "exclude": ["node_modules", "public", "dist"]
+}

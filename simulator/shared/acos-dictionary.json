@@ -152,5 +152,7 @@
     "timesec",
     "timeend",
     "next_id",
+    "next_player",
+    "next_team",
     "next_action"
 ]

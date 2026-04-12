@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>ACOS - Client Simulator</title>
+    <meta name="description" content="ACOS Client Simulator" />
+    <meta name="author" content="A Cup Of Skill" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src https://assets.acos.games ws://*:3301 ws://*:5173 http://*:5173 http://*:3301 http://*:3201 ws://*:3201 http://*:3200 ws://*:3200 ws://localhost:3201 http://localhost:3201 https://fonts.gstatic.com https://fonts.googleapis.com 'self' 'unsafe-inline' data:" />
+    <meta name="color-scheme" content="light dark">
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="module">
+        import RefreshRuntime from 'http://localhost:5173/@react-refresh'
+        RefreshRuntime.injectIntoGlobalHook(window)
+        window.$RefreshReg$ = () => { }
+        window.$RefreshSig$ = () => (type) => type
+        window.__vite_plugin_react_preamble_installed__ = true
+    </script>
+    <script type="module" src="http://localhost:5173/game-client/index.jsx"></script>
+</body>
+
+</html>

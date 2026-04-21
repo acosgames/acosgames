@@ -1,4 +1,4 @@
-import { GameStatus } from "./enums";
+import { GameStatus } from "./enums.js";
 
 
     

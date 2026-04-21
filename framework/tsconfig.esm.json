@@ -3,7 +3,9 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "sourceMap": true,
     "declaration": true,
+    "declarationMap": true,
     "outDir": "./dist/esm"
   }
 }

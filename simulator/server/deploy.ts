@@ -187,6 +187,68 @@ async function deployAll(got: any, FormData: any, FormDataEncoder: any): Promise
         console.error(err);
     }
 
+    //UPLOAD GAME SETTINGS
+    let hasGameSettings = false;
+    let gameSettingsFileSize = 0;
+    try {
+        const gameSettingsFilePath = path.join(buildPath, "../game-settings.json");
+        if (!fs.existsSync(gameSettingsFilePath)) {
+            console.warn(
+                "[ACOS] No game settings exist. It is optional, but this is a reminder just in case you forgot it. File should be at `./game-settings.json`"
+            );
+        } else {
+            gameSettingsFileSize = fs.statSync(gameSettingsFilePath).size;
+            contentLength += gameSettingsFileSize;
+            filesizes += "game-settings.json=" + gameSettingsFileSize + ";";
+            gameSettingsFileSize = Number((gameSettingsFileSize / 1000).toFixed(2));
+
+            const gameSettingsFile = fs.createReadStream(gameSettingsFilePath);
+            form_data.set("gameSettings", {
+                type: "application/javascript",
+                name: "game-settings.json",
+                [Symbol.toStringTag]: "File",
+                stream() {
+                    return gameSettingsFile;
+                },
+            });
+
+            hasGameSettings = true;
+        }
+    } catch (err) {
+        console.error(err);
+    }
+
+    //UPLOAD GAME PROTOCOL
+    let hasGameProtocol = false;
+    let gameProtocolFileSize = 0;
+    try {
+        const gameProtocolFilePath = path.join(buildPath, "../game-protocol.json");
+        if (!fs.existsSync(gameProtocolFilePath)) {
+            console.warn(
+                "[ACOS] No game protocol exists. It is optional, but this is a reminder just in case you forgot it. File should be at `./game-protocol.json`"
+            );
+        } else {
+            gameProtocolFileSize = fs.statSync(gameProtocolFilePath).size;
+            contentLength += gameProtocolFileSize;
+            filesizes += "game-protocol.json=" + gameProtocolFileSize + ";";
+            gameProtocolFileSize = Number((gameProtocolFileSize / 1000).toFixed(2));
+
+            const gameProtocolFile = fs.createReadStream(gameProtocolFilePath);
+            form_data.set("gameProtocol", {
+                type: "application/javascript",
+                name: "game-protocol.json",
+                [Symbol.toStringTag]: "File",
+                stream() {
+                    return gameProtocolFile;
+                },
+            });
+
+            hasGameProtocol = true;
+        }
+    } catch (err) {
+        console.error(err);
+    }
+
     //UPLOAD SERVER
     const serverFilePath = path.join(buildPath, "/server.bundle.js");
     let serverFileSize = fs.statSync(serverFilePath).size;
@@ -229,6 +291,12 @@ async function deployAll(got: any, FormData: any, FormDataEncoder: any): Promise
 
     //HAS DATABASE HEADER
     headers["X-GAME-HASDB"] = hasDb ? "yes" : "no";
+
+    //HAS GAME SETTINGS HEADER
+    headers["X-GAME-HASGAMESETTINGS"] = hasGameSettings ? "yes" : "no";
+
+    //HAS GAME PROTOCOL HEADER
+    headers["X-GAME-HASGAMEPROTOCOL"] = hasGameProtocol ? "yes" : "no";
 
     //HAS CSS HEADER
     headers["X-GAME-HASCSS"] = hasCSS ? "yes" : "no";

@@ -3,6 +3,8 @@
         "target": "ES2020",
         "ignoreDeprecations": "6.0",
         "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true,
         "rootDir": "./src"
     },
     "include": [

@@ -400,7 +400,7 @@ function runBrowserOpenDevTools() {
 
 function runDeploy(isDev) {
     return new Promise((rs, rj) => {
-        const cmd = `node --inspect ./server/deploy.js`;
+        const cmd = `node --inspect ./dist/server/deploy.js`;
         // console.log("[ACOS] Starting Deploy to ACOS.games");
         let buildPath = path.join(cwd, "/builds");
         let gameSettings = path.join(cwd, "/game-settings.json");

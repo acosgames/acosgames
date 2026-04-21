@@ -23,11 +23,26 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import { SettingSelectInput, SettingSwitchInput, SettingTextInput } from "./Inputs.tsx";
-import { MdEdit } from "react-icons/md";
+import { MdEdit, MdDragHandle } from "react-icons/md";
 import { bucket, useBucket, useBucketSelector } from "react-bucketjs";
 import { btGameSettings } from "../actions/buckets";
 import { useRef } from "react";
 import { updateGameSettings } from "../actions/websocket";
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    SortableContext,
+    useSortable,
+    verticalListSortingStrategy,
+    arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const btShowCreateStat = bucket<any>(false);
 const btEditStat = bucket<any>(null);
@@ -37,31 +52,69 @@ const btStatError = bucket<string[]>([]);
 
 export function GameStats() {
     const stats = useBucketSelector(btGameSettings, (b: any) => b.stats);
+
+    const sensors = useSensors(useSensor(PointerSensor));
+
+    const sortedAbbrs: string[] = stats
+        ? Object.keys(stats).sort(
+              (a, b) =>
+                  (stats[a].stat_order ?? 0) - (stats[b].stat_order ?? 0)
+          )
+        : [];
+
+    const onDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const oldIndex = sortedAbbrs.indexOf(active.id as string);
+        const newIndex = sortedAbbrs.indexOf(over.id as string);
+        const reordered = arrayMove(sortedAbbrs, oldIndex, newIndex);
+
+        const gameSettings = btGameSettings.get();
+        reordered.forEach((abbr, idx) => {
+            gameSettings.stats[abbr].stat_order = idx;
+        });
+        updateGameSettings(gameSettings);
+    };
+
     return (
         <VStack w="100%">
             <AddStat />
 
-            {stats && Object.keys(stats).length > 0 && (
-                <Table mt="2rem" mb="4rem">
-                    <Thead>
-                        <Tr>
-                            <Td fontWeight="600">Name</Td>
-                            <Td fontWeight="600">Abbreviation</Td>
-                            <Td fontWeight="600">Type</Td>
-                            <Td fontWeight="600" w="2rem" p="0"></Td>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
-                        {Object.keys(stats).map((abbr: string, idx: number) => (
-                            <Stat
-                                key={"stat-" + abbr}
-                                abbr={abbr}
-                                stat={stats[abbr]}
-                                idx={idx}
-                            />
-                        ))}
-                    </Tbody>
-                </Table>
+            {stats && sortedAbbrs.length > 0 && (
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={onDragEnd}
+                >
+                    <SortableContext
+                        items={sortedAbbrs}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        <Table mt="2rem" mb="4rem">
+                            <Thead>
+                                <Tr>
+                                    <Td fontWeight="600" w="2rem" p="0"></Td>
+                                    <Td fontWeight="600">Name</Td>
+                                    <Td fontWeight="600">Abbr</Td>
+                                    <Td fontWeight="600">Type</Td>
+                                    <Td fontWeight="600">#</Td>
+                                    <Td fontWeight="600" w="2rem" p="0"></Td>
+                                </Tr>
+                            </Thead>
+                            <Tbody>
+                                {sortedAbbrs.map((abbr: string, idx: number) => (
+                                    <Stat
+                                        key={"stat-" + abbr}
+                                        abbr={abbr}
+                                        stat={stats[abbr]}
+                                        idx={idx}
+                                    />
+                                ))}
+                            </Tbody>
+                        </Table>
+                    </SortableContext>
+                </DndContext>
             )}
         </VStack>
     );
@@ -84,11 +137,11 @@ function AddStat() {
             delete gameSettings.stats[abbr];
         }
 
-        if (gameSettings.statsEnum) {
-            const name = stat.name;
-            delete gameSettings.statsEnum[name];
-            delete gameSettings.statsEnum[abbr];
-        }
+        // if (gameSettings.statsEnum) {
+            // const name = stat.name;
+            // delete gameSettings.statsEnum[name];
+            // delete gameSettings.statsEnum[abbr];
+        // }
 
         updateGameSettings(gameSettings);
 
@@ -125,7 +178,7 @@ function AddStat() {
               )
             : stats;
 
-        if (!stat.name || stat.name.trim().length < 3) {
+        if (!stat.stat_name || stat.stat_name.trim().length < 3) {
             newErrors.push("Must have a name with at least 3 characters");
         }
         if (!stat.abbr || stat.abbr.trim().length === 0) {
@@ -157,24 +210,33 @@ function AddStat() {
         if (!validate()) return;
 
         if (!gameSettings.stats) gameSettings.stats = {};
-        if (!gameSettings.statsEnum) gameSettings.statsEnum = {};
+        // if (!gameSettings.statsEnum) gameSettings.statsEnum = {};
 
         if (editAbbr) {
             // remove old key if abbr changed
             if (editAbbr !== stat.abbr) {
                 delete gameSettings.stats[editAbbr];
-                delete gameSettings.statsEnum[editAbbr];
+                // delete gameSettings.statsEnum[editAbbr];
                 // also remove old name key
                 const oldStat = gameSettings.statsEnum;
-                Object.keys(oldStat).forEach((k) => {
-                    if (oldStat[k] === editAbbr) delete gameSettings.statsEnum[k];
-                });
+                // Object.keys(oldStat).forEach((k) => {
+                //     if (oldStat[k] === editAbbr) delete gameSettings.statsEnum[k];
+                // });
             }
         }
 
         gameSettings.stats[stat.abbr] = stat;
-        gameSettings.statsEnum[stat.name] = stat.abbr;
-        gameSettings.statsEnum[stat.abbr] = stat.abbr;
+        // gameSettings.statsEnum[stat.name] = stat.abbr;
+        // gameSettings.statsEnum[stat.abbr] = stat.abbr;
+
+        // assign stat_order if creating a new stat
+        if (!editAbbr) {
+            const existingOrders = Object.values(gameSettings.stats).map(
+                (s: any) => s.stat_order ?? 0
+            );
+            gameSettings.stats[stat.abbr].stat_order =
+                existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 0;
+        }
 
         updateGameSettings(gameSettings);
 
@@ -344,16 +406,16 @@ function CreateStat() {
     };
 
     const valueTypeOptions = [
-        { text: "Integer", value: 0 },
+        { text: "Int", value: 0 },
         { text: "Float", value: 1 },
-        { text: "Average", value: 2 },
+        { text: "Avg", value: 2 },
         { text: "Time", value: 3 },
     ];
 
     return (
         <VStack>
             <SettingTextInput
-                id="name"
+                id="stat_name"
                 title="Name"
                 textWidth="13rem"
                 maxLength={32}
@@ -378,7 +440,7 @@ function CreateStat() {
                 useValue={useStatValue}
             />
             <SettingSwitchInput
-                id="showInScoreboard"
+                id="scoreboard"
                 title="Show In Scoreboard"
                 textWidth="13rem"
                 useTarget={useStatTarget}
@@ -390,27 +452,45 @@ function CreateStat() {
 
 function Stat({ abbr, stat, idx }: { abbr: string; stat: any; idx: number }) {
     const isEven = idx % 2 == 0;
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+        useSortable({ id: abbr });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
 
     const valueTypeLabel = (t: number) => {
         switch (t) {
             case 0:
-                return "Integer";
+                return "Int";
             case 1:
                 return "Float";
             case 2:
-                return "Average";
+                return "Avg";
             case 3:
                 return "Time";
             default:
-                return "Integer";
+                return "Int";
         }
     };
 
     return (
-        <Tr>
+        <Tr ref={setNodeRef} style={style}>
+            <Td bgColor={isEven ? "gray.700" : "gray.750"} w="2rem" p="0">
+                <IconButton
+                    aria-label="Drag to reorder"
+                    bgColor={"transparent"}
+                    cursor="grab"
+                    icon={<MdDragHandle />}
+                    {...attributes}
+                    {...listeners}
+                ></IconButton>
+            </Td>
             <Td bgColor={isEven ? "gray.700" : "gray.750"}>
                 <Text as="span" fontWeight="500">
-                    {stat.name}
+                    {stat.stat_name}
                 </Text>
             </Td>
             <Td bgColor={isEven ? "gray.700" : "gray.750"}>
@@ -429,6 +509,21 @@ function Stat({ abbr, stat, idx }: { abbr: string; stat: any; idx: number }) {
                 <Text as="span" fontWeight="500">
                     {valueTypeLabel(stat.valueTYPE)}
                 </Text>
+            </Td>
+            <Td bgColor={isEven ? "gray.700" : "gray.750"}>
+                {stat.scoreboard && (
+                    <Text
+                        as="span"
+                        fontWeight="500"
+                        // borderRadius="12px"
+                        // bgColor="brand.500"
+                        p="0.5rem"
+                        px="0.5rem"
+                        fontSize="1.2rem"
+                    >
+                        ✓
+                    </Text>
+                )}
             </Td>
             <Td bgColor={isEven ? "gray.700" : "gray.750"} w="2rem" p="0">
                 <IconButton

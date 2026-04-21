@@ -89,6 +89,7 @@ const removeNewLine = new Transform({
 
 async function deployAll(got, FormData, FormDataEncoder) {
     let game_slug = "";
+    console.log("API Key: ", apikey);
     let apikeyParts = apikey.split(".");
     if (apikeyParts.length == 2) {
         game_slug = apikeyParts[0];

@@ -1,6 +1,6 @@
 // import { EGameStatus } from "./defs";
 
-import { GameStateReader, gs } from "./gamestate";
+import { GameStateReader, gs } from "./gamestate.js";
 
 declare global {
     var gamelog: (...msg: any[]) => void;

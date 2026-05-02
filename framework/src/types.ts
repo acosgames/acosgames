@@ -72,9 +72,9 @@ export interface TeamRef {
 export interface Room {
     room_slug: string;
     status: GameStatus;
-    _sequence: number;
+    sequence: number;
     starttime: number;
-    timeset: number;
+    timeset?: number;
     timesec: number;
     timeend: number;
     events: ACOSEvents;

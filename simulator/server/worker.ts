@@ -56,8 +56,8 @@ class FSGWorker {
         this.action = {};
         this.gameHistory = [];
         this.bundlePath = path.join(workerData.dir, "./builds/");
-        this.bundleFilename = "server.bundle.dev.js";
-        this.bundleFilePath = path.resolve(this.bundlePath, "server.bundle.dev.js");
+        this.bundleFilename = "server.bundle.js";
+        this.bundleFilePath = path.resolve(this.bundlePath, this.bundleFilename);
         this.entryFilePath = path.join(workerData.dir, "./game-server/index.js");
         this.settingsPath = path.join(workerData.dir, "./game-settings.json");
         this.dbPath = path.join(workerData.dir, "./game-server/database.json");
@@ -108,14 +108,14 @@ class FSGWorker {
 
     processTimelimit(gameState: any): void {
         const game = gs(gameState);
-        const timer = game.room().timerSet;
+        const timer = game.timerSet;
         if (typeof timer === "undefined") return;
 
         const seconds = Math.min(3_000_000, Math.max(1, timer));
         const now = Date.now();
         const deadline = now + seconds * 1000;
 
-        game.setDeadline(deadline - game.room().startTime);
+        game.setDeadline(deadline - game.startTime);
         game.setTimerSeconds(seconds);
         game.clearTimerSet();
     }
@@ -134,7 +134,6 @@ class FSGWorker {
             const game = gs(globalGame);
             game.clearEvents();
 
-            const room = game.room();
 
             if (action.type === "join") {
                 const shortid = action.user.shortid;
@@ -184,16 +183,16 @@ class FSGWorker {
 
             } else if (action.type === "reset" || action.type === "newgame") {
                 this.makeGame(gameSettings);
-                gs(globalGame).setStartTime(Date.now());
+                game.setStartTime(Date.now());
 
             } else if (action.type === "ready") {
-                if (room.status !== ROOM.statusByName("pregame")) return;
+                if (game.status !== ROOM.statusByName("pregame")) return;
                 const playerId = action.user.id;
                 if (game.player(playerId) && (typeof action.payload === "boolean" || typeof action.payload === "undefined"))
                     game.player(playerId)?.setReady(action.payload ?? true);
 
             } else if (action.type === "loaded") {
-                const seedStr = room.slug + room.startTime + room.sequence;
+                const seedStr = game.slug + game.startTime + game.sequence;
                 DiscreteRandom.seed(seedStr);
                 return;
 
@@ -202,11 +201,11 @@ class FSGWorker {
 
             } else if (action.type === "skip") {
                 globalSkipCount++;
-                if (globalGame.action && globalGame.action.type === "skip" && globalSkipCount > 5) {
+                if (action && action.type === "skip" && globalSkipCount > 5) {
                     game.setStatus(GameStatus.gamecancelled);
                     game.incrementSequence();
-                    game.setUpdatedAt(Date.now() - room.startTime);
-                    globalResult.room = room.raw();
+                    game.setUpdatedAt(Date.now() - game.startTime);
+                    globalResult.room = game.raw();
                     globalResult.action = action;
                     parentPort!.postMessage(globalResult);
                     globalResult = {};
@@ -219,7 +218,6 @@ class FSGWorker {
             }
 
             globalActions = cloneObj([action]);
-            globalGame.room = room.raw();
 
             // RUN GAME SERVER SCRIPT
             const passed = await this.run();
@@ -229,43 +227,25 @@ class FSGWorker {
                 return;
             }
 
+            const now = Date.now();
             const result = gs(globalResult);
-
-            const eventMap: Record<string, any> = {};
-            for (const event of result.events()) {
-                eventMap[event.type] = event;
-            }
+            const eventMap = result.eventsMap();
+    
 
             if (eventMap["gameover"]) {
                 result.setStatus(GameStatus.gameover);
-                result.setEndTime(Date.now() - room.startTime);
+                result.setEndTime(now - game.startTime);
             } else if (eventMap["gamecancelled"]) {
                 result.setStatus(GameStatus.gamecancelled);
             } else if (!passed || eventMap["gameerror"]) {
                 result.setStatus(GameStatus.gameerror);
             } else {
                 if (action.type === "join") {
-                    const shortid = action.user.shortid;
-                    let joinEvent = eventMap["join"];
-                    if (!joinEvent) {
-                        joinEvent = { type: "join", payload: [] };
-                        result.addEvent(joinEvent);
-                        eventMap["join"] = joinEvent;
-                    }
-                    if (joinEvent) {
-                        joinEvent.payload.push(result.playerRoomIndex(shortid));
-                    }
+                    result.addEvent({ type: "join", payload: action.user.id });
                 }
-
                 if (action.type === "leave") {
-                    const playerId = action.user.id;
-                    if (!eventMap["leave"]) {
-                        eventMap["leave"] = { type: "leave", payload: [] };
-                        result.addEvent(eventMap["leave"]);
-                    }
-                    eventMap["leave"].payload.push(playerId);
-                    result.player(playerId)?.setInGame(false);
-
+                    result.addEvent({ type: "leave", payload: action.user.id });
+                    result.player(action.user.id)?.setInGame(false);
                 } else if (action.type === "reset") {
                     result.setStatus(GameStatus.pregame);
                     result.setSequence(0);
@@ -277,18 +257,10 @@ class FSGWorker {
             }
 
             result.incrementSequence();
-            const now = Date.now();
-            result.setUpdatedAt(now - room.startTime);
-            // if (result.room().nextPlayer) game.setNextPlayer(result.room().nextPlayer);
-            // if (result.room().nextTeam) game.setNextTeam(result.room().nextTeam);
-            // if (result.room().nextAction) game.setNextAction(result.room().nextAction);
-            // result.setDeadline(result.room().deadline);
-            // result.setTimerSeconds(result.room().timerSeconds);
-            // result.setRoomEvents(result.events());
-			if (room.events.length === 0) room.clearEvents();
-			// globalResult.room = room.raw();
+            result.setUpdatedAt(now - game.startTime);
+
             globalResult.action = action;
-            
+
             result.ensureServerOnly(globalGame);
 
             parentPort!.postMessage(globalResult);
@@ -428,7 +400,7 @@ class FSGWorker {
     }
 
     convertStack(stackTrace: string): string {
-        const regex = /server\.bundle\.dev\.js:([0-9]+):([0-9]+)/gi;
+        const regex = /server\.bundle\.js:([0-9]+):([0-9]+)/gi;
         const matches = [...stackTrace.matchAll(regex)];
         const sourcemap = this.decodeSourceMap();
         const sourcePath = "file:///" + this.bundleFilePath.replace(/\\/gi, "/");

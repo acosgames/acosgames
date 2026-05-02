@@ -16,18 +16,13 @@
             "next_action": {
                 "$enum": ["pick", "move", "select"]
             },
-            "next_player": "uint",
-            "next_team": "uint",
+            "next_player": "int",
+            "next_team": "int",
             "starttime": "uint",
             "endtime": "uint",
             "sequence": "uint",
-            "status": "uint",
-            "meta": {
-                "room_slug": "string",
-                "isreplay": "uint",
-                "players": "uint",
-                "teams": "uint"
-            }
+            "status": "uint"
+            
         },
         "teams": {
             "$static": {

@@ -11,10 +11,12 @@ import { GameStatus } from "./enums";
 /** Zero-copy wrapper for a single player object in the gamestate. */
 export class PlayerReader {
 	private readonly playerRef: any;
+	private readonly gameStateRef: any;
 
 	/** @param player - The raw player object from the gamestate. */
-	constructor(player: any) {
+	constructor(player: any, gameState?: any) {
 		this.playerRef = player;
+		this.gameStateRef = gameState;
 	}
 
 	/** Returns the value of the given key from the player object. */
@@ -52,10 +54,20 @@ export class PlayerReader {
 	get stats(): Stats | undefined { return this.playerRef.stats; }
 	/** The player's zero-based index in the players array, defaults to -1. */
 	get index(): number { return this.playerRef.id ?? -1; }
+	get id(): number { return this.playerRef.id ?? -1; }
 	/** Whether the player is currently active in the game. */
 	get inGame(): boolean { return this.playerRef.ingame ?? false; }
 	/** Whether the player has indicated they are ready. */
 	get isReady(): boolean { return this.playerRef.ready ?? false; }
+
+	get team(): TeamReader | null {
+		if (!this.gameStateRef || !this.gameStateRef.teams) return null;
+		const teamId = this.teamid;
+		if (teamId === undefined) return null;
+		
+		const team = this.gameStateRef.teams?.[teamId];
+		return team ? new TeamReader(team, this.gameStateRef) : null;
+	}
 
 	/** Sets the player's short identifier and returns it. */
     setShortid(shortid: string): string {
@@ -111,6 +123,21 @@ export class PlayerReader {
 		return rating;
 	}
 
+	/** Sets the player's score and returns it. */
+	setScore(score: number): number {
+		this.playerRef.score = score;
+		return score;
+	}
+
+	/**
+	 * Increments the player's score by the given amount and returns the new score.
+	 * @param amount - Amount to increment by, defaults to 1.
+	 */
+	incrementScore(amount = 1): number {
+		this.playerRef.score = (this.playerRef.score ?? 0) + amount;
+		return this.playerRef.score;
+	}
+
 	/** Returns the underlying raw player object. */
 	raw(): Player {
 		return this.playerRef;
@@ -120,10 +147,12 @@ export class PlayerReader {
 /** Zero-copy wrapper for a single team object in the gamestate. */
 export class TeamReader {
 	private readonly teamRef: any;
+	private readonly gameStateRef: any;
 
 	/** @param team - The raw team object from the gamestate. */
-	constructor(team: any) {
+	constructor(team: any, gameState?: any) {
 		this.teamRef = team;
+		this.gameStateRef = gameState;
 	}
 
 	/** Returns the value of the given key from the team object. */
@@ -141,6 +170,7 @@ export class TeamReader {
 		return value;
 	}
 
+	
 	/** The team's slug identifier. */
 	get slug(): string { return this.teamRef.team_slug; }
 	/** The team's slug identifier (alias for `slug`). */
@@ -155,8 +185,40 @@ export class TeamReader {
 	get score(): number { return this.teamRef.score ?? 0; }
 	/** The team's current rank in the game, defaults to 0. */
 	get rank(): number { return this.teamRef.rank ?? 0; }
-	/** The list of player IDs belonging to this team, defaults to empty array. */
-	get players(): any[] { return this.teamRef.players ?? []; }
+	/**
+	 * With no arguments, returns all player refs for this team.
+	 * With an index, returns the player ref at that index or null if out of bounds.
+	 */
+	players(): PlayerReader[];
+	players(index: number): PlayerReader | null;
+	players(index?: number): PlayerReader[] | PlayerReader | null {
+
+		if( typeof index == "number" && index >= 0 ) {
+			const mappedPlayer = this.gameStateRef.players[index];
+			return mappedPlayer ? new PlayerReader(mappedPlayer, this.gameStateRef) : null;
+		}
+
+		const playerRefs: any[] = this.teamRef.players ?? [];
+		const players: PlayerReader[] = playerRefs
+			.map((playerRef: any) => {
+				if (!Array.isArray(this.gameStateRef?.players)) return null;
+				if (typeof playerRef === "number") {
+					const player = this.gameStateRef.players[playerRef];
+					return player ? new PlayerReader(player, this.gameStateRef) : null;
+				}
+				const mappedIndex = this.gameStateRef?.room?._players?.[playerRef];
+				if (mappedIndex !== undefined) {
+					const mappedPlayer = this.gameStateRef.players[mappedIndex];
+					return mappedPlayer ? new PlayerReader(mappedPlayer, this.gameStateRef) : null;
+				}
+				const player = this.gameStateRef.players.find((entry: any) => entry.shortid === playerRef);
+				return player ? new PlayerReader(player, this.gameStateRef) : null;
+			})
+			.filter((player: PlayerReader | null): player is PlayerReader => player !== null);
+
+		if (index === undefined) return players;
+		return players[index] ?? null;
+	}
 
 	/** Sets the team's slug identifier and returns it. */
     setSlug(slug: string): string {
@@ -192,6 +254,15 @@ export class TeamReader {
 	setScore(score: number): number {
 		this.teamRef.score = score;
 		return score;
+	}
+
+	/**
+	 * Increments the team's score by the given amount and returns the new score.
+	 * @param amount - Amount to increment by, defaults to 1.
+	 */
+	incrementScore(amount = 1): number {
+		this.teamRef.score = (this.teamRef.score ?? 0) + amount;
+		return this.teamRef.score;
 	}
 
 	/**
@@ -239,7 +310,7 @@ export class RoomReader {
 	/** The room's current game status. */
 	get status(): GameStatus { return (this.roomRef.status ?? 0) as GameStatus; }
 	/** The room's action sequence number. */
-	get sequence(): number { return this.roomRef._sequence ?? 0; }
+	get sequence(): number { return this.roomRef.sequence ?? 0; }
 	/** Unix timestamp (ms) of when the game started. */
 	get startTime(): number { return this.roomRef.starttime ?? 0; }
 	/** Unix timestamp (ms) of when the game ended. */
@@ -281,7 +352,7 @@ export class RoomReader {
 
 	/** Sets the room's action sequence number and returns it. */
 	setSequence(sequence: number): number {
-		this.roomRef._sequence = sequence;
+		this.roomRef.sequence = sequence;
 		return sequence;
 	}
 
@@ -291,8 +362,8 @@ export class RoomReader {
 	 * @returns The new sequence number.
 	 */
 	incrementSequence(amount = 1): number {
-		this.roomRef._sequence = (this.roomRef._sequence ?? 0) + amount;
-		return this.roomRef._sequence;
+		this.roomRef.sequence = (this.roomRef.sequence ?? 0) + amount;
+		return this.roomRef.sequence;
 	}
 
 	/** Sets the game start timestamp (ms) and returns it. */
@@ -466,13 +537,49 @@ export class GameStateReader {
 		return value;
 	}
 
+	// ----- Room property accessors (delegates to RoomReader) -----
+
+	/** The room's slug identifier. */
+	get slug(): string { return this.gameStateRef.room?.room_slug ?? ""; }
+	/** The room's current game status. */
+	get status(): GameStatus { return (this.gameStateRef.room?.status ?? 0) as GameStatus; }
+	/** The room's action sequence number. */
+	get sequence(): number { return this.gameStateRef.room?.sequence ?? 0; }
+	/** Unix timestamp (ms) of when the game started. */
+	get startTime(): number { return this.gameStateRef.room?.starttime ?? 0; }
+	/** Unix timestamp (ms) of when the game ended. */
+	get endTime(): number { return this.gameStateRef.room?.endtime ?? 0; }
+	/** Unix timestamp (ms) of the last update. */
+	get updatedAt(): number { return this.gameStateRef.room?.updated ?? 0; }
+	/** The Unix timestamp (ms) when the timer was set, if active. */
+	get timerSet(): number | undefined { return this.gameStateRef.room?.timeset; }
+	/** The duration of the current timer in seconds. */
+	get timerSeconds(): number { return this.gameStateRef.room?.timesec ?? 0; }
+	/** Unix timestamp (ms) when the current timer expires. */
+	get deadline(): number { return this.gameStateRef.room?.timeend ?? 0; }
+	/** Whether this room is running a replay. */
+	get isReplay(): boolean { return this.gameStateRef.room?.isreplay ?? false; }
+	/** The shortid or identifier of the next player expected to act. */
+	get nextPlayer(): any { return this.gameStateRef.room?.next_player; }
+	/** The slug or identifier of the next team expected to act. */
+	get nextTeam(): any { return this.gameStateRef.room?.next_team; }
+	/** The next expected action identifier. */
+	get nextAction(): any { return this.gameStateRef.room?.next_action; }
+	/** A map of player shortids to their array indices. */
+	get playerMap(): any { return this.gameStateRef.room?._players ?? {}; }
+	/** A map of team slugs to their array indices. */
+	get teamMap(): any { return this.gameStateRef.room?._teams ?? {}; }
+
 	/**
 	 * Returns a `PlayerReader` for the player at the given array index,
 	 * or `null` if the index is out of bounds.
 	 */
-	player(index: number): PlayerReader | null {
-		const player = this.gameStateRef?.players?.[index];
-		return player ? new PlayerReader(player) : null;
+	player(index: number | string): PlayerReader | null {
+		if( typeof index == 'number' ) {
+			const player = this.gameStateRef?.players?.[index];
+			return player ? new PlayerReader(player, this.gameStateRef) : null;
+		}
+		return this.playerByShortid(index);
 	}
 
 	/**
@@ -495,7 +602,7 @@ export class GameStateReader {
 
 	/** Returns `PlayerReader` wrappers for all players in the gamestate. */
 	players(): PlayerReader[] {
-		return (this.gameStateRef?.players ?? []).map((player: any) => new PlayerReader(player));
+		return (this.gameStateRef?.players ?? []).map((player: any) => new PlayerReader(player, this.gameStateRef));
 	}
 
 	/** Returns the total number of players in the gamestate. */
@@ -527,22 +634,28 @@ export class GameStateReader {
 
 	/** Registers a player shortid → array index mapping in the room and returns the index. */
 	setPlayerRoomIndex(shortid: string, index: number): number {
-		return this.room().setPlayerIndex(shortid, index);
+		if (!this.gameStateRef.room._players) this.gameStateRef.room._players = {};
+		this.gameStateRef.room._players[shortid] = index;
+		return index;
 	}
 
 	/**
 	 * Returns a `TeamReader` for the team with the given slug,
 	 * or `null` if not found. Checks the room index map first, then falls back to a linear scan.
 	 */
-	team(teamSlug: string): TeamReader | null {
-		const index = this.teamRoomIndex(teamSlug);
+	team(teamSlugOrIndex: string | number): TeamReader | null {
+		if( typeof teamSlugOrIndex == 'number' ) {
+			const team = this.gameStateRef?.teams?.[teamSlugOrIndex];
+			return team ? new TeamReader(team, this.gameStateRef) : null;
+		}
+		const index = this.teamRoomIndex(teamSlugOrIndex);
 		if (index !== undefined) {
 			const team = this.gameStateRef?.teams?.[index];
-			return team ? new TeamReader(team) : null;
+			return team ? new TeamReader(team, this.gameStateRef) : null;
 		}
 
-		const team = this.gameStateRef?.teams?.find((entry: any) => entry.team_slug === teamSlug);
-		return team ? new TeamReader(team) : null;
+		const team = this.gameStateRef?.teams?.find((entry: any) => entry.team_slug === teamSlugOrIndex);
+		return team ? new TeamReader(team, this.gameStateRef) : null;
 	}
 
 	/**
@@ -551,12 +664,12 @@ export class GameStateReader {
 	 */
 	teamAt(index: number): TeamReader | null {
 		const team = this.gameStateRef?.teams?.[index];
-		return team ? new TeamReader(team) : null;
+		return team ? new TeamReader(team, this.gameStateRef) : null;
 	}
 
 	/** Returns `TeamReader` wrappers for all teams in the gamestate. */
 	teams(): TeamReader[] {
-		return (this.gameStateRef?.teams ?? []).map((team: any) => new TeamReader(team));
+		return (this.gameStateRef?.teams ?? []).map((team: any) => new TeamReader(team, this.gameStateRef));
 	}
 
 	/** Returns the total number of teams in the gamestate. */
@@ -579,29 +692,30 @@ export class GameStateReader {
 
 	/** Registers a team slug → array index mapping in the room and returns the index. */
 	setTeamRoomIndex(teamSlug: string, index: number): number {
-		return this.room().setTeamIndex(teamSlug, index);
+		if (!this.gameStateRef.room._teams) this.gameStateRef.room._teams = {};
+		this.gameStateRef.room._teams[teamSlug] = index;
+		return index;
 	}
 
 	/** Returns all events currently stored in the room. */
 	events(): ACOSEvent[] {
-		return this.gameStateRef?.room?.events ?? [];
+		return this.gameStateRef.room?.events ?? [];
 	}
 
 	/**
 	 * Appends an event to the room's event list.
 	 * @returns The new length of the events array.
 	 */
-	addEvent(event: ACOSEvent): number {
-		const room = this.room();
-		const events = room.events;
-		events.push(event);
-		room.setEvents(events);
-		return events.length;
+	addEvent(eventOrType: ACOSEvent | string, payload?: any): number {
+		if (!Array.isArray(this.gameStateRef.room.events)) this.gameStateRef.room.events = [];
+		const event: ACOSEvent = typeof eventOrType === "string" ? { type: eventOrType, payload } : eventOrType;
+		this.gameStateRef.room.events.push(event);
+		return this.gameStateRef.room.events.length;
 	}
 
 	/** Removes all events from the room. */
 	clearEvents(): void {
-		this.room().clearEvents();
+		this.gameStateRef.room.events = [];
 	}
 
 	/**
@@ -609,17 +723,39 @@ export class GameStateReader {
 	 * @param type - The event type string to filter by.
 	 */
 	eventsByType(type: string): ACOSEvent[] {
-		return this.room().eventsByType(type);
+		return (this.gameStateRef.room?.events ?? []).filter((e: ACOSEvent) => e.type === type);
+	}
+
+	/**
+	 * Returns a map of all room events grouped by their `type` field.
+	 * Each key is an event type string and the value is the array of matching events.
+	 */
+	eventsMap(): Record<string, ACOSEvent[]> {
+		const events: ACOSEvent[] = this.gameStateRef.room?.events ?? [];
+		const map: Record<string, ACOSEvent[]> = {};
+		for (const event of events) {
+			if (!map[event.type]) map[event.type] = [];
+			map[event.type].push(event);
+		}
+		return map;
+	}
+
+	/** Sets the room's slug identifier and returns it. */
+	setSlug(slug: string): string {
+		this.gameStateRef.room.room_slug = slug;
+		return slug;
 	}
 
 	/** Sets the room's game status and returns it. */
 	setStatus(status: GameStatus): GameStatus {
-		return this.room().setStatus(status);
+		this.gameStateRef.room.status = status;
+		return status;
 	}
 
 	/** Sets the room's action sequence number and returns it. */
 	setSequence(sequence: number): number {
-		return this.room().setSequence(sequence);
+		this.gameStateRef.room.sequence = sequence;
+		return sequence;
 	}
 
 	/**
@@ -628,57 +764,79 @@ export class GameStateReader {
 	 * @returns The new sequence number.
 	 */
 	incrementSequence(amount = 1): number {
-		return this.room().incrementSequence(amount);
+		this.gameStateRef.room.sequence = (this.gameStateRef.room.sequence ?? 0) + amount;
+		return this.gameStateRef.room.sequence;
 	}
 
 	/** Sets the game start timestamp (ms) and returns it. */
 	setStartTime(startTime: number): number {
-		return this.room().setStartTime(startTime);
+		this.gameStateRef.room.starttime = startTime;
+		return startTime;
 	}
 
 	/** Sets the game end timestamp (ms) and returns it. */
 	setEndTime(endTime: number): number {
-		return this.room().setEndTime(endTime);
+		this.gameStateRef.room.endtime = endTime;
+		return endTime;
 	}
 
 	/** Sets the last-updated timestamp (ms) and returns it. */
 	setUpdatedAt(updatedAt: number): number {
-		return this.room().setUpdatedAt(updatedAt);
+		this.gameStateRef.room.updated = updatedAt;
+		return updatedAt;
 	}
 
 	/** Sets the timer duration in seconds and returns it. */
 	setTimerSeconds(timerSeconds: number): number {
-		return this.room().setTimerSeconds(timerSeconds);
+		this.gameStateRef.room.timesec = timerSeconds;
+		return timerSeconds;
 	}
 
 	/** Sets the timer expiry timestamp (ms) and returns it. */
 	setDeadline(deadline: number): number {
-		return this.room().setDeadline(deadline);
+		this.gameStateRef.room.timeend = deadline;
+		return deadline;
+	}
+
+	/** Records the Unix timestamp (ms) when the timer was set and returns it. */
+	setTimerSet(timerSet: number): number {
+		this.gameStateRef.room.timeset = timerSet;
+		return timerSet;
 	}
 
 	/** Removes the `timeset` field from the room, cancelling the active timer marker. */
 	clearTimerSet(): void {
-		this.room().clearTimerSet();
+		delete (this.gameStateRef.room as any).timeset;
+	}
+
+	/** Sets whether the room is running a replay and returns the value. */
+	setIsReplay(isReplay: boolean): boolean {
+		this.gameStateRef.room.isreplay = isReplay;
+		return isReplay;
 	}
 
 	/** Sets the next player identifier on the room and returns it. */
 	setNextPlayer(nextPlayer: any): any {
-		return this.room().setNextPlayer(nextPlayer);
+		this.gameStateRef.room.next_player = nextPlayer;
+		return nextPlayer;
 	}
 
 	/** Sets the next team identifier on the room and returns it. */
 	setNextTeam(nextTeam: any): any {
-		return this.room().setNextTeam(nextTeam);
+		this.gameStateRef.room.next_team = nextTeam;
+		return nextTeam;
 	}
 
 	/** Sets the next expected action identifier on the room and returns it. */
 	setNextAction(nextAction: any): any {
-		return this.room().setNextAction(nextAction);
+		this.gameStateRef.room.next_action = nextAction;
+		return nextAction;
 	}
 
 	/** Replaces the room's full event list and returns it. */
 	setRoomEvents(events: ACOSEvents): ACOSEvents {
-		return this.room().setEvents(events);
+		this.gameStateRef.room.events = events;
+		return events;
 	}
 
 	/** Ensures `state` exists on the gamestate and returns it. */
@@ -705,7 +863,7 @@ export class GameStateReader {
 	 */
 	addPlayer(player: any): PlayerReader {
 		this.ensurePlayers().push(player);
-		return new PlayerReader(player);
+		return new PlayerReader(player, this.gameStateRef);
 	}
 
 	/**
@@ -714,7 +872,7 @@ export class GameStateReader {
 	 */
 	addTeam(team: any): TeamReader {
 		this.ensureTeams().push(team);
-		return new TeamReader(team);
+		return new TeamReader(team, this.gameStateRef);
 	}
 
 	/** Returns the underlying raw gamestate object. */

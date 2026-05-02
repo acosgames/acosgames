@@ -363,8 +363,7 @@ function onAction(socket: Socket, action: any, fromServer?: boolean): void {
 function validateNextUser(status: number, gamestate: any, userid: number): boolean {
 
     gamestate = gs(gamestate);
-    let gameroom = gamestate.room();
-    let next = gameroom.nextPlayer;
+    let next = gamestate.nextPlayer;
 
     if (Array.isArray(next) && next.includes(userid)) return true;
 
@@ -380,7 +379,7 @@ function validateNextUser(status: number, gamestate: any, userid: number): boole
     // // eslint-disable-next-line @typescript-eslint/no-explicit-any
     // const nextid = gamestate?.room?.next_player as any;
     // const room = gamestate.room;
-    // const roomManager = RoomManager.current();
+    // const roomManager = RoomManager.current();  
 
     // if (room?.status !== roomManager.statusByName("gamestart")) return false;
     // if (nextid === null || nextid === undefined) return false;
@@ -398,9 +397,8 @@ function validateNextUser(status: number, gamestate: any, userid: number): boole
 function validateNextTeam(gamestate: any, teamid: number): boolean {
 
     gamestate = gs(gamestate);
-    const gameroom = gamestate.room();
-
-    let next = gameroom.nextPlayer;
+  
+    let next = gamestate.nextPlayer;
 
     if (Array.isArray(next) && next.includes(teamid)) return true;
 

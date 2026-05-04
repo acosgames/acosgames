@@ -1,6 +1,15 @@
 import { GameStatus } from "./enums.js";
 
+let isGameover: boolean = false;
+let roomStatus: GameStatus = GameStatus.none;
+let gamestate: GameState | null = null;
 
+let timerHandle: any = 0;
+let timerPaused: boolean = false;
+let timerLoopCallback: ((elapsed: number) => void) = (elapsed: number) => {};
+
+var volumeChangeCallback: ((volume: number) => void) | null = null;
+var ACOS_VOLUME: number = 1.0;
     
 export function send(type: string, payload: any): void {
     window.parent.postMessage({ type, payload }, "*");
@@ -10,8 +19,8 @@ export function ready(): void {
     send("ready", true);
 }
 
-export function listen(callback: (message: string) => void) {
-    window.addEventListener("message", onMessage(callback), false);
+export function listen(gameStateCallback: (message: string) => void, utilityCallback?: (message: string) => void): void {
+    window.addEventListener("message", onMessage(gameStateCallback, utilityCallback), false);
 }
 
 export function getPortrait(portraitid: string): string {
@@ -23,12 +32,31 @@ export function getCountryFlag(countrycode: string): string {
 }
 
 const onMessage =
-    (callback: (message: string, newStatus: boolean) => void) => (evt: MessageEvent<any>) => {
+    (gameStateCallback: (message: string, newStatus: boolean) => void, utilityCallback?: (message: string) => void) => (evt: MessageEvent<any>) => {
         // console.log("MESSAGE EVENT CALLED #1");
         let message = evt.data;
         let origin = evt.origin;
         let source = evt.source;
         if (!message || message.length == 0) return;
+
+        if( message?.type == 'pause' ) {
+            pauseTimer();
+            utilityCallback?.(message);
+            return;
+        }
+        else if( message?.type == 'resume' ) {
+            resumeTimer();
+            utilityCallback?.(message);
+            return;
+        }
+        else if( message?.type == 'volume' ) {
+            let volume = message?.payload;
+            if( typeof volume === "number" ) {
+                setVolume(volume);
+            }
+            utilityCallback?.(message);
+            return;
+        }
 
         let newStatus = false;
         gamestate = message;
@@ -44,18 +72,15 @@ const onMessage =
             }
         }
 
-        if (callback) {
-            callback(message, newStatus);
+        if (gameStateCallback) {
+            gameStateCallback(message, newStatus);
         }
     };
 
-let isGameover: boolean = false;
-let roomStatus: GameStatus = GameStatus.none;
-let gamestate: GameState | null = null;
-let timerHandle: any = 0;
-let timerLoopCallback: ((elapsed: number) => void) = (elapsed: number) => {};
+
 export function timerLoop(cb: (elapsed: number) => void): void {
     timerLoopCallback = cb;
+    if (timerPaused) return;
     timerHandle = setTimeout(() => {
         timerLoop(cb);
     }, 100);
@@ -83,4 +108,30 @@ export function timerLoop(cb: (elapsed: number) => void): void {
     }
 }
 
-export default { send, ready, listen, getPortrait, getCountryFlag, timerLoop };
+export function pauseTimer(): void {
+    timerPaused = true;
+    clearTimeout(timerHandle);
+}
+
+export function resumeTimer(): void {
+    if (!timerPaused) return;
+    timerPaused = false;
+    timerLoop(timerLoopCallback);
+}
+
+
+
+export function setVolume(volume: number): void {
+    ACOS_VOLUME = Math.max(0, Math.min(1, volume));
+
+    if( volumeChangeCallback )
+        volumeChangeCallback(ACOS_VOLUME);
+    // Implement actual audio volume control as needed, e.g.:
+    // if using HTMLAudioElement(s), set their .volume = ACOS_VOLUME
+}
+
+export function onVolumeChange(callback: (volume: number) => void): void {
+    volumeChangeCallback = callback;
+}
+
+export default { send, ready, listen, getPortrait, getCountryFlag, timerLoop, pauseTimer, resumeTimer, setVolume, onVolumeChange };

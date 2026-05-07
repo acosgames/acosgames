@@ -22,6 +22,10 @@ import {
     Select,
     Text,
     VStack,
+    Slider,
+    SliderTrack,
+    SliderFilledTrack,
+    SliderThumb,
 } from "@chakra-ui/react";
 import { updateGameSettings } from "../actions/websocket";
 
@@ -33,12 +37,18 @@ import { ColorPicker, useColor } from "react-color-palette";
 import "react-color-palette/css";
 import { useBucket } from "react-bucketjs";
 import {
+    btGamepanels,
     btGameSettings,
     btPrevGameSettings,
     btTeamSettingsRef,
     btWebsocketStatus,
 } from "../actions/buckets";
+import { useCallback } from "react";
+// Ensure btVolume exists in buckets.ts:
+// export const btVolume = bucket<number>(1.0);
+import { btVolume } from "../actions/buckets";
 import { SettingNumberInput, SettingTextInput } from "./Inputs.tsx";
+import GamePanelService from "../services/GamePanelService";
 
 const MotionBox = motion(Box);
 
@@ -55,10 +65,61 @@ export function Settings() {
 
     return (
         <>
+            <VolumeSettingSection />
             <ChooseScreenSettings />
             <ChooseGameSettings />
             <ChooseTeamSettings />
         </>
+    );
+}
+
+function VolumeSettingSection() {
+    const volume = useBucket(btVolume);
+    const setVolume = useCallback((val: number) => {
+        btVolume.set(val);
+        let gamepanels = btGamepanels.get() || {};
+        for (const id in gamepanels) {
+            const gamepanel = gamepanels[id];
+            if (gamepanel) {
+                GamePanelService.sendFrameMessage(gamepanel, { type: "volume", payload:  val });
+            }
+        }
+    }, []);
+    return (
+        <Card mt="1rem">
+            <CardHeader>
+                <Text fontWeight={"500"}>Volume</Text>
+            </CardHeader>
+            <CardBody pt="0">
+                <VStack px="2rem" w="100%">
+                    <HStack w="100%">
+                        {/* <Text w="6rem" color="gray.50" fontWeight={"600"}>
+                            Volume
+                        </Text> */}
+                        <Slider
+                            aria-label="volume-slider"
+                            value={typeof volume === "number" ? volume : 1}
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            onChange={setVolume}
+                            w="100%"
+                            mr="1rem"
+                            
+                        >
+                            <SliderTrack 
+                            h="0.5rem">
+                                <SliderFilledTrack />
+                            </SliderTrack>
+                            <SliderThumb w="1.5rem" h="1.5rem" />
+                        </Slider>
+                        <Text w="4rem" textAlign="right" color="gray.100">
+                            {Math.round((typeof volume === "number" ? volume : 1) * 100)}%
+                        </Text>
+                    </HStack>
+                </VStack>
+            </CardBody>
+        </Card>
     );
 }
 

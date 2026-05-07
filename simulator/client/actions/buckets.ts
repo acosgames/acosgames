@@ -1,5 +1,6 @@
 import { bucket } from "react-bucketjs";
 
+export const btVolume = bucket<number>(1.0);
 export const btTimeleft = bucket<number>(0);
 export const btTimeleftUpdated = bucket<number>(0);
 

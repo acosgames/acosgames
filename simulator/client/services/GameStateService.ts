@@ -10,6 +10,7 @@ import {
     btHiddenPlayerState,
     btPlayerTeams,
     btTeamInfo,
+    btVolume,
 } from "../actions/buckets";
 import { gs } from "@acosgames/framework";
 
@@ -364,6 +365,8 @@ class GameStateService {
             }
 
             GamePanelService.sendFrameMessage(gamepanel, pstate);
+
+            GamePanelService.sendFrameMessage(gamepanel, {type:"volume", volume: btVolume.get()});
 
             const joinEvent = pstate?.room?.events?.find(
                 (e: any) =>

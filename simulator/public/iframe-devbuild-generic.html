@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>ACOS - Client Simulator</title>
+    <meta name="description" content="ACOS Client Simulator" />
+    <meta name="author" content="A Cup Of Skill" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src https://assets.acos.games ws://*:3301 ws://*:3100 http://*:3100 http://*:3301 http://*:3201 ws://*:3201 http://*:3200 ws://*:3200 ws://localhost:3201 http://localhost:3201 https://fonts.gstatic.com https://fonts.googleapis.com 'self' 'unsafe-inline' data:" />
+    <meta name="color-scheme" content="light dark">
+    <link id="css-bundle" rel="stylesheet" href="/assets/client.bundle.css" />
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!--
+        Generic bundle hot-reload iframe.
+        Use this with:  vite build --watch  (outputs builds/client.bundle.js)
+        The ACOS simulator server watches builds/client.bundle.js with chokidar
+        and emits a Socket.IO "hotreload" event on change. This page listens for
+        it and reloads, which is the cleanest strategy for Phaser 4 / Three.js
+        because the game engine needs to be fully re-initialised anyway.
+    -->
+    <script src="http://localhost:3100/socket.io/socket.io.js"></script>
+    <script>
+        (function () {
+            var socket = io('http://localhost:3100', { transports: ['websocket'] });
+            socket.on('hotreload', function () {
+                console.log('[ACOS] Bundle changed — reloading...');
+                // Small delay so the file write is fully flushed before we load it
+                setTimeout(function () { location.reload(); }, 150);
+            });
+        })();
+    </script>
+
+    <script type="module" src="/client.bundle.js"></script>
+</body>
+
+</html>

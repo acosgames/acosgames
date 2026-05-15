@@ -5,6 +5,7 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import { Worker } from "worker_threads";
 import { protoEncode, protoDecode, delta } from "acos-json-encoder";
+import chokidar from "chokidar";
 
 
 import initACOSProtocol from "../shared/acos-encoder";
@@ -362,12 +363,12 @@ function onAction(socket: Socket, action: any, fromServer?: boolean): void {
 
 function validateNextUser(status: number, gamestate: any, userid: number): boolean {
 
-    gamestate = gs(gamestate);
-    let next = gamestate.nextPlayer;
+    const game = gs(gamestate);
+    let next = game.nextPlayer;
 
     if (Array.isArray(next) && next.includes(userid)) return true;
 
-    let player = gamestate.player(userid);
+    let player = game.player(userid);
     if (!player) return false;
 
     if (next === userid) return true;
@@ -396,13 +397,13 @@ function validateNextUser(status: number, gamestate: any, userid: number): boole
 
 function validateNextTeam(gamestate: any, teamid: number): boolean {
 
-    gamestate = gs(gamestate);
+    const game = gs(gamestate);
   
-    let next = gamestate.nextPlayer;
+    let next = game.nextPlayer;
 
     if (Array.isArray(next) && next.includes(teamid)) return true;
 
-    let player = gamestate.player(teamid);
+    let player = game.player(teamid);
     if (!player) return false;
 
     if (next === teamid) return true;
@@ -479,6 +480,9 @@ function createWorker(index: number): Worker {
 }
 
 // Static file routes
+app.get("/client.bundle.js", (req, res) => {
+    res.sendFile(path.join(process.argv[2], "./builds/client.bundle.js"));
+});
 app.get("/client.bundle.dev.js", (req, res) => {
     res.sendFile(path.join(process.argv[2], "./builds/client.bundle.dev.js"));
 });
@@ -507,13 +511,29 @@ app.get("/", (req, res) => {
 });
 
 const assetPath = path.join(process.argv[2], "./builds/assets");
+const altAssetPath = path.join(process.argv[2], "./game-client/assets");
 app.use("/assets/*", (req, res) => {
-    res.sendFile(path.join(assetPath, req.path));
-    console.log(req.path);
+    let baseUrl = req.baseUrl;
+    if( baseUrl.indexOf("/assets/") === 0 ) {
+        baseUrl = baseUrl.substring("/assets/".length);
+    }
+    if( baseUrl.indexOf("assets/") === 0 ) {
+        baseUrl = baseUrl.substring("assets/".length);
+    }
+
+    res.sendFile(path.join(assetPath, baseUrl ), (err) => {
+        if (err) {
+            res.sendFile(path.join(altAssetPath, baseUrl ), (err2) => {
+                if (err2) res.status(404).end();
+            });
+        }
+    });
+    // res.sendFile(path.join(assetPath, req.path));
+    console.log(baseUrl );
 });
 app.use("/game-client/assets/*", (req, res) => {
-    res.sendFile(path.join(process.argv[2], req.baseUrl));
-    console.log(req.path);
+    console.log(req.baseUrl );
+    res.sendFile(path.join(altAssetPath, req.baseUrl ));
 });
 app.get("/routes", (req, res) => {
     if (process.argv[4] === "webpack" || process.argv[4] === "bundle") {
@@ -527,6 +547,12 @@ app.get("/iframe.html", (req, res) => {
         res.sendFile(path.join(__dirname, "../../public/iframe-" + process.argv[3] + "-vite.html"));
     } else if (process.argv[4] === "webpack" || process.argv[4] === "bundle") {
         res.sendFile(path.join(__dirname, "../../public/iframe-" + process.argv[3] + "-webpack.html"));
+    } else if (process.argv[4] === "generic") {
+        // Vite dev server path — full page reload via Vite HMR WebSocket
+        res.sendFile(path.join(__dirname, "../../public/iframe-" + process.argv[3] + "-generic.html"));
+    } else if (process.argv[4] === "generic-watch") {
+        // vite build --watch path — Socket.IO hotreload notification
+        res.sendFile(path.join(__dirname, "../../public/iframe-devbuild-generic.html"));
     } else {
         res.sendFile(path.join(__dirname, "../../public/iframe-" + process.argv[3] + ".html"));
     }
@@ -535,9 +561,24 @@ app.get("/favicon.ico", (req, res) => {
     res.sendFile(path.join(__dirname, "../../public/favicon.ico"));
 });
 
+app.use((req, res) => {
+    res.sendFile(path.join(process.argv[2], req.baseUrl));
+    console.log(req.path);
+});
+
+
 server.listen(port, () => {
     // console.log("[ACOS] Server started at http://localhost:" + port);
 });
+
+// Generic bundle hot reload — watch builds/client.bundle.js and notify all iframe clients
+if (process.argv[4] === "generic" || process.argv[4] === "generic-watch") {
+    const bundleFile = path.join(gameWorkingDirectory, "./builds/client.bundle.js");
+    chokidar.watch(bundleFile, { ignoreInitial: true }).on("change", () => {
+        console.log("[ACOS] Generic bundle changed, sending hotreload...");
+        io.emit("hotreload", {});
+    });
+}
 
 process.on("SIGINT", () => {
     process.exit();

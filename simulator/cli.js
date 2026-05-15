@@ -32,7 +32,7 @@ const cd = __dirname;
 //     return argv.length <= 2 ? "" : argv[2];
 // }
 
-const acosClientType = argv.client || "vite";
+const acosClientType = argv.type || "vite";
 const acosCommand = argv._[0]; // getCommand(process.argv);
 let serverApp = null;
 

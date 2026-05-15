@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>ACOS - Client Simulator</title>
+    <meta name="description" content="ACOS Client Simulator" />
+    <meta name="author" content="A Cup Of Skill" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src https://assets.acos.games ws://*:3301 ws://*:5173 http://*:5173 http://*:3301 http://*:3201 ws://*:3201 http://*:3200 ws://*:3200 ws://localhost:3201 http://localhost:3201 https://fonts.gstatic.com https://fonts.googleapis.com 'self' 'unsafe-inline' data:" />
+    <meta name="color-scheme" content="light dark">
+</head>
+
+<body>
+    <div id="root"></div>
+    <!--
+        Generic / framework-agnostic dev iframe.
+        Vite serves the game entry file directly, providing HMR for ES modules.
+        For Phaser / Three.js projects, Vite falls back to a full-page reload when
+        no import.meta.hot.accept() handler is registered — which is fine for game engines.
+        To opt-in to true partial HMR without a reload, add this to your entry:
+            if (import.meta.hot) import.meta.hot.accept();
+    -->
+    <script type="module" src="http://localhost:5173/game-client/index.js"></script>
+</body>
+
+</html>

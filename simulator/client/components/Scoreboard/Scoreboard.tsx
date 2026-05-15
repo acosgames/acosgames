@@ -87,7 +87,7 @@ export function RenderPlayers({ room_slug }: RenderPlayersProps = {}) {
     const players = gameState.players;
     const teams = gameState.teams;
 
-    if (teams) {
+    if (teams && teams.length > 0) {
         return (
             <VStack w="100%" spacing="0">
                 <HStack w="100%">

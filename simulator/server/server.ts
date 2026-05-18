@@ -158,8 +158,10 @@ io.on("connection", (socket) => {
     socket.on("action", (msg) => { onAction(socket, protoDecode(msg)); });
     socket.on("reload", (msg) => {
         msg = protoDecode(msg);
+        const currentRoom = RoomManager.current();
+        const currentGamestate = currentRoom.getGameState();
         console.log("[ACOS] Incoming Action: ", msg);
-        worker.postMessage([{ type: "reset" }]);
+        worker.postMessage([{ type: "reset", gamestate: currentGamestate, gameSettings: settings.get() }]);
     });
 });
 
@@ -373,7 +375,7 @@ function validateNextUser(status: number, gamestate: any, userid: number): boole
 
     if (next === userid) return true;
 
-    if( validateNextTeam(gamestate, player.teamid) ) return true;
+    if (validateNextTeam(gamestate, player.teamid)) return true;
 
     return false;
 
@@ -398,7 +400,7 @@ function validateNextUser(status: number, gamestate: any, userid: number): boole
 function validateNextTeam(gamestate: any, teamid: number): boolean {
 
     const game = gs(gamestate);
-  
+
     let next = game.nextPlayer;
 
     if (Array.isArray(next) && next.includes(teamid)) return true;
@@ -455,13 +457,13 @@ function createWorker(index: number): Worker {
             }
         }
 
+        room.updateGame(gamestate);
+
         io.to("gameroom").emit("game", protoEncode({ type: "game", payload: gamestate }));
 
         if (room.spectators.length > 0) {
             io.to("spectator").emit("spectator", protoEncode({ type: "spectator", payload: gamestate }));
         }
-
-        room.updateGame(gamestate);
 
         io.emit("replayStats", protoEncode({ type: "replayStats", payload: room.replayStats() }));
         io.emit("teaminfo", protoEncode({ type: "teaminfo", payload: room.getTeamInfo() }));
@@ -514,26 +516,26 @@ const assetPath = path.join(process.argv[2], "./builds/assets");
 const altAssetPath = path.join(process.argv[2], "./game-client/assets");
 app.use("/assets/*", (req, res) => {
     let baseUrl = req.baseUrl;
-    if( baseUrl.indexOf("/assets/") === 0 ) {
+    if (baseUrl.indexOf("/assets/") === 0) {
         baseUrl = baseUrl.substring("/assets/".length);
     }
-    if( baseUrl.indexOf("assets/") === 0 ) {
+    if (baseUrl.indexOf("assets/") === 0) {
         baseUrl = baseUrl.substring("assets/".length);
     }
 
-    res.sendFile(path.join(assetPath, baseUrl ), (err) => {
+    res.sendFile(path.join(assetPath, baseUrl), (err) => {
         if (err) {
-            res.sendFile(path.join(altAssetPath, baseUrl ), (err2) => {
+            res.sendFile(path.join(altAssetPath, baseUrl), (err2) => {
                 if (err2) res.status(404).end();
             });
         }
     });
     // res.sendFile(path.join(assetPath, req.path));
-    console.log(baseUrl );
+    console.log(baseUrl);
 });
 app.use("/game-client/assets/*", (req, res) => {
-    console.log(req.baseUrl );
-    res.sendFile(path.join(altAssetPath, req.baseUrl ));
+    console.log(req.baseUrl);
+    res.sendFile(path.join(altAssetPath, req.baseUrl));
 });
 app.get("/routes", (req, res) => {
     if (process.argv[4] === "webpack" || process.argv[4] === "bundle") {

@@ -51,6 +51,8 @@ class FSGWorker {
     private dbPath: string | null;
     private nodeContext: any;
     private gameScript: vm.Script | null;
+    private actionQueue: any[] = [];
+    private isProcessing: boolean = false;
 
     constructor() {
         this.action = {};
@@ -127,10 +129,15 @@ class FSGWorker {
     async onAction({ action, gamestate, gameSettings }: { action: any; gamestate: any; gameSettings: any }): Promise<void> {
         try {
             console.log("[ACOS] Executing Action: ", action);
-            globalGame = gamestate;
+            
+            // Use provided gamestate if valid; otherwise persist the global gamestate from previous actions
+            if (gamestate && isObject(gamestate)) {
+                globalGame = gamestate;
+            } else if (!globalGame || !isObject(globalGame)) {
+                this.makeGame(gameSettings);
+            }
 
             globalIgnore = false;
-            if (!globalGame) this.makeGame(gameSettings);
             const game = gs(globalGame);
             game.clearEvents();
 
@@ -205,7 +212,7 @@ class FSGWorker {
                     game.setStatus(GameStatus.gamecancelled);
                     game.incrementSequence();
                     game.setUpdatedAt(Date.now() - game.startTime);
-                    globalResult.room = game.raw();
+                    globalResult.room = game.raw()?.room;
                     globalResult.action = action;
                     parentPort!.postMessage(globalResult);
                     globalResult = {};
@@ -231,6 +238,10 @@ class FSGWorker {
             const result = gs(globalResult);
             const eventMap = result.eventsMap();
     
+            result.setStartTime(game.startTime);
+            result.setSlug(game.slug);
+            result.setSequence(game.sequence);
+
 
             if (eventMap["gameover"]) {
                 result.setStatus(GameStatus.gameover);
@@ -256,12 +267,16 @@ class FSGWorker {
                 this.processTimelimit(globalResult);
             }
 
+           
             result.incrementSequence();
             result.setUpdatedAt(now - game.startTime);
 
             globalResult.action = action;
 
             result.ensureServerOnly(globalGame);
+
+            // Persist the result as the current gamestate for the next action
+            globalGame = cloneObj(globalResult);
 
             parentPort!.postMessage(globalResult);
             globalResult = {};
@@ -316,18 +331,24 @@ class FSGWorker {
     }
 
     async reloadServerBundle(filepath?: string): Promise<vm.Script | null> {
-        const options = {
-            filename: "file:///" + this.bundleFilePath.replace(/\\/gi, "/"),
-        };
-        Profiler.Start(`Reloaded Server Bundle ${options.filename.replace("file:///", "")} in`);
-
-        filepath = filepath || this.bundleFilePath;
-        const data = fs.readFileSync(filepath, "utf8");
-
-        this.gameScript = new vm.Script(data, { filename: options.filename });
-
-        Profiler.End(`Reloaded Server Bundle ${options.filename.replace("file:///", "")} in`);
-        return this.gameScript;
+        try {
+            const options = {
+                filename: "file:///" + this.bundleFilePath.replace(/\\/gi, "/"),
+            };
+            Profiler.Start(`Reloaded Server Bundle ${options.filename.replace("file:///", "")} in`);
+    
+            filepath = filepath || this.bundleFilePath;
+            const data = fs.readFileSync(filepath, "utf8");
+    
+            this.gameScript = new vm.Script(data, { filename: options.filename });
+    
+            Profiler.End(`Reloaded Server Bundle ${options.filename.replace("file:///", "")} in`);
+            return this.gameScript;
+        }
+        catch(e) {
+            console.error("Error reloading server bundle:", e);
+            return null;
+        }
     }
 
     async start(): Promise<void> {
@@ -352,10 +373,30 @@ class FSGWorker {
                 });
             }
 
-            parentPort!.on("message", this.onAction.bind(this));
+            parentPort!.on("message", (msg: any) => {
+                this.actionQueue.push(msg);
+                this.processQueuedActions();
+            });
         } catch (e) {
             console.error(e);
         }
+    }
+
+    private async processQueuedActions(): Promise<void> {
+        if (this.isProcessing || this.actionQueue.length === 0) return;
+
+        this.isProcessing = true;
+        const msg = this.actionQueue.shift();
+
+        try {
+            await this.onAction(msg);
+        } catch (e) {
+            console.error(e);
+        }
+
+        this.isProcessing = false;
+        // Continue processing next queued action
+        await this.processQueuedActions();
     }
 
     run(): Promise<boolean> {

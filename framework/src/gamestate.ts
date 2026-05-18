@@ -715,7 +715,9 @@ export class GameStateReader {
 
 	/** Removes all events from the room. */
 	clearEvents(): void {
-		this.gameStateRef.room.events = [];
+		if (this.gameStateRef?.room?.events) {
+			this.gameStateRef.room.events = [];
+		}
 	}
 
 	/**

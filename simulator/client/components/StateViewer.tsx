@@ -421,7 +421,7 @@ function ObjectViewer(props: ObjectViewerProps) {
                 <VStack w="100%" alignItems={"flex-start"} overflow="hidden">
                     <HStack w="100%"></HStack>
                     <Box px="0" w="100%" minH="2rem">
-                        {props.encodedLen !== 0 && (
+                        {/* {props.encodedLen !== 0 && ( */}
                             <JsonView
                                 src={object || ''}
                                 theme="vscode"
@@ -430,7 +430,7 @@ function ObjectViewer(props: ObjectViewerProps) {
                                 // displayDataTypes={false}
                                 // displayObjectSize={false}
                             />
-                        )}
+                        {/* )} */}
                     </Box>
                 </VStack>
             </AccordionPanel>

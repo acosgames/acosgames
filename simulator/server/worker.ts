@@ -40,6 +40,22 @@ interface DecodedSourceMap {
     json: any;
 }
 
+interface WorkerActionMessage {
+    action: any;
+    gamestate?: any;
+    gameSettings?: any;
+    forceGamestate?: boolean;
+}
+
+function hasUsableGamestate(gamestate: any): boolean {
+    return !!(gamestate && isObject(gamestate) && isObject(gamestate.room));
+}
+
+function gamestateSequence(gamestate: any): number {
+    const sequence = gamestate?.room?._sequence;
+    return typeof sequence === "number" ? sequence : -1;
+}
+
 class FSGWorker {
     private action: any;
     private gameHistory: any[];
@@ -126,19 +142,28 @@ class FSGWorker {
         return Math.floor(Math.random() * (2104 - 1 + 1) + 1);
     };
 
-    async onAction({ action, gamestate, gameSettings }: { action: any; gamestate: any; gameSettings: any }): Promise<void> {
+    async onAction({ action, gamestate, gameSettings, forceGamestate }: WorkerActionMessage): Promise<void> {
         try {
             console.log("[ACOS] Executing Action: ", action);
-            
-            // Use provided gamestate if valid; otherwise persist the global gamestate from previous actions
-            if (gamestate && isObject(gamestate)) {
-                globalGame = gamestate;
-            } else if (!globalGame || !isObject(globalGame)) {
+
+            const hasIncomingState = hasUsableGamestate(gamestate);
+            const hasLocalState = hasUsableGamestate(globalGame);
+            const incomingSequence = gamestateSequence(gamestate);
+            const localSequence = gamestateSequence(globalGame);
+            const shouldUseIncoming = hasIncomingState && (
+                !!forceGamestate ||
+                !hasLocalState ||
+                incomingSequence > localSequence
+            );
+
+            if (shouldUseIncoming) {
+                globalGame = cloneObj(gamestate);
+            } else if (!hasLocalState) {
                 this.makeGame(gameSettings);
             }
 
             globalIgnore = false;
-            const game = gs(globalGame);
+            let game = gs(globalGame);
             game.clearEvents();
 
 
@@ -189,7 +214,12 @@ class FSGWorker {
                 if (leavingPlayerId !== undefined) game.player(leavingPlayerId)?.setInGame(false);
 
             } else if (action.type === "reset" || action.type === "newgame") {
-                this.makeGame(gameSettings);
+                if (forceGamestate && hasIncomingState) {
+                    globalGame = cloneObj(gamestate);
+                } else {
+                    this.makeGame(gameSettings);
+                }
+                game = gs(globalGame);
                 game.setStartTime(Date.now());
 
             } else if (action.type === "ready") {
@@ -373,7 +403,7 @@ class FSGWorker {
                 });
             }
 
-            parentPort!.on("message", (msg: any) => {
+            parentPort!.on("message", (msg: WorkerActionMessage) => {
                 this.actionQueue.push(msg);
                 this.processQueuedActions();
             });
@@ -412,7 +442,11 @@ class FSGWorker {
                     gamelog: (...args: any[]) => { console.log(...args); },
                     gameerror: (...args: any[]) => { console.error(...args); },
                     commit: (newGame: any) => {
-                        try { globalResult = cloneObj(newGame); } catch (e) { console.error(e); }
+                        try { 
+                            globalResult = cloneObj(newGame); 
+                        } catch (e) { 
+                            console.error(e); 
+                        }
                     },
                     random: () => {
                         try { return DiscreteRandom.random(); } catch (e) { console.error(e); }

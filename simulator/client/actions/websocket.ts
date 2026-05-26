@@ -58,6 +58,7 @@ export function connect(displayname?: string): void {
     socket.on("connect", onConnect);
     socket.on("gameSettings", onGameSettings);
     socket.on("gameProtocol", onGameProtocol);
+    socket.on("actionProtocol", onActionProtocol);
     socket.on("connected", onConnected);
     socket.on("pong", onPong);
     socket.on("join", onJoin);
@@ -111,6 +112,17 @@ const onGameProtocol = (message: any): void => {
         if (!decoded?.payload) return;
         registerExtension("gameupdate", "game", decoded.payload);
         applyExtension("gameupdate", "game");
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+const onActionProtocol = (message: any): void => {
+    try {
+        const decoded: any = protoDecode(message);
+        if (!decoded?.payload) return;
+        registerExtension("action", "gameAction", decoded.payload);
+        applyExtension("action", "gameAction");
     } catch (e) {
         console.error(e);
     }

@@ -5,6 +5,7 @@ import {
     btPrimaryGamePanel,
     btScreenConfig,
     btSocketUser,
+    btVolume,
 } from "../actions/buckets";
 import { wsSend } from "../actions/websocket";
 import GameStateService from "./GameStateService";
@@ -90,6 +91,20 @@ class GamePanelService {
                 if (Array.isArray(gameSettings.teams) && gameSettings.teams.length > 0) {
                     GameStateService.initTeamsFromSettings(gameSettings.teams);
                 }
+            }
+            return;
+        }
+
+        if (data.type === "gameprotocol") {
+            if (data.payload && typeof data.payload === "object") {
+                wsSend("gameProtocol", data.payload);
+            }
+            return;
+        }
+
+        if (data.type === "actionprotocol") {
+            if (data.payload && typeof data.payload === "object") {
+                wsSend("actionProtocol", data.payload);
             }
             return;
         }
@@ -192,6 +207,38 @@ class GamePanelService {
             return true;
         }
         return false;
+    }
+
+    updateGamePanelVolumes(nextPlayerIds: string | string[] | null = null): void {
+        const gps: Record<string, GamePanel> = btGamepanels.get() || {};
+        const globalVolume = btVolume.get() || 1.0;
+        
+        // Determine which panels should have sound
+        let activePanelIds: Set<string> = new Set();
+        
+        if (nextPlayerIds) {
+            // If nextPlayerIds is provided, use it
+            const idsArray = Array.isArray(nextPlayerIds) ? nextPlayerIds : [nextPlayerIds];
+            idsArray.forEach(id => activePanelIds.add(String(id)));
+        } else {
+            // If no valid next player, choose the first active GamePanel
+            const activeIds = Object.keys(gps).filter(id => gps[id]?.active);
+            if (activeIds.length > 0) {
+                activePanelIds.add(activeIds[0]);
+            }
+        }
+        
+        // Send volume messages to all panels
+        for (const id in gps) {
+            const gp = gps[id];
+            const shouldHaveSound = activePanelIds.has(id);
+            const volume = shouldHaveSound ? globalVolume : 0.0;
+            
+            this.sendFrameMessage(gp, {
+                type: "volume",
+                payload: volume
+            });
+        }
     }
 }
 

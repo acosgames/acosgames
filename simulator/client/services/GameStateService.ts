@@ -154,7 +154,7 @@ class GameStateService {
         let gameroom = gamestate.room();
         let nextTeam = gameroom.nextTeam;
 
-        if( nextTeam === teamid) return true;
+        if( nextTeam === teamid || nextTeam == -2 ) return true;
         if( Array.isArray(nextTeam) && nextTeam.includes(teamid)) return true;
 
         // const nextid = gameroom?.next_team;
@@ -179,7 +179,7 @@ class GameStateService {
         let player = gamestate.player(id);
         if (!player) return false;
 
-        if( next === id) return true;
+        if( next === id || next == -2 ) return true;
 
 
         return false;
@@ -327,7 +327,7 @@ class GameStateService {
         if (!msgDelta.action) {
             encodedSizes.action = 0;
         } else {
-            encoded = protoEncode({ type: "gameupdate", payload: { action: msgDelta.action } });
+            encoded = protoEncode({ type: "action", payload: msgDelta.action });
             encodedSizes.action = encoded.byteLength - 1;
         }
 
@@ -366,8 +366,6 @@ class GameStateService {
 
             GamePanelService.sendFrameMessage(gamepanel, pstate);
 
-            GamePanelService.sendFrameMessage(gamepanel, {type:"volume", volume: btVolume.get()});
-
             const joinEvent = pstate?.room?.events?.find(
                 (e: any) =>
                     e.type === "join" &&
@@ -391,6 +389,17 @@ class GameStateService {
         for (const id in gamepanels) {
             this.updateGamePanel(id);
         }
+        
+        // Update volume for all panels based on next player
+        const gameState = btGameState.get();
+        const gameroom = gameState?.room;
+        let nextPlayerIds: string | string[] | null = null;
+        
+        if (gameroom?.nextPlayer !== undefined && gameroom?.nextPlayer !== null) {
+            nextPlayerIds = gameroom.nextPlayer;
+        }
+        
+        GamePanelService.updateGamePanelVolumes(nextPlayerIds);
     }
 }
 

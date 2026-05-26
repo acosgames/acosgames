@@ -46,9 +46,15 @@ function onGameSettingsReloaded(): void {
 }
 
 function onGameProtocolReloaded(): void {
-    const protocol = GameProtocolManager.get();
-    if (!protocol) return;
-    io.emit("gameProtocol", protoEncode({ type: "gameProtocol", payload: protocol }));
+    const gameProtocol = GameProtocolManager.get();
+    if (gameProtocol) {
+        io.emit("gameProtocol", protoEncode({ type: "gameProtocol", payload: gameProtocol }));
+    }
+
+    const actionProtocol = GameProtocolManager.getActionProtocol();
+    if (actionProtocol) {
+        io.emit("actionProtocol", protoEncode({ type: "actionProtocol", payload: actionProtocol }));
+    }
 }
 
 setInterval(() => {
@@ -93,6 +99,11 @@ function onConnect(socket: Socket): void {
         socket.emit("gameProtocol", protoEncode({ type: "gameProtocol", payload: gameProtocol }));
     }
 
+    const actionProtocol = GameProtocolManager.getActionProtocol();
+    if (actionProtocol) {
+        socket.emit("actionProtocol", protoEncode({ type: "actionProtocol", payload: actionProtocol }));
+    }
+
     const room = RoomManager.current();
     const fakePlayers = UserManager.getFakePlayersByParent(user.shortid);
     if (fakePlayers?.length >= 0) {
@@ -128,6 +139,22 @@ function onNewGameSettings(socket: Socket, newGameSettings: any): void {
     settings.updateGameSettings(newGameSettings.payload ?? newGameSettings);
 }
 
+function onClientGameProtocol(protocolMessage: any): void {
+    const decoded = protoDecode(protocolMessage);
+    const protocol = decoded?.payload ?? decoded;
+    if (!protocol || typeof protocol !== "object") return;
+    GameProtocolManager.setGameProtocol(protocol);
+    onGameProtocolReloaded();
+}
+
+function onClientActionProtocol(protocolMessage: any): void {
+    const decoded = protoDecode(protocolMessage);
+    const protocol = decoded?.payload ?? decoded;
+    if (!protocol || typeof protocol !== "object") return;
+    GameProtocolManager.setActionProtocol(protocol);
+    onGameProtocolReloaded();
+}
+
 function onFakePlayer(socket: Socket, msg: any): void {
     msg = protoDecode(msg).payload;
     const type = msg.type;
@@ -153,6 +180,8 @@ io.on("connection", (socket) => {
     socket.on("disconnect", (e) => { onDisconnect(socket, e); });
     socket.on("ping", (msg) => { onPing(socket, msg); });
     socket.on("gameSettings", (newGameSettings) => { onNewGameSettings(socket, newGameSettings); });
+    socket.on("gameProtocol", (protocolMessage) => { onClientGameProtocol(protocolMessage); });
+    socket.on("actionProtocol", (protocolMessage) => { onClientActionProtocol(protocolMessage); });
     socket.on("fakeplayer", (msg) => { onFakePlayer(socket, msg); });
     socket.on("replay", (msg) => { onReplay(socket, protoDecode(msg)); });
     socket.on("action", (msg) => { onAction(socket, protoDecode(msg)); });
@@ -161,7 +190,12 @@ io.on("connection", (socket) => {
         const currentRoom = RoomManager.current();
         const currentGamestate = currentRoom.getGameState();
         console.log("[ACOS] Incoming Action: ", msg);
-        worker.postMessage([{ type: "reset", gamestate: currentGamestate, gameSettings: settings.get() }]);
+        worker.postMessage({
+            action: { type: "reset" },
+            gamestate: currentGamestate,
+            gameSettings: settings.get(),
+            forceGamestate: true,
+        });
     });
 });
 
@@ -360,6 +394,7 @@ function onAction(socket: Socket, action: any, fromServer?: boolean): void {
         action,
         gamestate: currentGamestate,
         gameSettings: settings.get(),
+        forceGamestate: action.type === "newgame" || action.type === "reset",
     });
 }
 
@@ -373,7 +408,7 @@ function validateNextUser(status: number, gamestate: any, userid: number): boole
     let player = game.player(userid);
     if (!player) return false;
 
-    if (next === userid) return true;
+    if (next === userid || next == -2) return true;
 
     if (validateNextTeam(gamestate, player.teamid)) return true;
 
@@ -401,14 +436,14 @@ function validateNextTeam(gamestate: any, teamid: number): boolean {
 
     const game = gs(gamestate);
 
-    let next = game.nextPlayer;
+    let next = game.nextTeam;
 
     if (Array.isArray(next) && next.includes(teamid)) return true;
 
     let player = game.player(teamid);
     if (!player) return false;
 
-    if (next === teamid) return true;
+    if (next === teamid || next == -2) return true;
 
 
     return false;
@@ -531,10 +566,10 @@ app.use("/assets/*", (req, res) => {
         }
     });
     // res.sendFile(path.join(assetPath, req.path));
-    console.log(baseUrl);
+    // console.log(baseUrl);
 });
 app.use("/game-client/assets/*", (req, res) => {
-    console.log(req.baseUrl);
+    // console.log(req.baseUrl);
     res.sendFile(path.join(altAssetPath, req.baseUrl));
 });
 app.get("/routes", (req, res) => {

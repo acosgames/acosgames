@@ -187,6 +187,37 @@ async function deployAll(got: any, FormData: any, FormDataEncoder: any): Promise
         console.error(err);
     }
 
+    //UPLOAD ACTION PROTOCOL
+    let hasActionProtocol = false;
+    let actionProtocolFileSize = 0;
+    try {
+        const actionProtocolFilePath = path.join(buildPath, "../action-protocol.json");
+        if (!fs.existsSync(actionProtocolFilePath)) {
+            console.warn(
+                "[ACOS] No action protocol exists. It is optional, but this is a reminder just in case you forgot it. File should be at `./action-protocol.json`"
+            );
+        } else {
+            actionProtocolFileSize = fs.statSync(actionProtocolFilePath).size;
+            contentLength += actionProtocolFileSize;
+            filesizes += "action-protocol.json=" + actionProtocolFileSize + ";";
+            actionProtocolFileSize = Number((actionProtocolFileSize / 1000).toFixed(2));
+
+            const actionProtocolFile = fs.createReadStream(actionProtocolFilePath);
+            form_data.set("actionProtocol", {
+                type: "application/javascript",
+                name: "action-protocol.json",
+                [Symbol.toStringTag]: "File",
+                stream() {
+                    return actionProtocolFile;
+                },
+            });
+
+            hasActionProtocol = true;
+        }
+    } catch (err) {
+        console.error(err);
+    }
+
     //UPLOAD GAME SETTINGS
     let hasGameSettings = false;
     let gameSettingsFileSize = 0;
@@ -297,6 +328,9 @@ async function deployAll(got: any, FormData: any, FormDataEncoder: any): Promise
 
     //HAS GAME PROTOCOL HEADER
     headers["X-GAME-HASGAMEPROTOCOL"] = hasGameProtocol ? "yes" : "no";
+
+    //HAS ACTION PROTOCOL HEADER
+    headers["X-GAME-HASACTIONPROTOCOL"] = hasActionProtocol ? "yes" : "no";
 
     //HAS CSS HEADER
     headers["X-GAME-HASCSS"] = hasCSS ? "yes" : "no";

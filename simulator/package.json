@@ -20,7 +20,7 @@
     },
     "dependencies": {
         "@acosgames/framework": "file:../framework",
-        "acos-json-encoder": "^2.0.10",
+        "acos-json-encoder": "^2.0.20",
         "axios": "^1.6.8",
         "browser-sync": "^3.0.2",
         "chalk": "^5.3.0",

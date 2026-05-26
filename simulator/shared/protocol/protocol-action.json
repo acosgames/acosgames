@@ -1,6 +1,14 @@
 {
     "type": "action",
     "payload": {
-        "$slot": "any"
-    }
+        "$variants": {
+            "join": "any"
+        }
+        
+    },
+    "user": {
+            "displayname": "string",
+            "shortid": "string",
+            "teamid": "uint"
+        }
 }

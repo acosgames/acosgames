@@ -144,8 +144,7 @@ class GamePanelService {
 
         if (user.shortid !== gamepanel.id) return;
 
-        data.user = { shortid: user.shortid, displayname: user.displayname };
-        wsSend("action", data);
+        wsSend("action", data,  { shortid: user.shortid, displayname: user.displayname });
     }
 
     createGamePanel(id: string): GamePanel {

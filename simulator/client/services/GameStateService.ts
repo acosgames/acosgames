@@ -242,7 +242,7 @@ class GameStateService {
 
         if (msgDelta["local"]) delete msgDelta["local"];
 
-        this.calculateEncodedSizes(msgDelta);
+        this.calculateEncodedSizes(msgDelta, copyNewState);
 
         newState.delta = msgDelta;
 
@@ -273,7 +273,7 @@ class GameStateService {
         this.updateGamePanels();
     }
 
-    calculateEncodedSizes(msgDelta: any): void {
+    calculateEncodedSizes(msgDelta: any, newState: any): void {
         const encodedSizes: EncodedSizes = {
             total: 0,
             state: 0,
@@ -319,15 +319,18 @@ class GameStateService {
             encodedSizes.room = 0;
         } else {
             const removeHidden = hidden(msgDelta.room);
+            if( newState.room['$deleted']) delete newState.room['$deleted'];
             encoded = protoEncode({ type: "gameupdate", payload: { room: msgDelta.room } });
             unhidden(msgDelta.room, removeHidden);
             encodedSizes.room = encoded.byteLength - 1;
         }
 
-        if (!msgDelta.action) {
+        if (!newState.action) {
             encodedSizes.action = 0;
         } else {
-            encoded = protoEncode({ type: "action", payload: msgDelta.action });
+            if( newState.action['$deleted']) delete newState.action['$deleted'];
+            if( newState.action['user'] ) delete newState.action.user;
+            encoded = protoEncode({ type: "action", payload: newState.action });
             encodedSizes.action = encoded.byteLength - 1;
         }
 

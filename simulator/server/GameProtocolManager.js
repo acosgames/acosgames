@@ -13,7 +13,7 @@ class GameProtocolManager {
         this.onProtocolReloaded = null;
     }
 
-    start(gameWorkingDirectory, callback) {
+    start(gameWorkingDirectory, callback) { 
         if (!gameWorkingDirectory) return;
         this.onProtocolReloaded = callback;
         this.protocolPath = path.join(gameWorkingDirectory, "./game-protocol.json");
@@ -39,7 +39,7 @@ class GameProtocolManager {
             // game-protocol.json defines payload-level overrides (state, players, teams)
             // so wrap in { payload: ... } to match the protocol message structure
             registerExtension(BASE_PROTOCOL, EXTENSION_NAME, { payload: this.gameProtocol });
-            applyExtension(BASE_PROTOCOL, EXTENSION_NAME);
+            applyExtension(BASE_PROTOCOL, EXTENSION_NAME);  
 
             let filename = filepath.split(/\/|\\/g);
             filename = filename[filename.length - 1];

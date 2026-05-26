@@ -34,10 +34,7 @@
                     "$static": "uint"
                 },
                 "rank": "uint",
-                "score": "uint",
-                "attr": {
-                    "$slot": {}
-                }
+                "score": "uint"
             }
         },
         "players": {
@@ -59,9 +56,6 @@
                         "name": "uint",
                         "balance": "uint"
                     }
-                },
-                "attr": {
-                    "$slot": "any"
                 },
                 "rank": "uint",
                 "score": "uint"

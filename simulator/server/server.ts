@@ -35,7 +35,7 @@ const gameWorkingDirectory = process.argv[2];
 
 const settings = GameSettingsManager;
 settings.start(gameWorkingDirectory, onGameSettingsReloaded);
-GameProtocolManager.start(gameWorkingDirectory, onGameProtocolReloaded);
+GameProtocolManager.start(gameWorkingDirectory, onGameProtocolReloaded); 
 const RoomManager = new RoomManagerService();
 RoomManager.setSettings(settings);
 
@@ -45,7 +45,7 @@ function onGameSettingsReloaded(): void {
     io.emit("gameSettings", protoEncode({ type: "gameSettings", payload: { gameSettings: settings.get() } }));
 }
 
-function onGameProtocolReloaded(): void {
+function onGameProtocolReloaded(): void { 
     const gameProtocol = GameProtocolManager.get();
     if (gameProtocol) {
         io.emit("gameProtocol", protoEncode({ type: "gameProtocol", payload: gameProtocol }));
@@ -174,7 +174,7 @@ function onFakePlayer(socket: Socket, msg: any): void {
     }
 }
 
-io.on("connection", (socket) => {
+io.on("connection", (socket) => { 
     onConnect(socket);
 
     socket.on("disconnect", (e) => { onDisconnect(socket, e); });
@@ -184,7 +184,9 @@ io.on("connection", (socket) => {
     socket.on("actionProtocol", (protocolMessage) => { onClientActionProtocol(protocolMessage); });
     socket.on("fakeplayer", (msg) => { onFakePlayer(socket, msg); });
     socket.on("replay", (msg) => { onReplay(socket, protoDecode(msg)); });
-    socket.on("action", (msg) => { onAction(socket, protoDecode(msg)); });
+    socket.on("action", (msg) => { 
+        onAction(socket, protoDecode(msg));  
+    });
     socket.on("reload", (msg) => {
         msg = protoDecode(msg);
         const currentRoom = RoomManager.current();
@@ -339,9 +341,12 @@ function onReplay(socket: Socket, action: any, fromServer?: boolean): void {
     replayFunc(action);
 }
 
-function onAction(socket: Socket, action: any, fromServer?: boolean): void {
-    if (!fromServer) action = action.payload;
-    if (typeof action !== "object" || !("type" in action)) return;
+function onAction(socket: Socket & { user?: any }, action: any, fromServer?: boolean): void {
+    if (!fromServer) action = {
+        ...action.payload,
+        user: action.user
+    };
+    if (typeof action !== "object" || !("type" in action)) return;  
 
     const msgStr = JSON.stringify(action);
     const msgBuffer = Buffer.from(msgStr, "utf-8");
@@ -350,7 +355,7 @@ function onAction(socket: Socket, action: any, fromServer?: boolean): void {
     }
 
     let user: any = null;
-    const client = UserManager.getUserByShortid(action?.user?.shortid);
+    const client = UserManager.getUserByShortid(action?.user?.shortid );
     if (!client) {
         user = UserManager.getFakePlayer(action?.user?.shortid);
     } else {

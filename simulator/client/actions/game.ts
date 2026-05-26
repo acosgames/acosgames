@@ -71,7 +71,7 @@ export function leaveGame(_message?: unknown): void {
         shortid: socketUser.shortid,
         displayname: socketUser.displayname,
     };
-    wsSend("action", { type: "leave", user });
+    wsSend("action", { type: "leave" }, user);
     btGameStatus.set(0);
 }
 
@@ -94,11 +94,11 @@ export function joinGame(teamid?: number): void {
         displayname: socketUser.displayname,
         teamid,
     };
-    wsSend("action", { type: "join", user });
+    wsSend("action", { type: "join" }, user);
 }
 
 export function playerReady(user: any): void {
-    wsSend("action", { type: "ready", user });
+    wsSend("action", { type: "ready" }, user);
 }
 
 export function startGame(_message?: unknown): void {
@@ -107,7 +107,7 @@ export function startGame(_message?: unknown): void {
         shortid: socketUser.shortid,
         displayname: socketUser.displayname,
     };
-    wsSend("action", { type: "gamestart", user });
+    wsSend("action", { type: "gamestart" }, user);
 }
 
 export async function autoJoin(): Promise<void> {
@@ -133,7 +133,7 @@ export async function newGame(_message?: unknown): Promise<void> {
         shortid: socketUser.shortid,
         displayname: socketUser.displayname,
     };
-    wsSend("action", { type: "newgame", user });
+    wsSend("action", { type: "newgame" }, user);
     btGameStatus.set(0);
 
     const autojoin = btAutoJoin.get();
@@ -148,7 +148,7 @@ export function skip(_message?: unknown): void {
         shortid: socketUser.shortid,
         displayname: socketUser.displayname,
     };
-    wsSend("action", { type: "skip", user });
+    wsSend("action", { type: "skip" }, user);
 }
 
 export function spawnFakePlayers(_message?: unknown): void {
@@ -157,7 +157,7 @@ export function spawnFakePlayers(_message?: unknown): void {
         shortid: socketUser.shortid,
         displayname: socketUser.displayname,
     };
-    wsSend("fakeplayer", { type: "create", payload: { user, count: 1 } });
+    wsSend("fakeplayer", { type: "create", payload: { user, count: 1 } }, user);
 
     const autojoin = btAutoJoin.get();
     if (autojoin) {
@@ -171,7 +171,7 @@ export function joinFakePlayer(fakePlayer: any, teamid?: number): void {
         displayname: fakePlayer.displayname,
         teamid,
     };
-    wsSend("action", { type: "join", user });
+    wsSend("action", { type: "join" }, user);
 }
 
 export function leaveFakePlayer(fakePlayer: any): void {
@@ -181,7 +181,7 @@ export function leaveFakePlayer(fakePlayer: any): void {
         displayname: fakePlayer.displayname,
         clientid: socketUser.shortid,
     };
-    wsSend("action", { type: "leave", user });
+    wsSend("action", { type: "leave" }, user);
 }
 
 export function removeFakePlayer(fakePlayer: any): void {
@@ -191,7 +191,7 @@ export function removeFakePlayer(fakePlayer: any): void {
         displayname: fakePlayer.displayname,
         clientid: socketUser.shortid,
     };
-    wsSend("fakeplayer", { type: "remove", user });
+    wsSend("fakeplayer", { type: "remove" }, user);
 }
 
 export function onLeave(_message: unknown): void {

@@ -53,7 +53,7 @@ class GameProtocolManager {
         return this.actionProtocol;
     }
 
-    setGameProtocol(protocol: Record<string, unknown>): void {
+    setGameProtocol(protocol: Record<string, unknown>): void {  
         this.gameProtocol = protocol;
         registerExtension(GAME_BASE_PROTOCOL, GAME_EXTENSION_NAME, { payload: this.gameProtocol });
         applyExtension(GAME_BASE_PROTOCOL, GAME_EXTENSION_NAME);

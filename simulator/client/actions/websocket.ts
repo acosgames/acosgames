@@ -3,6 +3,7 @@ import {
     protoDecode,
     registerExtension,
     applyExtension,
+    disableExtension,
 } from "acos-json-encoder";
 import { io, Socket } from "socket.io-client";
 
@@ -75,9 +76,12 @@ export function connect(displayname?: string): void {
     btSocket.set(socket);
 }
 
-export function wsSend(type: string, payload: unknown): void {
+export function wsSend(type: string, payload: unknown, user?: any): void {
     const socket: Socket = btSocket.get();
-    socket.emit(type, protoEncode({ type, payload }));
+    console.log(">>> SEND", type, payload);
+    const socketUser = btSocketUser.get();
+   
+    socket.emit(type, protoEncode({ type, payload, user }));
 }
 
 export function updateGameSettings(newSettings: Record<string, any>): void {
@@ -110,19 +114,24 @@ const onGameProtocol = (message: any): void => {
     try {
         const decoded: any = protoDecode(message);
         if (!decoded?.payload) return;
-        registerExtension("gameupdate", "game", decoded.payload);
+        registerExtension("gameupdate", "game", decoded.payload );
         applyExtension("gameupdate", "game");
+        console.log("Registered game protocol update", decoded.payload);
+        console.log("Applied game protocol 'game'");
     } catch (e) {
         console.error(e);
     }
 };
 
-const onActionProtocol = (message: any): void => {
+const onActionProtocol = (message: any): void => { 
     try {
         const decoded: any = protoDecode(message);
         if (!decoded?.payload) return;
-        registerExtension("action", "gameAction", decoded.payload);
+        disableExtension("action");
+        registerExtension("action", "gameAction", { payload: decoded.payload });
         applyExtension("action", "gameAction");
+        console.log("Registered action protocol update", decoded.payload);
+        console.log("Applied action protocol 'gameAction'");
     } catch (e) {
         console.error(e);
     }
